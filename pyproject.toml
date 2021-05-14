@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "SPEDometer"
-version = "6.0.0"
-description = "The Official Bot for the SPED Head Discord Server"
+name = "Comet"
+version = "1.0.0"
+description = "A open-source discord.py bot."
 authors = ["Emmanuel Castillo emmanuelino2@gmail.com","Garen Gevorgyan"]
 
 [tool.poetry.dependencies]

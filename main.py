@@ -1301,16 +1301,16 @@ async def help(ctx, pg=1):
 
   for command in client.commands:
     if embedCommands <= 18:
-      embed.add_field(name=command, value=command.help, inline=True)
+      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
     elif embedCommands <= 36:
-      embed2.add_field(name=command, value=command.help, inline=True)
+      embed2.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
     elif embedCommands <= 54:
-      embed3.add_field(name=command, value=command.help, inline=True)
+      embed3.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
     else:
-      embed3.add_field(name=command, value=command.help, inline=True)
+      embed3.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
   
   if pg == 1:
