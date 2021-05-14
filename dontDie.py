@@ -7,11 +7,15 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+  return render_template('index.html')
+
+@app.route('/features')
+def featuresPage():
+  return render_template('features.html')
 
 def run():
   app.run(host='0.0.0.0',port=8080)
 
 def dontDieOnMe():
-    t = Thread(target=run)
-    t.start()
+  t = Thread(target=run)
+  t.start()
