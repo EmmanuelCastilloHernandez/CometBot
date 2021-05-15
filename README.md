@@ -2,6 +2,8 @@
 ## Open Source Discord.py bot to goof with
 Created by Emmanuel Castillo and in collaboration with Garen Gevorgyan. Current version is 1.0.0 `Luna`
 
+To see if the bot is up, check: https://cometbot.emmanuelch.repl.co/creators
+
 # What It Does
 > It's a python bot ofc
 
