@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Comet Features</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
 * {
   box-sizing: border-box;
@@ -10,7 +11,22 @@
 
 body {
   margin: 0;
+  background-image: url({{ url_for('static', filename='photoToRender/CometWebBackground.jpg') }});
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes tracking-in-contract {
+  0% {
+    letter-spacing: 1em;
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.6;
+  }
+  100% {
+    letter-spacing: normal;
+    opacity: 1;
+  }
 }
 
 /* Style the side navigation */
@@ -21,8 +37,51 @@ body {
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: #191970;
+  background-image: linear-gradient(to right, rgba(52,34,138,1), rgba(35,22,99,0));
   overflow-x: hidden;
+}
+
+@keyframes vibrate-1 {
+  0% {
+    -webkit-transform: translate(0);
+            transform: translate(0);
+  }
+  20% {
+    -webkit-transform: translate(-2px, 2px);
+            transform: translate(-2px, 2px);
+  }
+  40% {
+    -webkit-transform: translate(-2px, -2px);
+            transform: translate(-2px, -2px);
+  }
+  60% {
+    -webkit-transform: translate(2px, 2px);
+            transform: translate(2px, 2px);
+  }
+  80% {
+    -webkit-transform: translate(2px, -2px);
+            transform: translate(2px, -2px);
+  }
+  100% {
+    -webkit-transform: translate(0);
+            transform: translate(0);
+  }
+}
+
+.homeButton{
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  width: 48px;
+  height: 50px;
+  background-color: rgba(34, 9, 189)
+}
+
+/* Darker background on mouse-over */
+.homeButton:hover {
+  animation-name: vibrate-1;
+  animation-duration: 0.4s;
+  background-color: rgba(34, 9, 189)
 }
 
 /* Side navigation links */
@@ -33,31 +92,54 @@ body {
   display: block;
 }
 
+@keyframes pulsate-fwd {
+  0% {
+    -webkit-transform: scale(1);
+      transform: scale(1);
+  }
+  50% {
+    -webkit-transform: scale(1.1);
+      transform: scale(1.1);
+  }
+  100% {
+    -webkit-transform: scale(1);
+      transform: scale(1);
+  }
+}
+
 /* Change color on hover */
 .sidenav a:hover {
-  background-color: #6A5ACD;
+  background-image: linear-gradient(to right, rgba(106, 90, 205,1), rgba(106, 90, 205, 0));
   color: white;
-  opacity: 0.5;
+  opacity: 0.8;
+  animation-name: pulsate-fwd;
+  animation-duration: 0.4s;
 }
 
 /* Style the content */
 .content {
+  color: white;
   margin-left: 150px;
   padding-left: 20px;
+  animation-name: tracking-in-contract;
+  animation-duration: 2.5s;
 }
+
+.homeButton {border-radius: 10%;}
 </style>
 </head>
 <body>
 <div class="sidenav">
   <a href="https://cometbot.emmanuelch.repl.co/features">Features ⊛</a>
-  <a href="#">Versions </a>
-  <a href="#">Creators </a>
+  <a href="https://cometbot.emmanuelch.repl.co/versions">Versions </a>
+  <a href="https://cometbot.emmanuelch.repl.co/creators">Creators </a>
 </div>
-<div class="content">
+<div style="background-image: {{ user_image }};" class="content">
   <h1 style="font-family:verdana" title="1.0.0 Luna">Features</h1>
-  <p style="font-family:verdana">The bot itself is packed with features to keep people engaged in using the bot for longer periods of time.<br><br>Here is some of the things SPEDometer offers:</p>
+  <p style="font-family:verdana">The bot itself is packed with features to keep people engaged in using the bot for longer periods of time.<br><br>Here is some of the things Comet offers:</p>
   <p style="font-family:verdana">* A warning system that can be tinkered to the needs of each server.<br>* An economy system that revolves around buying, selling, and robbing.<br>* A super snipe feature</p>
   <img title="A placeholder image." src="https://images.vexels.com/media/users/3/142363/isolated/preview/76cc00e3681f38ed4956be2394cccd38-office-flat-wall-clock-by-vexels.png" alt="A clock" width="184" height="185">
 </div>
+<a href="https://cometbot.emmanuelch.repl.co/" class="homeButton"><i class="fa fa-home" style="font-size:50px;color:white;"></i></a>
 </body>
 </html>
