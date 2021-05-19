@@ -41,12 +41,12 @@ import urllib
 import randfacts
 import requests, json
 import string
-import time
 from zalgo_text import zalgo
 import urllib.request
 import re
 from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
+import audioread
 
 # This step is only needed if you use poetry in Replit
 os.system('pip3 uninstall -y googletrans')
@@ -70,9 +70,19 @@ reactionMessage = None
 title = None
 views = 0
 likes = 0
+length = 0
 
 # Comet audio player dictionary
 players={}
+
+def howLong(length):
+  hours = length // 3600
+  length %= 3600
+  mins = length // 60
+  length %= 60
+  seconds = length
+  
+  return hours, mins, seconds
 
 # NOTE: This is the list used by the blacklist to see if a message contains a slur
 # This is to help keep slurs at bay
@@ -2007,13 +2017,12 @@ async def edit(ctx):
 # Muisc Player Code
 @client.command(pass_context = True)
 async def play(ctx, *, url : str):
-
   print(url)
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
-    voice2 = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
 
-    if voice2 == None:
+    if voiceChannel == None:
       channel = ctx.message.author.voice.channel
       voice = await channel.connect()
     else:
@@ -2042,10 +2051,33 @@ async def play(ctx, *, url : str):
     
 
     API_KEY=os.getenv("ytKey")
+    def VideoDetails():
+      global views
+      global title
+      global likes
+
+      if "youtube" in videoUrl:
+        videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+      else:
+	      videoId = videoUrl
+
+      youtube = build('youtube','v3', developerKey=API_KEY)
+
+      videoRequest=youtube.videos().list(
+	      part='snippet,statistics',
+	      id=videoId
+      )
+
+      videoResponse = videoRequest.execute()
+
+      title = videoResponse['items'][0]['snippet']['title']
+      likes = videoResponse['items'][0]['statistics']['likeCount']
+      views = videoResponse['items'][0]['statistics']['viewCount']
+      return (likes, title, views)
     
     print(f'{title}+{views}+{likes}')
     videoUrl = song
-    videoDetails()
+    VideoDetails()
 
     try:
       with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -2056,7 +2088,12 @@ async def play(ctx, *, url : str):
     except youtube_dl.utils.DownloadError:
       await ctx.reply('Invalid Link')
       return
-  
+
+    with audioread.audio_open('song.mp3') as f:
+      totalsec = f.duration
+      hours, mins, seconds = howLong(int(totalsec))
+      print('Total Duration: {}:{}:{}'.format(hours, mins, seconds))
+    
     embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
     embed.set_author(name="Comet Music Player", icon_url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
     embed.set_thumbnail(url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
@@ -2064,40 +2101,24 @@ async def play(ctx, *, url : str):
     embed.add_field(name="Views:", value=f"{views}", inline=True)
     embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
     embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+    embed.add_field(name="Length:", value=f"{hours}:{mins}:{seconds}", inline=True)
     embed.set_footer(text="Comet Alert")
-    await ctx.reply(embed=embed)
+    await ctx.reply(embed=embed)  
+
     
     guild = ctx.message.guild
-    await voice.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: print('played'))
-    players[guild.id] = voice2
+    player = voice.play(discord.FFmpegPCMAudio("song.mp3"))
+    counter = 0
+
+    players[guild.id] = player
+    while counter <= totalsec:
+      await asyncio.sleep(1)
+      counter += 1
+    await voice.disconnect()
+    
 
   else:
     await ctx.send("You need to be in a voice channel to run this command")
-
-async def videoDetails():
-  global views
-  global title
-  global likes
-
-	if "youtube" in videoUrl:
-		videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
-	else:
-		videoId = videoUrl
-
-	# creating youtube resource object
-	youtube = build('youtube','v3', developerKey=API_KEY)
-
-	# retrieve youtube video results
-	videoRequest=youtube.videos().list(
-		part='snippet,statistics',
-		id=videoId
-  )
-
-	videoResponse = videoRequest.execute()
-
-	title = videoResponse['items'][0]['snippet']['title']
-	likes = videoResponse['items'][0]['statistics']['likeCount']
-	views = videoResponse['items'][0]['statistics']['viewCount']
 
 @client.command(pass_context = True)
 async def leave(ctx, musicCommand=False):
@@ -2235,94 +2256,100 @@ async def userinfo(ctx, *, user: discord.Member=None):
 
 @client.command(aliases=['tts','say'], help='TTS Command')
 async def repeat(ctx, *, text=None):
-    # USE GOOGLETRANS V 3.1.0a0
-    # To install it use pip3 install googletrans==3.1.0a0
-    # Poetry doesn't have 3.1.0a0 if you use Replit
+  # USE GOOGLETRANS V 3.1.0a0
+  # To install it use pip3 install googletrans==3.1.0a0
+  # Poetry doesn't have 3.1.0a0 if you use Replit
 
-    if not text:
-        # We have nothing to speak
-        await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
-        return
-    embed=discord.Embed(title="TTS Options", description="React to this message to choose a language. You have 5 seconds.", color=0x00ffee)
-    embed.set_thumbnail(url="https://img.icons8.com/dusk/452/audio-wave-2.png")
-    embed.add_field(name="Spanish", value="👍", inline=False)
-    embed.add_field(name="Armenian", value="🌕", inline=False)
-    embed.add_field(name="English", value="🔅", inline=False)
-    embed.add_field(name='Korean', value='✨', inline=False)
-    embed.add_field(name='Filipino', value='🌜', inline=False)
-    embed.set_footer(text="Comet Alert")
-    embed1 = await ctx.send(embed=embed)
-    await embed1.add_reaction('👍')
-    await embed1.add_reaction('🌕')
-    await embed1.add_reaction('🔅')
-    await embed1.add_reaction('✨')
-    await embed1.add_reaction('🌜')
+  if not text:
+    # We have nothing to speak
+    await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
+    return
+  embed=discord.Embed(title="TTS Options", description="React to this message to choose a language. You have 5 seconds.",color=0x00ffee)
+  embed.set_thumbnail(url="https://img.icons8.com/dusk/452/audio-wave-2.png")
+  embed.add_field(name="Spanish", value="👍", inline=False)
+  embed.add_field(name="Armenian", value="🌕", inline=False)
+  embed.add_field(name="English", value="🔅", inline=False)
+  embed.add_field(name='Korean', value='✨', inline=False)
+  embed.add_field(name='Filipino', value='🌜', inline=False)
+  embed.set_footer(text="Comet Alert")
+  embed1 = await ctx.send(embed=embed)
+  await embed1.add_reaction('👍')
+  await embed1.add_reaction('🌕')
+  await embed1.add_reaction('🔅')
+  await embed1.add_reaction('✨')
+  await embed1.add_reaction('🌜')
 
-    def check(reaction, user):
-      return user == ctx.author and (str(reaction.emoji) == '👍' or str(reaction.emoji) == '🔅' or str(reaction.emoji) == '🌕' or str(reaction.emoji) == '✨' or str(reaction.emoji) == '🌜')
+  def check(reaction, user):
+    return user == ctx.author and (str(reaction.emoji) == '👍' or str(reaction.emoji) == '🔅' or str(reaction.emoji) == '🌕' or str(reaction.emoji) == '✨' or str(reaction.emoji) == '🌜')
 
-    try:
-      reaction, user = await client.wait_for('reaction_add', timeout=3.5, check=check)
+  try:
+    reaction, user = await client.wait_for('reaction_add',timeout=3.5, check=check)
 
-      if str(reaction.emoji) == '👍':
-        translator = Translator()
-        result = translator.translate(text, dest='es')
-        print(result.text)
-        language = 'es'
-      elif str(reaction.emoji) == '🌕':
-        translator = Translator()
-        result = translator.translate(text, dest='hy')
-        language = 'hy'
-      elif str(reaction.emoji) == '🔅':
-        translator = Translator()
-        result = translator.translate(text, dest='en')
-        language = 'en'
-      elif str(reaction.emoji) == '✨':
-        translator = Translator()
-        result = translator.translate(text, dest='ko')
-        language = 'ko'
-      elif str(reaction.emoji) == '🌜':
-        translator = Translator()
-        result = translator.translate(text, dest='tl')
-        language = 'tl'
-      else:
-        await ctx.send('Defaulted to English')
-        translator = Translator()
-        language = 'en'
-      
-    except asyncio.TimeoutError:
-      await ctx.send('Defaulted to English')
+    if str(reaction.emoji) == '👍':
+      translator = Translator()
+      result = translator.translate(text, dest='es')
+      print(result.text)
+      language = 'es'
+    elif str(reaction.emoji) == '🌕':
+      translator = Translator()
+      result = translator.translate(text, dest='hy')
+      language = 'hy'
+    elif str(reaction.emoji) == '🔅':
+      translator = Translator()
+      result = translator.translate(text, dest='en')
       language = 'en'
-    
-    voice2 = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    if voice2 == None:
-      channel = ctx.message.author.voice.channel
-      voice = await channel.connect()
+    elif str(reaction.emoji) == '✨':
+      translator = Translator()
+      result = translator.translate(text, dest='ko')
+      language = 'ko'
+    elif str(reaction.emoji) == '🌜':
+      translator = Translator()
+      result = translator.translate(text, dest='tl')
+      language = 'tl'
     else:
-      print('hello')
+      await ctx.send('Defaulted to English')
+      translator = Translator()
+      language = 'en'
+      
+  except asyncio.TimeoutError:
+    await ctx.send('Defaulted to English')
+    language = 'en'
+    
+  voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
+  if voiceChannel == None:
+    channel = ctx.message.author.voice.channel
+    voice = await channel.connect()
+  else:
+    print('hello')
 
     # Lets prepare our text, and then save the audio file
-    tts = gTTS(text=result.text, lang=language)
-    tts.save("text.mp3")
-    embed2=discord.Embed(title="TTS Notification", description="Successfully set up.", color=0x3ce7e4)
-    embed2.set_thumbnail(url="https://img.icons8.com/dusk/452/audio-wave-2.png")
-    embed2.add_field(name="Text", value=f"{result.text}", inline=True)
-    embed2.add_field(name="Language", value=f"{language}", inline=True)
-    embed2.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed2, delete_after=30)
+  tts = gTTS(text=result.text, lang=language)
+  tts.save("text.mp3")
+  with audioread.audio_open('text.mp3') as f:
+    totalsec = f.duration
+    hours, mins, seconds = howLong(int(totalsec))
     
-    try:
-        # Lets play that mp3 file in the voice channel
-        audio_source = discord.FFmpegPCMAudio('text.mp3')
-        player = voice.play(audio_source)
-        player.play()
+  embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x3ce7e4)
+  embed2.set_thumbnail(url="https://img.icons8.com/dusk/452/audio-wave-2.png")
+  embed2.add_field(name="Text", value=f"{result.text}", inline=True)
+  embed2.add_field(name="Language", value=f"{language}",inline=True)
+  embed2.add_field(name="Duration", value=f"{hours}:{mins}:{seconds}", inline=True)
+  embed2.set_footer(text="Comet Alert")
+  await ctx.send(embed=embed2, delete_after=30)
+    
+  try:
+    guild = ctx.message.guild
+    player = voice.play(discord.FFmpegPCMAudio("text.mp3"))
+    counter = 0
 
-    except TypeError as e:
-        await ctx.send(f"TypeError exception:\n`{e}`")
+    players[guild.id] = player
+    while counter <= totalsec:
+      await asyncio.sleep(1)
+      counter += 1
+    await voice.disconnect()
 
-@repeat.before_invoke
-async def before(message):
-  await message.invoke(client.get_command('leave'), musicCommand=True)
+  except TypeError as e:
+    await ctx.send(f"TypeError exception:\n`{e}`")
 
 @client.command(help="Play with #rps")
 async def rps(ctx):

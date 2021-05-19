@@ -23,6 +23,8 @@ googletrans = "^3.0.0"
 lxml = "^4.6.3"
 bs4 = "^0.0.1"
 google-api-python-client = "^2.4.0"
+mutagen = "^1.45.1"
+audioread = "^2.1.9"
 
 [tool.poetry.dev-dependencies]
 
