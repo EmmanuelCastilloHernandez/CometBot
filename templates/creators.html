@@ -17,6 +17,36 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+#niceHeader{
+  font-family: verdana;
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-transform: capitalize;
+  font-variant: small-caps;
+  font-size: 65px;
+  letter-spacing: -3px;
+  word-spacing: 6px;
+  color: rgba(0, 247, 255, 0.65);
+  background-color: rgb(84, 84, 0, 0);
+  text-shadow: rgba(251, 138, 255, 0.56) 7px 0px 3px;
+}
+
+#niceSubHeader{
+  font-family: verdana;
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-transform: capitalize;
+  font-variant: small-caps;
+  font-size: 25px;
+  letter-spacing: -3px;
+  word-spacing: 6px;
+  color: rgba(0, 247, 255, 0.65);
+  background-color: rgb(84, 84, 0, 0);
+  text-shadow: rgba(251, 138, 255, 0.56) 7px 0px 3px;
+}
+
 @keyframes tracking-in-contract {
   0% {
     letter-spacing: 1em;
@@ -71,19 +101,18 @@ body {
 }
 
 .homeButton{
-  position: absolute;
+  position: fixed;
   bottom: 8px;
   right: 16px;
   width: 48px;
   height: 50px;
-  background-color: rgba(34, 9, 189)
+  background-color: rgba(34, 9, 189,0.5)
 }
 
 /* Darker background on mouse-over */
 .homeButton:hover {
   animation-name: vibrate-1;
   animation-duration: 0.4s;
-  background-color: rgba(34, 9, 189)
 }
 
 /* Side navigation links */
@@ -135,10 +164,13 @@ body {
   <a href="https://cometbot.emmanuelch.repl.co/features">Features</a>
   <a href="https://cometbot.emmanuelch.repl.co/versions">Versions</a>
   <a href="https://cometbot.emmanuelch.repl.co/creators">Creators ⊛</a>
+  <a href="https://cometbot.emmanuelch.repl.co/invite">Invite</a>
 </div>
 <div style="background-image: {{ user_image }};" class="content">
-  <h1 style="font-family:verdana" title="1.0.0 Luna">Creators</h1>
-  <p style="font-family:verdana">The Bot was created by:<br>Emmanuel Castillo (EmmanuelCastilloHernandez)<br><br>Contributed to by:<br>Garen Gevorgyan (Warlex#7860)<br>Avery Streb (CobaltTS#1441)<br>Marlon Streb<br>Charleze Gregorio (charboo#0017)</p>
+  <h1 style="font-family:verdana" title="1.0.0 Luna" id="niceHeader">Creators</h1>
+  <p style="font-family:verdana">Emmanuel Castillo (EmmanuelCastilloHernandez)<br></p>
+  <h2 style="font-family:verdana" title="1.0.0 Luna" id="niceSubHeader">Contributed to by:</h2>
+  <p2 style="font-family:verdana">Garen Gevorgyan (Warlex#7860)<br>Avery Streb (CobaltTS#1441)<br>Marlon Streb<br>Charleze Gregorio (charboo#0017)</p>
   <a class="github-button" href="https://github.com/EmmanuelCastilloHernandez/CometBot/subscription" data-color-scheme="no-preference: dark_dimmed; light: dark_dimmed; dark: dark_dimmed;" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch EmmanuelCastilloHernandez/CometBot on GitHub">Watch</a>
 </div>
 <a href="https://cometbot.emmanuelch.repl.co/" class="homeButton"><i class="fa fa-home" style="font-size:50px;color:white;"></i></a>

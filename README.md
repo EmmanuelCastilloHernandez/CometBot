@@ -2,7 +2,7 @@
 ## Open Source Discord.py bot to goof with
 Created by Emmanuel Castillo and in collaboration with Garen Gevorgyan. Current version is 1.0.0 `Luna`
 
-To see if the bot is up, check: https://cometbot.emmanuelch.repl.co/creators
+To see if the bot is up, check: https://cometbot.emmanuelch.repl.co
 
 # What It Does
 > It's a python bot ofc
@@ -12,6 +12,8 @@ To see if the bot is up, check: https://cometbot.emmanuelch.repl.co/creators
 The Comet bot provides basic Discord Bot functionality, like a warning system and other commands to goof around with. This is all done using the __***Discord.py***__ library.
 
 It's modular and runs 24/7 thanks to __***Flask***__ and __***Uptime Robot***__
+
+The website is coded in HTML and CSS working together. The animations are made possible because of [animistia](https://animista.net/play).
 
 # Features
 > Comet gives other bots like Sniped! a run for its money
@@ -23,7 +25,6 @@ As is, the bot is packed with features, such as:
 * Revive functionality
 * Blacklist
 * Economy Game
-* Adaptability to the warning system of Mods
 
 ### Super Snipe
 Typical snipe bots only snipe one message at a time and when another message gets deleted, so does that message. This bot solves that issue because it can capture up to three deleted messages before discarding them in favor of new ones.
@@ -42,15 +43,13 @@ Slurs are a rampant problem. They may generate problems and a image of a member 
 ### Economy Game
 Comet is equipped with an economy game, where you can gain, rob, and send Chem Coins (⌬), which is the currency of the bot. You can use `#shop` to see what is available and to buy something you run `#bal <amount> <itemName>`. To begin playing, run `#bal` and the bot will make an account for you and to gain money you do `#beg`. 
 
-### Adaptability to Warning Systems
-Warning systems will get a boost with this bot because it counts how many times a member has broken the rules. If such member gets a warning after their "Last Chance", Comet will warn the mod team that the member has enough warning to get kicked out of their server. The number to activate this can be tweaked inside the warn function code. To warn a member, run `#warn <member> <reason>` and to see how much warnings they have you do `#infractions <member>` (`#infractions` can be ran by any person).
 
 # Commands
 To run a ~~cum~~command, you have to use the `#` prefix. Simple.
 
 > #WAP
 
-###### Chxrleze
+###### Charleze (charboo#0017)
 Here is a list of some bot commands as of 1.0.0 __**`Luna`**__:
 * #char
 * #wap
@@ -58,7 +57,6 @@ Here is a list of some bot commands as of 1.0.0 __**`Luna`**__:
 * #rps
 * #hangman
 * #tictactoe
-* #expose
 * #warn
 * #dead chat
 * #dead server

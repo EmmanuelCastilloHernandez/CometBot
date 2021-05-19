@@ -18,8 +18,12 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 from discord.utils import get
+from discord.utils import find
+from discord import FFmpegPCMAudio
 from dontDie import dontDieOnMe
 from gtts import gTTS
+import lxml
+from lxml import etree
 import math
 from googletrans import Translator
 # import matplotlib.pyplot as plt
@@ -30,41 +34,45 @@ from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
 import random
 from random import randint
-from replit import db
 import os
 import youtube_dl
 import ffmpeg
-import re
 import urllib
 import randfacts
 import requests, json
 import string
-from discord.ext.commands import Bot
 import time
-
 from zalgo_text import zalgo
+import urllib.request
+import re
+from bs4 import BeautifulSoup
+from googleapiclient.discovery import build
 
 # This step is only needed if you use poetry in Replit
 os.system('pip3 uninstall -y googletrans')
 os.system('pip3 install googletrans==3.1.0a0')
 
 # Snipe variables
-regularSnipeAuthor = None
-regularSnipeMessage = None
-snipeMessage = None
-snipeMessageAuthor = None
-snipeMessage2 = None
-snipeMessageAuthor2 = None
-snipeMessage3 = None
-snipeMessageAuthor3 = None
+regularSnipeAuthor = {}
+regularSnipeMessage = {}
+snipeMessage = {}
+snipeMessageAuthor = {}
+snipeMessage2 = {}
+snipeMessageAuthor2 = {}
+snipeMessage3 = {}
+snipeMessageAuthor3 = {}
 snipeCounter = 1
-editMessageAuthor = None
-beforeMessage = None
-afterMessage = None
+editMessageAuthor = {}
+beforeMessage = {}
+afterMessage = {}
 users = None
 reactionMessage = None
+title = None
+views = 0
+likes = 0
 
-# Comet audio player Queue
+# Comet audio player dictionary
+players={}
 
 # NOTE: This is the list used by the blacklist to see if a message contains a slur
 # This is to help keep slurs at bay
@@ -83,19 +91,55 @@ client = commands.Bot(command_prefix="#", intents=intents)
 client.remove_command('help')
 
 @client.event
+async def on_guild_join(guild):
+  with open('serverCount.json','r+') as f:
+    serverCount = json.load(f)
+
+  serverCount["server count"] = len(client.guilds)
+  servers = serverCount["server count"]
+
+  with open('serverCount.json','w') as f:
+    serverCount = json.dump(serverCount, f)
+  
+  general = find(lambda x: x.name == 'general',  guild.text_channels)
+  if general and general.permissions_for(guild.me).send_messages:
+    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and\n you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nThank you for choosing Comet 1.0.0", color=0x00b3ff)
+    embed.set_author(name=f"Hello, {guild.name}")
+    embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
+    embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
+    embed.add_field(name="This bot now runs on:", value=f"{servers} servers", inline=False)
+    embed.set_footer(text="Comet Welcome Message")
+    await general.send(embed=embed)
+
+@client.event
+async def on_guild_remove(guild):
+  with open('serverCount.json','r+') as f:
+    serverCount = json.load(f)
+  
+  serverCount["server count"] = len(client.guilds)
+  
+  with open('serverCount.json','w') as f:
+    serverCount = json.dump(serverCount, f)
+
+@client.event
 async def on_member_join(member):
+  # This code is put in place at the request of one of the patron
+  # servers after a member who solicited two girls for inappropriate
+  # pictures left before he could get banned. This code should
+  # only affect the server that requested it
   channel = client.get_channel(777364217673678858)
   methuDetect = client.get_user(member.id)
 
   if methuDetect == 713566308695932950:
-    embed=discord.Embed(title=f"{member.name} TRIED TO COME BACK", color=0xc53302)
-    embed.set_author(name="UNWANTED USER DETECTED")
-    embed.add_field(name="Hi Methu,", value="If you're seeing this, it's because the bot caught you trying to slip back into a server you were barred from entering. You are banned from entering again because you asked two underaged girls to show you their boobs as part of a $5 bet by dav#0560. You don't go and ask for boob pics from girls you 13-year old pervert. Get a life and learn some basic manners because you are going to be in some serious problems in the future, you sellout.", inline=True)
-    embed.set_footer(text="Unapologetically, the Developer")
+    if member.guild_id == 736621294350499931:
+      embed=discord.Embed(title=f"{member.name} TRIED TO COME BACK", color=0xc53302)
+      embed.set_author(name="UNWANTED USER DETECTED")
+      embed.add_field(name=f"Hi {member.name},", value="If you're seeing this, it's because the bot caught you trying to slip back into a server you were barred from entering. You are banned from entering again because you asked two underaged girls to show you their boobs as part of a $5 bet by dav#0560. You don't go and ask for boob pics from girls you 13-year old pervert. Get a life and learn some basic manners because you are going to be in some serious problems in the future, you sellout.", inline=True)
+      embed.set_footer(text="Unapologetically, the Developer")
 
-    await member.send(embed=embed)
-    await member.ban()
-    await channel.send(embed=embed)
+      await member.send(embed=embed)
+      await member.ban()
+      await channel.send(embed=embed)
 
 @client.event
 async def on_raw_reaction_add(payload):
@@ -190,10 +234,6 @@ async def on_message(message):
     userBal = users[str(message.author.id)][f'{message.guild.name} Level']
     await message.channel.send(f'{message.author.mention} has leveled up to level {userBal+1}! Congrats.')
   
-  # Bot responds with ^ when someone says ^
-  if message.content.startswith('^'):
-    await message.channel.send('^')
-  
   if message.content.startswith('no one cares'):
     agreedReplies=['agreed\nand I\'m a bot :skull:',
       'agreed',
@@ -251,21 +291,21 @@ async def on_message_delete(message):
   global snipeMessageAuthor3
   global snipeCounter
 
-  regularSnipeAuthor = message.author
-  regularSnipeMessage = message.content
+  regularSnipeAuthor[message.channel.id] = message.author
+  regularSnipeMessage[message.channel.id] = message.content
   if snipeCounter == 1:
-    snipeMessage = message.content
-    snipeMessageAuthor = message.author
+    snipeMessage[message.channel.id] = message.content
+    snipeMessageAuthor[message.channel.id] = message.author
     snipeCounter += 1
 
   elif snipeCounter == 2:
-    snipeMessage2 = message.content
-    snipeMessageAuthor2 = message.author
+    snipeMessage2[message.channel.id] = message.content
+    snipeMessageAuthor2[message.channel.id] = message.author
     snipeCounter += 1
 
   elif snipeCounter == 3:
-    snipeMessage3 = message.content
-    snipeMessageAuthor3 = message.author
+    snipeMessage3[message.channel.id] = message.content
+    snipeMessageAuthor3[message.channel.id] = message.author
 
     snipeCounter = 1
     print('New snipe val: '+ str(snipeCounter))
@@ -273,14 +313,14 @@ async def on_message_delete(message):
   await asyncio.sleep(120)
 
   snipeCounter = 1
-  snipeMessage = None
-  snipeMessageAuthor = None
-  snipeMessage2 = None
-  snipeMessageAuthor2 = None
-  snipeMessage3 = None
-  snipeMessageAuthor3 = None
-  regularSnipeAuthor = None
-  regularSnipeMessage = None
+  del regularSnipeAuthor[message.channel.id]
+  del regularSnipeMessage[message.channel.id]
+  del snipeMessageAuthor[message.channel.id]
+  del snipeMessage[message.channel.id]
+  del snipeMessageAuthor2[message.channel.id]
+  del snipeMessage2[message.channel.id]
+  del snipeMessageAuthor3[message.channel.id]
+  del snipeMessage3[message.channel.id]
 
 @client.event
 async def on_ready():
@@ -1261,9 +1301,8 @@ async def devnote(ctx):
     'Dev Note #2: Comet\'s codename is Wolf Rayet. :star:',
     'Dev Note #3: The bot is written in Python. :snake:',
     'Dev Note #4: Comet\'s is open source',
-    'Dev Note #5: Hardest thing to create in the bot was the warning system.',
-    'Dev Note #6: Comet Music Player supports text search',
-    'Dev Note #7: Hangman on an embed was hell.',]
+    'Dev Note #5: Comet Music Player supports text search',
+    'Dev Note #6: Hangman on an embed was hell.']
   await ctx.send(f'{random.choice(randomDevNotes)}')
 
 @client.command(pass_context=True)
@@ -1481,63 +1520,57 @@ async def failed(ctx, *, type):
 
 #Snipe command
 @client.command(help='A super snipe command for snitches')
-@commands.cooldown(1, 10, commands.BucketType.user)
-async def SuperSnipe(ctx, *, messageToRetrieveA=1):
-  messageToRetrieve = int(messageToRetrieveA)
-  
-  if snipeMessage == None:
-    print('hale bopp')
-    if snipeMessage2 == None:
-      print('android')
-      if snipeMessage3 == None:
-        print('egg')
-        await ctx.channel.send(f'No snipable message, {ctx.author.mention}.')
-  else:
+@commands.cooldown(1, 5, commands.BucketType.user)
+async def SuperSnipe(ctx, *, messageToRetrieve=1):
+  messageToRetrieve = int(messageToRetrieve)
+  channel = ctx.channel
+
+  try:
     print('takis')
     if messageToRetrieve == 1:
       print('nuttala')
-      embed = discord.Embed(description=f'{snipeMessage}')
+      embed = discord.Embed(description=f'{snipeMessage[channel.id]}')
       embed.set_footer(
         text=
         f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
         icon_url=ctx.author.avatar_url)
-      embed.set_author(name=f'Sniped from {snipeMessageAuthor}')
+      embed.set_author(name=f'Sniped from {snipeMessageAuthor[channel.id]}')
       await ctx.channel.send(embed=embed)
     if messageToRetrieve == 2:
       print('frosting')
-      embed2 = discord.Embed(description=f'{snipeMessage2}')
+      embed2 = discord.Embed(description=f'{snipeMessage2[channel.id]}')
       embed2.set_footer(
         text=
         f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
         icon_url=ctx.author.avatar_url)
-      embed2.set_author(name=f'Sniped from {snipeMessageAuthor2}')
+      embed2.set_author(name=f'Sniped from {snipeMessageAuthor2[channel.id]}')
       await ctx.channel.send(embed=embed2)
     if messageToRetrieve == 3:
       print('candy')
-      embed3 = discord.Embed(description=f'{snipeMessage3}')
+      embed3 = discord.Embed(description=f'{snipeMessage3[channel.id]}')
       embed3.set_footer(
         text=
         f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
         icon_url=ctx.author.avatar_url)
-      embed3.set_author(name=f'Sniped from {snipeMessageAuthor3}')
+      embed3.set_author(name=f'Sniped from {snipeMessageAuthor3[channel.id]}')
       await ctx.channel.send(embed=embed3)
-    
+  except:
+    await ctx.channel.send(f'No snipable message, {ctx.author.mention}.')
+  
   await ctx.send(f'{ctx.author.mention} is a snitch! Please use the other command like everyone else.')
   await ctx.send(f'Fuck off {ctx.author.mention}')
   
 @client.command(aliases=['retrieve','snitch','Snipe'], pass_context=True)
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def snipe(ctx):
-  if regularSnipeMessage == None:
-    await ctx.send(f'There\'s no retrievable message, {ctx.author.mention}')
-  else:
-    embed = discord.Embed(description=f'{regularSnipeMessage}')
-    embed.set_footer(
-      text=
-      f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
-      icon_url=ctx.author.avatar_url)
-    embed.set_author(name=f'Sniped from {regularSnipeAuthor}')
+  channel = ctx.channel
+  try:
+    embed = discord.Embed(description=f'{regularSnipeMessage[channel.id]}')
+    embed.set_footer(text=f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+    embed.set_author(name=f'Sniped from {regularSnipeAuthor[channel.id]}')
     await ctx.channel.send(embed=embed)
+  except:
+    await ctx.send(f'There\'s no retrievable message, {ctx.author.mention}')
 
 # Hello command
 # First command in Comet
@@ -1726,92 +1759,7 @@ async def sus(ctx):
     'https://tenor.com/view/among-us-mungus-neck-neck-break-neck-snap-gif-18599860']
   await ctx.channel.send(f'{random.choice(susGifs)}')
 
-# This function is responsible for warning people
-@client.command(aliases=['givewarning', 'givewarn'], help='Warn command for mods.', pass_context=True)
-@commands.cooldown(1, 5, commands.BucketType.user)
-@commands.has_permissions(kick_members=True, administrator=True)
-async def warn(ctx, user: discord.Member, *, reason=None):
-  userCheck = str(user)
-  admin = get(ctx.guild.roles, name='Admin')
-  coolerppl = get(ctx.guild.roles, name='cooler people')
-  owner = get(ctx.guild.roles, name='creator, not tyler')
-
-  if "warnings" in db.keys():
-    warnings = db["warnings"]
-    warnings.append(f'{user}')
-    db["warnings"] = warnings
-    print(db["warnings"])
-    await ctx.channel.send(f'I have warned {user} for {reason}')
-
-    resultado = len(list(filter(lambda x: userCheck in x, db["warnings"])))
-
-    for role in user.roles:
-      if (str(role.name) == str(coolerppl)):
-        if resultado >= 12:
-          await ctx.channel.send(f'Your time is **fucking** up, {user}! Mods have been notified. You better hope you dont get kicked.')
-          await ctx.channel.send( f'Hey {admin.mention}, {user} has gotten enough warnings to get themselves kicked/ban. Decide their fate.')
-      elif (str(role.name) != str(coolerppl)):
-        if resultado >= 9:
-          await ctx.channel.send(f'Your time is up, {user}! Mods have been notified. Start saying goodbye to everyone here.')
-          await ctx.channel.send(f'Hey {admin.mention}, {user} has gotten enough warnings to get themselves kicked/ban. Decide their fate.')
-      elif (str(role.name) == str(admin)):
-        if resultado >=4:
-          await ctx.channel.send(f'Hey {owner.metion}, {user} has gotten enough warnings to get their mod taken away')
-
-
-  else:
-    db["warnings"] = [user]
-    db["warnings"] = warnings
-    print(db["warnings"])
-
-    resultado = len(list(filter(lambda x: userCheck in x, db["warnings"])))
-
-    for role in user.roles:
-      if (str(role.name) == str(coolerppl)):
-          if resultado >= 12:
-            await ctx.channel.send(f'Your time is **fucking** up, {user}! Mods have been notified. You better hope you dont get kicked.')
-            await ctx.channel.send(f'Hey {admin.mention}, {user} has gotten enough warnings to get themselves kicked/ban. Decide their fate.')
-          elif (str(role.name) != str(coolerppl)):
-            if resultado >= 9:
-              await ctx.channel.send(f'Your time is up, {user}! Mods have been notified. Start saying goodbye to everyone here.')
-              await ctx.channel.send( f'Hey {admin.mention}, {user} has gotten enough warnings to get themselves kicked/ban. Decide their fate.')
-
-  warnmessage = f'`YOU` have been given a warning in **{ctx.guild.name}** for {reason}.'
-  await user.send(warnmessage)
-  return reason
-
-
-@client.command(aliases=['takewarn', 'unwarn'], help='Remove a warn')
-@commands.cooldown(1, 5, commands.BucketType.user)
-@commands.has_permissions(kick_members=True, administrator=True)
-async def removewarn(ctx, *, user: discord.Member, reason=None):
-  warnings = db["warnings"]
-  userAndReason = f'{user} {reason}'
-  print(userAndReason)
-  print(db["warnings"])
-
-  if reason == None:
-    warnings.remove(f'{user}')
-  else:
-    warnings.remove(userAndReason)
-
-  db["warnings"] = warnings
-  await ctx.channel.send(f'Removed one single warning from {user}. Now begone :|')
-
-@client.command(aliases=['mywarns', 'warningsfor', 'infraction', 'warnsfor', 'warns'], help='Lists all your warnings.')
-@commands.cooldown(1, 5, commands.BucketType.user)
-async def infractions(ctx, *, user: discord.Member):
-  warnings = db["warnings"]
-  print(warnings)
-
-  usertotrack = str(user)
-
-  res = len(list(filter(lambda x: usertotrack in x, db["warnings"])))
-  print(res)
-
-  db["warnings"] = warnings
-  await ctx.channel.send(f'{user} has been warned ' + str(res) + ' times. What a hag. :cold_face:!')
-
+# This game was possible thanks to Garen
 # tic tac toe
 player1 = ""
 player2 = ""
@@ -2059,6 +2007,9 @@ async def edit(ctx):
 # Muisc Player Code
 @client.command(pass_context = True)
 async def play(ctx, *, url : str):
+
+  print(url)
+  httpsResult = url.startswith('https')
   if (ctx.author.voice):
     voice2 = discord.utils.get(client.voice_clients, guild=ctx.guild)
 
@@ -2067,6 +2018,8 @@ async def play(ctx, *, url : str):
       voice = await channel.connect()
     else:
       print('hello')
+    
+    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
     # Downloading the Youtube video
     ydl_opts = {
@@ -2078,38 +2031,73 @@ async def play(ctx, *, url : str):
       }],
     }
     
+    if httpsResult == False:
+      newUrl=url.replace(' ', '+')
+      html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+      videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+      song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+      print(song)
+    else:
+      song = url
+    
+
+    API_KEY=os.getenv("ytKey")
+    
+    print(f'{title}+{views}+{likes}')
+    videoUrl = song
+    videoDetails()
+
     try:
       with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        ydl.download([song])
       for file in os.listdir('./'):
         if file.endswith('.mp3') or file.endswith('.webm') or file.endswith('.m4a'):
           os.rename(file, 'song.mp3')
     except youtube_dl.utils.DownloadError:
-      embed=discord.Embed(title="Comet Music Player", description="Now processing your request. This may take a bit because of it having to be downloaded.", color=0xe29797)
-      embed.set_thumbnail(url='https://images.vexels.com/media/users/3/136461/isolated/preview/d8279505f7fa8e7cd761c755be58f0b7-colorful-music-note-icon-by-vexels.png')
-      embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-      embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-      embed.set_footer(text="Comet Alert")
-      await ctx.reply(embed=embed)
-
-      os.system(f"youtube-dl --extract-audio --audio-format mp3 ytsearch:\'{url}\'")
-      for file in os.listdir('./'):
-        if file.endswith('.mp3') or file.endswith('.webm'):
-          os.rename(file, 'song.mp3')
-    
-    embed=discord.Embed(title="Comet Music Player", description=f"Now Playing: **{url}**.", color=0xe29797)
+      await ctx.reply('Invalid Link')
+      return
+  
+    embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
+    embed.set_author(name="Comet Music Player", icon_url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
     embed.set_thumbnail(url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
+    embed.add_field(name="Likes:", value=f"{likes}", inline=True)
+    embed.add_field(name="Views:", value=f"{views}", inline=True)
     embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
     embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
     embed.set_footer(text="Comet Alert")
     await ctx.reply(embed=embed)
-
-    audio_source = discord.FFmpegPCMAudio('song.mp3')
-    player = voice.play(audio_source)
-    player.start()
+    
+    guild = ctx.message.guild
+    await voice.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: print('played'))
+    players[guild.id] = voice2
 
   else:
     await ctx.send("You need to be in a voice channel to run this command")
+
+async def videoDetails():
+  global views
+  global title
+  global likes
+
+	if "youtube" in videoUrl:
+		videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+	else:
+		videoId = videoUrl
+
+	# creating youtube resource object
+	youtube = build('youtube','v3', developerKey=API_KEY)
+
+	# retrieve youtube video results
+	videoRequest=youtube.videos().list(
+		part='snippet,statistics',
+		id=videoId
+  )
+
+	videoResponse = videoRequest.execute()
+
+	title = videoResponse['items'][0]['snippet']['title']
+	likes = videoResponse['items'][0]['statistics']['likeCount']
+	views = videoResponse['items'][0]['statistics']['viewCount']
 
 @client.command(pass_context = True)
 async def leave(ctx, musicCommand=False):
