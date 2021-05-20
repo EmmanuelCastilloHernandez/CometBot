@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Comet Features</title>
+  <meta http-equiv="refresh" content="10">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="icon" href="{{ user_image }}">
 <style>
@@ -58,6 +59,7 @@
 body {
   margin: 0;
   background-image: url({{ url_for('static', filename='photoToRender/CometWebBackground.jpg') }});
+  background-size: cover;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -207,6 +209,9 @@ body {
   <p2>Comet supports the ability to save three deleted messages at any given moment. This ability is called <span class="niceNumberArt">Super Snipe</span>. <br>To access this feature you do <span class="niceNumberArt">#SuperSnipe (1-3)</span> on a server where comet is available.<br><br>To use regular snipe which only stores the most recently deleted message, you do <span class="niceNumberArt">#snipe</span></p2>
   <div id="niceSubHeader">TTS with Unlimited Character Limit</div>
   <p3>Comet supports text-to-speech in any voice channel thanks to <span class="niceNumberArt">gTTS</span>. <br>Due to this, Comet also has the ability to speak the text inputted in five different languages.<br>These languages are English, Spanish, Tagalog (Filipino), Armenian, and Korean.<br>To use TTS, you run <span class="niceNumberArt">#tts (text to speak)</span> on a server where comet is available. The bot will then prompt the user to choose their language and the bot will shortly speak the text inputted in that language.</p3>
+  <br/>
+  <img src={{ url_for('static', filename='photoToRender/CometTTSPeek.jpg') }} alt="Comet TTS Options <3" width='386' height='297'>
+  <br/>
   <div id="niceSubHeader">Zalgo Generation</div>
   <p3>To put it simply, you can make text that looks like the taste of s̸͙͗p̸̛̘a̴͔͝r̴̻͑k̶͉̏ḽ̴̀ǐ̴̱n̷̬͑g̴̨̋ ̵͚̀w̴͎̿a̷̛̗t̶̞̄ẹ̵̈́r̸͎̅  in Comet.<br>To do this run <span class="niceNumberArt">#zalgo (text to curse)</span> in a Comet-enabled server and Comet will generate the text in a message.</p3>
 </div>

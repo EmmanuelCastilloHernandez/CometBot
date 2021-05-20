@@ -14,6 +14,7 @@
 
 # Importing libraries used in the bot
 import asyncio
+from bs4 import BeautifulSoup
 from datetime import datetime
 import discord
 from discord.ext import commands
@@ -21,32 +22,32 @@ from discord.utils import get
 from discord.utils import find
 from discord import FFmpegPCMAudio
 from dontDie import dontDieOnMe
+from googletrans import Translator
 from gtts import gTTS
 import lxml
 from lxml import etree
 import math
-from googletrans import Translator
 # import matplotlib.pyplot as plt
 # from matplotlib.pyplot import *
 # import numpy as np
 # from numpy import *
+import os
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
 import random
 from random import randint
-import os
-import youtube_dl
+import randfacts
+import string
 import ffmpeg
 import urllib
-import randfacts
-import requests, json
-import string
-from zalgo_text import zalgo
 import urllib.request
+import requests, json
+import youtube_dl
+from zalgo_text import zalgo
 import re
-from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
 import audioread
+from urllib.parse import parse_qs, urlparse
 
 # This step is only needed if you use poetry in Replit
 os.system('pip3 uninstall -y googletrans')
@@ -71,9 +72,12 @@ title = None
 views = 0
 likes = 0
 length = 0
+queuedMusic = None
 
 # Comet audio player dictionary
-players={}
+players = {}
+queues = {}
+queueTitles = {}
 
 def howLong(length):
   hours = length // 3600
@@ -701,7 +705,7 @@ async def phone(ctx):
             msg = await client.wait_for('message', timeout=20, check=check)
 
             await ctx.invoke(client.get_command('repeat'), text=msg.content)
-            await ctx.invoke(client.get_command('leave'), yes=True)
+            await ctx.invoke(client.get_command('leave'))
 
           except asyncio.TimeoutError:
             await ctx.send('The phone\'s battery ran out.')
@@ -1211,10 +1215,6 @@ async def rob(ctx, member:discord.Member, scam=False, phoneRobber=None):
     await updateBank(member, earnings,'Wallet')
     await ctx.reply(f'{random.choice(responses)}', mention_author=False)
 
-@client.command(pass_context=True)
-async def OverthrowMods(ctx):
-  await ctx.send('Overthrow the mods.')
-
 @client.command(aliases=['slot','Slots','Slot'])
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def slots(ctx, amount=0):
@@ -1652,18 +1652,6 @@ async def steven(ctx):
 async def charboo(ctx):
   await ctx.channel.send('https://tenor.com/view/flairwars-charboo-charboo2-gif-18874808')
 
-@client.command(aliases=['shit'])
-@commands.cooldown(1, 10, commands.BucketType.user)
-async def shitServer(ctx, choice):
-  shitServerReplies=['Correct.',
-    f'Shit server, shit mods, and shitty bot, amiright {ctx.author.mention}',
-    'ok.',
-    'yes']
-  if (str(choice) == 'server'):
-    await ctx.send(f'{random.choice(shitServerReplies)}')
-  if (str(choice) == 'reasoning'):
-    await ctx.channel.send('Shit reasoning')
-
 #Spinning GIF code
 @client.command(aliases=['spin'])
 @commands.cooldown(1, 10, commands.BucketType.user)
@@ -1718,7 +1706,7 @@ async def _8ball(ctx, *, question):
 @client.command(aliases=['delete', 'delet'], help='Clear command obviously.')
 @commands.has_permissions(manage_messages=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
-async def clear(ctx, maxamount=15):
+async def purge(ctx, maxamount=30):
   await ctx.channel.purge(limit=maxamount)
   await ctx.channel.send(f'Deleted **{maxamount}** messages.')
 
@@ -1754,20 +1742,6 @@ async def crusader(ctx):
     'https://tenor.com/view/crusader-shocked-shotgun-gif-17982096',
     'https://tenor.com/view/crusader-uno-reverse-crusader-uno-reverse-uno-crusader-uno-reverse-red-eyes-gif-17741833']
   await ctx.send(f'{random.choice(crusaderGifs)}')
-
-@client.command(aliases=['sussy', 'susie', 'amogus', 'amongus'])
-@commands.cooldown(1, 5, commands.BucketType.user)
-async def sus(ctx):
-  susGifs = ['https://media.tenor.co/videos/528c8fefa503d1411656267c91a93f43/mp4',
-    'https://tenor.com/view/you-got-it-snowing-dentist-mexico-minion-gif-19502972',
-    'https://tenor.com/view/among-us-red-sus-suspect-among-gif-19597730',
-    'https://tenor.com/view/among-us-impostor-imposter-digibyte-twerk-gif-19659754',
-    'https://tenor.com/view/grinch-when-the-imposter-is-sus-among-us-grinch-meme-among-us-meme-gif-19566326',
-    'https://tenor.com/view/sus-heart-sus-locket-sus-heart-gif-20749877',
-    'https://tenor.com/view/looking-mad-sus-sus-mad-sus-inam-sus-inam-gif-20656225',
-    'https://tenor.com/view/sus-gif-20628699',
-    'https://tenor.com/view/among-us-mungus-neck-neck-break-neck-snap-gif-18599860']
-  await ctx.channel.send(f'{random.choice(susGifs)}')
 
 # This game was possible thanks to Garen
 # tic tac toe
@@ -1923,6 +1897,8 @@ async def place_error(ctx, error):
     elif isinstance(error, commands.BadArgument):
         await ctx.send("Please make sure to enter an integer.")
 
+# End of the #tictactoe game by garen
+
 @client.command(aliases=['Hangman', 'hangma'], help='hangman duh')
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def hangman(ctx):
@@ -1961,10 +1937,14 @@ async def hangman(ctx):
   
   while not wonHangman:
     print(word)
+
+    def check(message):
+      return message.author == ctx.author and message.channel == ctx.channel
+    
     try:
       await ctx.send(embed=hangmanEmbed)
       await ctx.send(f"Put your guess before 15 seconds pass by.\n``The word is: {' '.join(hiddenWord)}``")
-      grabUserInput = await client.wait_for('message', check=None, timeout=15)
+      grabUserInput = await client.wait_for('message', check=check(), timeout=15)
       guess = grabUserInput.content
 
     except asyncio.TimeoutError:
@@ -2000,8 +1980,19 @@ async def hangman(ctx):
 
 @client.command(aliases=['zalgo','cursedtext'], help='Z̵̤ͫ A̋ͨ͝ L̬ͣ͡ G͊ͤ͜ Ö͕́̀')
 @commands.cooldown(1, 10, commands.BucketType.guild)
-async def makeZalgo(ctx, *, textToZalgofy):
-  finalText = zalgo.zalgo().zalgofy(textToZalgofy)
+async def makeZalgo(ctx, *, textToZalgofy: str):
+  print(textToZalgofy)
+  def chunkstring(string, length):
+    return (string[0+i:length+i] for i in range(0, len(string), length))
+  
+  chunks = list(chunkstring(textToZalgofy, 5))
+  print(chunks)
+  zalgoList = []
+  for c in chunks:
+    zalgofiedChunk = zalgo.zalgo().zalgofy(c)
+    print(zalgofiedChunk)
+    zalgoList.append(zalgofiedChunk)
+  finalText = ''.join(zalgoList)
   await ctx.send(f'`{finalText}`')
 
 @client.command(help='Edit command for snitches')
@@ -2014,7 +2005,27 @@ async def edit(ctx):
   await ctx.send(embed=embed)
   await ctx.send(f'SNITCH {ctx.author.mention}')
 
-# Muisc Player Code
+
+def checkQueue1(id, server):
+  ID = id
+  theGuild = server
+
+  if queues[id] != []:
+    voiceChannel = discord.utils.get(client.voice_clients, guild=server)
+    player = queues[id].pop(0)
+    queues[id] = player
+    voiceChannel.play(player, after=lambda e: checkQueue2(ID, theGuild))
+
+def checkQueue2(id, server):
+  ID = id
+  theGuild = server
+  
+  if queues[id] != []:
+    voiceChannel = discord.utils.get(client.voice_clients, guild=server)
+    player = queues[id].pop(0)
+    queues[id] = player
+    voiceChannel.play(player, after=lambda e: checkQueue1(ID, theGuild))
+
 @client.command(pass_context = True)
 async def play(ctx, *, url : str):
   print(url)
@@ -2026,9 +2037,8 @@ async def play(ctx, *, url : str):
       channel = ctx.message.author.voice.channel
       voice = await channel.connect()
     else:
+      voice = voiceChannel
       print('hello')
-    
-    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
     # Downloading the Youtube video
     ydl_opts = {
@@ -2044,12 +2054,14 @@ async def play(ctx, *, url : str):
       newUrl=url.replace(' ', '+')
       html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
       videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+      thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
       song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
       print(song)
     else:
       song = url
+      songID = parse_qs(urlparse(song).query)['v'][0]
+      thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
     
-
     API_KEY=os.getenv("ytKey")
     def VideoDetails():
       global views
@@ -2091,51 +2103,130 @@ async def play(ctx, *, url : str):
 
     with audioread.audio_open('song.mp3') as f:
       totalsec = f.duration
-      hours, mins, seconds = howLong(int(totalsec))
-      print('Total Duration: {}:{}:{}'.format(hours, mins, seconds))
-    
+      hours, mins, seconds = howLong(int(totalsec))    
     embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
     embed.set_author(name="Comet Music Player", icon_url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
-    embed.set_thumbnail(url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
+    embed.set_thumbnail(url=thumbnail)
     embed.add_field(name="Likes:", value=f"{likes}", inline=True)
     embed.add_field(name="Views:", value=f"{views}", inline=True)
     embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
     embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-    embed.add_field(name="Length:", value=f"{hours}:{mins}:{seconds}", inline=True)
+    embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
     embed.set_footer(text="Comet Alert")
-    await ctx.reply(embed=embed)  
+    await ctx.reply(embed=embed)
 
-    
     guild = ctx.message.guild
-    player = voice.play(discord.FFmpegPCMAudio("song.mp3"))
-    counter = 0
+    player = discord.FFmpegPCMAudio("song.mp3")
+
+    voice.play(player, after=lambda e: checkQueue1(guild.id, guild))
 
     players[guild.id] = player
-    while counter <= totalsec:
-      await asyncio.sleep(1)
-      counter += 1
-    await voice.disconnect()
-    
+  else:
+    await ctx.send("You need to be in a voice channel to run this command")
 
+@client.command(pass_context=True)
+async def queue(ctx, *, url: str):
+  print(url)
+  httpsResult = url.startswith('https')
+  if (ctx.author.voice):
+    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
+
+    # Downloading the Youtube video
+    ydl_opts = {
+      'format': 'best audio',
+      'postprocesssors':[{
+        'key': 'FFmpegExtractAudio',
+        'prefferedcodec': 'mp3',
+        'prefferedquality':'192',
+      }],
+    }
+    
+    if httpsResult == False:
+      newUrl=url.replace(' ', '+')
+      html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+      videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+      thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
+      song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+      print(song)
+    else:
+      song = url
+      songID = parse_qs(urlparse(song).query)['v'][0]
+      thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
+    
+    API_KEY=os.getenv("ytKey")
+    def VideoDetails():
+      global views
+      global title
+      global likes
+
+      if "youtube" in videoUrl:
+        videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+      else:
+	      videoId = videoUrl
+
+      youtube = build('youtube','v3', developerKey=API_KEY)
+
+      videoRequest=youtube.videos().list(
+	      part='snippet,statistics',
+	      id=videoId
+      )
+
+      videoResponse = videoRequest.execute()
+
+      title = videoResponse['items'][0]['snippet']['title']
+      likes = videoResponse['items'][0]['statistics']['likeCount']
+      views = videoResponse['items'][0]['statistics']['viewCount']
+      return (likes, title, views)
+    
+    print(f'{title}+{views}+{likes}')
+    videoUrl = song
+    VideoDetails()
+
+    try:
+      with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([song])
+      for file in os.listdir('./'):
+        if file.endswith('.mp3') or file.endswith('.webm') or file.endswith('.m4a'):
+          os.rename(file, 'queue.mp3')
+    except youtube_dl.utils.DownloadError:
+      await ctx.reply('Invalid Link')
+      return
+
+    with audioread.audio_open('queue.mp3') as f:
+      totalsec = f.duration
+      hours, mins, seconds = howLong(int(totalsec))    
+    embed=discord.Embed(title=f"Queued: {title}", url=f"{song}", description="===================================", color=0xf23136)
+    embed.set_author(name="Comet Music Player", icon_url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
+    embed.set_thumbnail(url=thumbnail)
+    embed.add_field(name="Likes:", value=f"{likes}", inline=True)
+    embed.add_field(name="Views:", value=f"{views}", inline=True)
+    embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+    embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+    embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+    embed.set_footer(text="Comet Alert")
+    await ctx.reply(embed=embed)  
+    
+    guild = ctx.guild
+    player = discord.FFmpegPCMAudio("queue.mp3")
+
+    if guild.id in queues:
+      queues[guild.id].append(player)
+      print(queues)
+    else:
+      queues[guild.id] = [player]
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
 @client.command(pass_context = True)
-async def leave(ctx, musicCommand=False):
+async def leave(ctx):
   if (ctx.voice_client):
-    print(musicCommand)
+    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
     await ctx.guild.voice_client.disconnect()
-    embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.message.author.voice.channel}.", color=0xe29797)
+    embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.voice_client}.", color=0xe29797)
     embed.set_author(name="Comet VC")
-    if musicCommand == True:
-      print('Dialogue Skipped')
-    else:
-      await ctx.reply(embed=embed)
+    await ctx.reply(embed=embed)
   else:
-    if musicCommand == True:
-      print('Dialogue Skipped')
-    else:
-      await ctx.send("Im not in a voice channel.")
+    await ctx.send("Im not in a voice channel.")
 
 @client.command(pass_context = True, aliases=['stop'])
 async def pause(ctx):
@@ -2440,7 +2531,6 @@ async def rps(ctx):
             embed.set_footer(text="Comet Game")
             await ctx.send(embed=embed)
 
-
 # All the error handles
 @questions.error
 async def topic_error(ctx, error):
@@ -2584,6 +2674,16 @@ async def removeWordError(ctx, error):
     embed.set_author(name="STOP", icon_url="https://images.vexels.com/media/users/3/193117/isolated/preview/391dc07c463639a67dcb5d471d068bff-stop-covid-badge-by-vexels.png")
     embed.set_thumbnail(url="https://images.vexels.com/media/users/3/136933/isolated/preview/12e4ab9fce4498ed36b9f1d162678300-stop-button-icon-by-vexels.png")
     embed.add_field(name="People who have permissions to run it:", value="Mods", inline=False)
+    embed.set_footer(text="Comet Alert")
+    await ctx.send(embed=embed, delete_after=10)
+  else:
+    raise error
+
+@client.event
+async def on_command_error(ctx, error):
+  if isinstance(error, discord.ext.commands.errors.CommandNotFound):
+    msg = 'I am sorry. That command doesnt exist. Try typing it differently or just don\'t type it.'
+    embed=discord.Embed(title="Command Doesn't Exist", description=msg, color=0xff0000)
     embed.set_footer(text="Comet Alert")
     await ctx.send(embed=embed, delete_after=10)
   else:
