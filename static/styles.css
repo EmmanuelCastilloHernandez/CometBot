@@ -62,7 +62,7 @@
 
 body {
   margin: 0;
-  background-image: url("photoToRender/CometWebBackground.jpg");
+  background-image: url("photoToRender/WebBackground.jpg");
   background-size: cover;
   font-family: Arial, Helvetica, sans-serif;
 }

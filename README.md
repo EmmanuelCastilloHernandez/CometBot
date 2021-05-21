@@ -1,5 +1,7 @@
 # Comet
 ## Open Source Discord.py bot to goof with
+![Comet Logo](static/photoToRender/CometProfile.jpg)
+
 Created by Emmanuel Castillo and in collaboration with Garen Gevorgyan. Current version is 1.0.0 `Luna`
 
 To see if the bot is up, check: https://cometbot.emmanuelch.repl.co
