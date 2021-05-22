@@ -173,36 +173,6 @@ async def on_member_join(member):
       await channel.send(embed=embed)
 
 @client.event
-async def on_raw_reaction_add(payload):
-  upEmoji = client.get_emoji(800206782042734612)
-  downEmoji = client.get_emoji(800206712606949416)
-  print(payload.emoji)
-  if payload.emoji.name == "💀":
-    channel = client.get_channel(payload.channel_id)
-    message = await channel.fetch_message(payload.message_id)
-    reaction = get(message.reactions, emoji=payload.emoji.name)
-    if reaction and reaction.count > 5:
-      await message.add_reaction('💀')
-  elif payload.emoji == upEmoji:
-    channel = client.get_channel(payload.channel_id)
-    message = await channel.fetch_message(payload.message_id)
-    reaction = get(message.reactions)
-    print(reaction)
-    print(reaction.count)
-    if reaction and reaction.count > 3:
-      await message.add_reaction('<:up:800206782042734612>')
-  elif payload.emoji == downEmoji:
-    channel = client.get_channel(payload.channel_id)
-    message = await channel.fetch_message(payload.message_id)
-    reaction = get(message.reactions)
-    print(reaction)
-    print(reaction.count)
-    if reaction and reaction.count > 3:
-      await message.add_reaction('<:down:800206712606949416>')
-    if reaction and reaction.count > 5:
-      await message.add_reaction('<:deletethis:839716370212192258>')
-
-@client.event
 async def on_message_edit(before, after):
   global editMessageAuthor
   global beforeMessage
@@ -478,6 +448,55 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Phone','price':500,'description':'The Castillo Phone 2XS Pro MAX. Use #phone to be able to scam people and do other things.'},
   {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #Padlock to use it.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
+
+@client.command()
+async def ascii(ctx, *, member: discord.Member=None):
+  if member == None:
+    member = ctx.author
+  
+  asset = member.avatar_url_as(size=64)
+  data = BytesIO(await asset.read())
+  pfp = Image.open(data)
+  pfp.save('pfp.png')
+
+  image = Image.open('pfp.png')
+  ASCII_CHARS = ["☐", "◲", "◰", "◳", "▽", "◁", "▨", "▧", "▣", "▩", "▤"]
+
+  # resize image according to a new width
+  def resize_image(image, new_width=40):
+    width, height = image.size
+    ratio = height/width
+    new_height = int(new_width * ratio)
+    resized_image = image.resize((new_width, new_height))
+    return(resized_image)
+
+  # convert each pixel to grayscale
+  def grayify(image):
+    grayscale_image = image.convert("L")
+    return(grayscale_image)
+    
+  # convert pixels to a string of ascii characters
+  def pixels_to_ascii(image):
+    pixels = image.getdata()
+    characters = "".join([ASCII_CHARS[pixel//25] for pixel in pixels])
+    return(characters)    
+
+  try:
+    image = Image.open("pfp.png")
+  except:
+    await ctx.send('RE-CREATE THE pfp.png FILE ASAP WHEREVER YOU\'RE HOSTING THE BOT')
+    return
+  
+  # convert image to ascii    
+  new_image_data = pixels_to_ascii(grayify(resize_image(image)))
+    
+  # format
+  pixel_count = len(new_image_data)  
+  ascii_image = "\n".join([new_image_data[index:(index+40)] for index in range(0, pixel_count, 40)])
+    
+  embed=discord.Embed(description=f"{ascii_image}")
+  embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {member.name}'ᔕ ᑭᖴᑭ")
+  await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
 async def wanted(ctx, member:discord.Member=None):
@@ -2013,22 +2032,28 @@ async def edit(ctx):
 def checkQueue1(id, server):
   ID = id
   theGuild = server
+  FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
     player = queues[id].pop(0)
     queues[id] = player
-    voiceChannel.play(player, after=lambda e: checkQueue2(ID, theGuild))
+    video, source = search(player)
+
+    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
 
 def checkQueue2(id, server):
   ID = id
   theGuild = server
+  FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
   
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
     player = queues[id].pop(0)
     queues[id] = player
-    voiceChannel.play(player, after=lambda e: checkQueue1(ID, theGuild))
+    video, source = search(player)
+    
+    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue1(ID, theGuild))
 
 @client.command(pass_context = True)
 async def play(ctx, *, url : str):
@@ -2044,16 +2069,6 @@ async def play(ctx, *, url : str):
     else:
       voice = voiceChannel
       print('hello')
-
-    # Downloading the Youtube video
-    ydl_opts = {
-      'format': 'best audio',
-      'postprocesssors':[{
-        'key': 'FFmpegExtractAudio',
-        'prefferedcodec': 'mp3',
-        'prefferedquality':'192',
-      }],
-    }
     
     if httpsResult == False:
       newUrl=url.replace(' ', '+')
@@ -2113,12 +2128,13 @@ async def play(ctx, *, url : str):
     embed.set_footer(text="Comet Alert")
     await ctx.reply(embed=embed)
 
-    guild = ctx.message.guild
+    server = ctx.message.guild
     player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-    voice.play(player, after=lambda e: checkQueue1(guild.id, guild))
+    voice.play(player, after=lambda e: checkQueue1(server.id, server))
+    voice.is_playing()
 
-    players[guild.id] = player
+    players[server.id] = source
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
@@ -2128,16 +2144,6 @@ async def queue(ctx, *, url: str):
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
-
-    # Downloading the Youtube video
-    ydl_opts = {
-      'format': 'best audio',
-      'postprocesssors':[{
-        'key': 'FFmpegExtractAudio',
-        'prefferedcodec': 'mp3',
-        'prefferedquality':'192',
-      }],
-    }
     
     if httpsResult == False:
       newUrl=url.replace(' ', '+')
@@ -2181,14 +2187,11 @@ async def queue(ctx, *, url: str):
     VideoDetails()
 
     try:
-      video, source = search(song)
+      video, source, hours, mins, seconds = search(song)
     except:
       await ctx.reply('Invalid Link')
       return
-
-    with audioread.audio_open('queue.mp3') as f:
-      totalsec = f.duration
-      hours, mins, seconds = howLong(int(totalsec))    
+  
     embed=discord.Embed(title=f"Queued: {title}", url=f"{song}", description="===================================", color=0xf23136)
     embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
     embed.set_thumbnail(url=thumbnail)
@@ -2200,14 +2203,13 @@ async def queue(ctx, *, url: str):
     embed.set_footer(text="Comet Alert")
     await ctx.reply(embed=embed)  
     
-    guild = ctx.guild
-    player = discord.FFmpegPCMAudio("queue.mp3")
+    guild = ctx.message.guild
 
     if guild.id in queues:
-      queues[guild.id].append(player)
+      queues[guild.id].append(song)
       print(queues)
     else:
-      queues[guild.id] = [player]
+      queues[guild.id] = [song]
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
