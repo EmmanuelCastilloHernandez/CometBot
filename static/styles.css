@@ -47,12 +47,26 @@
   text-shadow: rgba(251, 138, 255, 0.56) 7px 0px 3px;
 }
 
+.niceButtonArt{
+  font-family: verdana;
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-transform: capitalize;
+  font-variant: small-caps;
+  font-size: 20px;
+  letter-spacing: 0px;
+  word-spacing: 6px;
+  color: rgba(0, 247, 255, 0.65);
+  background-color: rgb(84, 84, 0, 0);
+  text-shadow: rgb(247, 39, 39) 7px 0px 3px;
+}
+
+
 .coolButton {
   border: none;
-  color: white;
   padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
+  color: white;
   display: inline-block;
   font-size: 16px;
   margin: 4px 2px;
@@ -137,7 +151,6 @@ body {
             transform: rotateX(0);
   }
 }
-
 
 .homeButton{
   position: fixed;

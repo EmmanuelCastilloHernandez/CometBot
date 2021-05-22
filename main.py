@@ -48,6 +48,8 @@ import re
 from googleapiclient.discovery import build
 import audioread
 from urllib.parse import parse_qs, urlparse
+from requests import get
+from youtube_dl import YoutubeDL
 
 # This step is only needed if you use poetry in Replit
 os.system('pip3 uninstall -y googletrans')
@@ -87,6 +89,21 @@ def howLong(length):
   seconds = length
   
   return hours, mins, seconds
+
+def search(query):
+  with YoutubeDL({'format': 'bestaudio', 'noplaylist':'True'}) as ydl:
+    try: requests.get(query)
+    except: info = ydl.extract_info(f"ytsearch:{query}", download=False)['entries'][0]
+    else: info = ydl.extract_info(query, download=False)
+  
+  duration = info['duration']
+
+  hours = duration // 3600
+  duration %= 3600
+  mins = duration // 60
+  duration %= 60
+  seconds = duration
+  return (info, info['formats'][0]['url'], hours, mins, seconds)
 
 # NOTE: This is the list used by the blacklist to see if a message contains a slur
 # This is to help keep slurs at bay
@@ -1337,26 +1354,26 @@ async def help(ctx, pg=1):
   embed.set_footer(text="Comet Alert")
 
   if pg == 2:
-    embedCommands = 18
+    embedCommands = 19
   if pg == 3:
-    embedCommands = 36
+    embedCommands = 37
   if pg == 4:
-    embedCommands = 54
+    embedCommands = 55
   if pg == 5:
-    embedCommands = 70
+    embedCommands = 69
 
   for command in client.commands:
     if embedCommands <= 18:
-      embed.add_field(name=f'{command[embedCommands]} | {command.aliases}', value=command.help, inline=True)
+      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
     elif embedCommands <= 36:
-      embed.add_field(name=f'{command[embedCommands]} | {command.aliases}', value=command.help, inline=True)
+      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
     elif embedCommands <= 54:
-      embed.add_field(name=f'{command[embedCommands]} | {command.aliases}', value=command.help, inline=True)
+      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
     else:
-      embed.add_field(name=f'{command[embedCommands]} | {command.aliases}', value=command.help, inline=True)
+      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
       embedCommands += 1
   
   await ctx.send(embed=embed)
@@ -2019,6 +2036,7 @@ async def play(ctx, *, url : str):
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
     if voiceChannel == None:
       channel = ctx.message.author.voice.channel
@@ -2079,20 +2097,13 @@ async def play(ctx, *, url : str):
     VideoDetails()
 
     try:
-      with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([song])
-      for file in os.listdir('./'):
-        if file.endswith('.mp3') or file.endswith('.webm') or file.endswith('.m4a'):
-          os.rename(file, 'song.mp3')
-    except youtube_dl.utils.DownloadError:
+      video, source, hours, mins, seconds = search(song)
+    except:
       await ctx.reply('Invalid Link')
       return
 
-    with audioread.audio_open('song.mp3') as f:
-      totalsec = f.duration
-      hours, mins, seconds = howLong(int(totalsec))    
     embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
-    embed.set_author(name="Comet Music Player", icon_url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
+    embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
     embed.set_thumbnail(url=thumbnail)
     embed.add_field(name="Likes:", value=f"{likes}", inline=True)
     embed.add_field(name="Views:", value=f"{views}", inline=True)
@@ -2103,7 +2114,7 @@ async def play(ctx, *, url : str):
     await ctx.reply(embed=embed)
 
     guild = ctx.message.guild
-    player = discord.FFmpegPCMAudio("song.mp3")
+    player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
     voice.play(player, after=lambda e: checkQueue1(guild.id, guild))
 
@@ -2170,12 +2181,8 @@ async def queue(ctx, *, url: str):
     VideoDetails()
 
     try:
-      with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([song])
-      for file in os.listdir('./'):
-        if file.endswith('.mp3') or file.endswith('.webm') or file.endswith('.m4a'):
-          os.rename(file, 'queue.mp3')
-    except youtube_dl.utils.DownloadError:
+      video, source = search(song)
+    except:
       await ctx.reply('Invalid Link')
       return
 
@@ -2183,7 +2190,7 @@ async def queue(ctx, *, url: str):
       totalsec = f.duration
       hours, mins, seconds = howLong(int(totalsec))    
     embed=discord.Embed(title=f"Queued: {title}", url=f"{song}", description="===================================", color=0xf23136)
-    embed.set_author(name="Comet Music Player", icon_url="https://images.vexels.com/media/users/3/161756/isolated/preview/ea4532cd7cfb79ce0cab3f663f19aef9-heartbeat-with-music-notes-by-vexels.png")
+    embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
     embed.set_thumbnail(url=thumbnail)
     embed.add_field(name="Likes:", value=f"{likes}", inline=True)
     embed.add_field(name="Views:", value=f"{views}", inline=True)
@@ -2210,7 +2217,7 @@ async def leave(ctx):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
     await ctx.guild.voice_client.disconnect()
     embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.voice_client}.", color=0xe29797)
-    embed.set_author(name="Comet VC")
+    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/leaveIcon.png')
     await ctx.reply(embed=embed)
   else:
     await ctx.send("Im not in a voice channel.")
@@ -2220,7 +2227,7 @@ async def pause(ctx):
   voice = discord.utils.get(client.voice_clients,guild=ctx.guild)
   if voice.is_playing():
     embed=discord.Embed(title="Music Paused", color=0x2432ff)
-    embed.set_author(name="Comet Music Player")
+    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/pauseIcon.png')
     await ctx.reply(embed=embed)
     voice.pause()
   else:
@@ -2231,7 +2238,7 @@ async def resume(ctx):
   voice = discord.utils.get(client.voice_clients,guild=ctx.guild)
   if voice.is_paused():
     embed=discord.Embed(title="Music Resumed", color=0xff2600)
-    embed.set_author(name="Comet Music Player")
+    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
     await ctx.reply(embed=embed)
     voice.resume()
   else:
@@ -2249,7 +2256,7 @@ async def skip(ctx):
 @client.command(aliases=['topic','topis','stopic','Topic','stoc'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def questions(ctx):
-  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','What were you really into, other than Annette, when you were a kid?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What benefit do you bring to the group when you hang out with friends? It’s none, isn’t that right, Chris?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','H̵́́o̷̒͘w̴̷̆͗͋̒d̸͌͆ò̶͝ ̶̄̈ẏ̸̃o̸̖͆u̶̾̓ ̶̅͛e̵̍́s̵̓́c̴̎̚a̸͗̑p̴̦͝é̷̉?̸̉̏','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','This ni99a out here tryna cop a fit :laughing:','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Annette, please, this isn\'t a joke, come out here to California. I\'m sorry.','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'Everyone in this server is Naturally Intelligent, Gorgeous, Generous, Exemplary, & Radiant!', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?', 'https://mee6.xyz/leaderboard/736621294350499931','No topic could be generated. Please try again!','Avery stop stalking Annette lmao you don\’t even know her.', 'The G-Man provides a Xen sample. What do you do?', 'Dev note #6: the warning system took a whole week to make, only for it to not be used :neutral_face:', 'Mention the person with the least friends.', 'I\’m not like other girls!']
+  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','What were you really into, other than Annette, when you were a kid?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What benefit do you bring to the group when you hang out with friends? It’s none, isn’t that right, Chris?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','H̵́́o̷̒͘w̴̷̆͗͋̒d̸͌͆ò̶͝ ̶̄̈ẏ̸̃o̸̖͆u̶̾̓ ̶̅͛e̵̍́s̵̓́c̴̎̚a̸͗̑p̴̦͝é̷̉?̸̉̏','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Annette, please, this isn\'t a joke, come out here to California. I\'m sorry.','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'Everyone in this server is Naturally Intelligent, Gorgeous, Generous, Exemplary, & Radiant!', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?', 'https://mee6.xyz/leaderboard/736621294350499931','No topic could be generated. Please try again!','Avery stop stalking Annette lmao you don\’t even know her.', 'The G-Man provides a Xen sample. What do you do?', 'Dev note #6: the warning system took a whole week to make, only for it to not be used :neutral_face:', 'Mention the person with the least friends.', 'I\’m not like other girls!']
   await ctx.channel.send(f'{random.choice(randomquestions)}')
 
 @client.command(aliases=['gareb', 'garen',])
@@ -2343,7 +2350,7 @@ async def tts(ctx, *, text=None):
     await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
     return
   embed=discord.Embed(title="TTS Options", description="React to this message to choose a language. You have 5 seconds.",color=0x00ffee)
-  embed.set_thumbnail(url="https://img.icons8.com/dusk/452/audio-wave-2.png")
+  embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
   embed.add_field(name="Spanish", value="👍", inline=False)
   embed.add_field(name="Armenian", value="🌕", inline=False)
   embed.add_field(name="English", value="🔅", inline=False)
@@ -2387,6 +2394,7 @@ async def tts(ctx, *, text=None):
     else:
       await ctx.send('Defaulted to English')
       translator = Translator()
+      result = translator.translate(text, dest='tl')
       language = 'en'
       
   except asyncio.TimeoutError:
@@ -2408,7 +2416,7 @@ async def tts(ctx, *, text=None):
     hours, mins, seconds = howLong(int(totalsec))
     
   embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x3ce7e4)
-  embed2.set_thumbnail(url="https://img.icons8.com/dusk/452/audio-wave-2.png")
+  embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
   embed2.add_field(name="Text", value=f"{result.text}", inline=True)
   embed2.add_field(name="Language", value=f"{language}",inline=True)
   embed2.add_field(name="Duration", value=f"{hours}:{mins}:{seconds}", inline=True)
