@@ -68,6 +68,7 @@ snipeCounter = 1
 editMessageAuthor = {}
 beforeMessage = {}
 afterMessage = {}
+usersToLevelUp = {}
 users = None
 reactionMessage = None
 title = None
@@ -191,8 +192,23 @@ async def on_message_edit(before, after):
 # This executes when a message is sent
 @client.event
 async def on_message(message):
-
+  await client.process_commands(message)
   # Neo Blacklist Code
+  checkBannedWords = ""
+  with open("slurs.json", "r") as slurs:
+    slurPrepare = json.load(slurs)
+  print(message.guild.id)
+
+  if str(message.guild.id) in slurPrepare:
+    print('hello')
+  else:
+    slurPrepare[message.guild.id] = []
+  
+  checkBannedWords = slurPrepare[str(message.guild.id)]
+    
+  with open('slurs.json','w') as f:
+    json.dump(slurPrepare, f)
+
   content = str(message.content)
   httpsResult = content.startswith('https')
   emojiResult = content.startswith('<a:')
@@ -208,14 +224,18 @@ async def on_message(message):
   for x in content:
     if (message.author.bot):
       return
-    elif x in bannedWords:
+    elif x in checkBannedWords:
       print('Emmanuel Castillo')
       await message.delete()
-  
   # End of Neo Blacklist code
 
+  # Level Code
+  allowPoints = True
   if message.author == client.user:
     return
+  
+  if f'{message.author.id} | {message.guild.id}' in usersToLevelUp:
+    allowPoints = False
   
   serverName = message.guild.name
   with open('levels.json','r') as f:
@@ -227,14 +247,21 @@ async def on_message(message):
   userBal = users[str(message.author.id)][f'{message.guild.name} Level']
 
   levelThreshold = 10*1.5*userBal
-  await updateLevels(message.author, awardLevelPoints, serverName, f'{message.guild.name} XP')
+  if allowPoints != False:
+    await updateLevels(message.author, awardLevelPoints, serverName, f'{message.guild.name} XP')
+
+    usersToLevelUp[f'{message.author.id} | {message.guild.id}'] = message.guild.id
+
+    await asyncio.sleep(60)
+    del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
 
   if levelBal >= levelThreshold:
     await updateLevels(message.author, 1, serverName, f'{message.guild.name} Level')
     await updateLevels(message.author, -1*levelBal, serverName, f'{message.guild.name} XP')
     userBal = users[str(message.author.id)][f'{message.guild.name} Level']
     await message.channel.send(f'{message.author.mention} has leveled up to level {userBal+1}! Congrats.')
-  
+  # End of Level Code
+
   if message.content.startswith('no one cares'):
     agreedReplies=['agreed\nand I\'m a bot :skull:',
       'agreed',
@@ -245,8 +272,6 @@ async def on_message(message):
   
   if message.content.startswith('Wow. There is no message to snipe buddy.'):
     await message.channel.send('ok')
-
-  await client.process_commands(message)
 
 async def openLevelUser(user, server):
   with open('levels.json','r') as f:
@@ -449,6 +474,8 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #Padlock to use it.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
 
+# Code made by KITECO on GitHub
+# This version of their code was adapted for use in Discord
 @client.command()
 async def ascii(ctx, *, member: discord.Member=None):
   if member == None:
@@ -479,23 +506,23 @@ async def ascii(ctx, *, member: discord.Member=None):
   def pixels_to_ascii(image):
     pixels = image.getdata()
     characters = "".join([ASCII_CHARS[pixel//25] for pixel in pixels])
-    return(characters)    
+    return(characters)
 
   try:
     image = Image.open("pfp.png")
   except:
     await ctx.send('RE-CREATE THE pfp.png FILE ASAP WHEREVER YOU\'RE HOSTING THE BOT')
     return
-  
-  # convert image to ascii    
-  new_image_data = pixels_to_ascii(grayify(resize_image(image)))
+  async with ctx.typing():
+    # convert image to ascii    
+    new_image_data = pixels_to_ascii(grayify(resize_image(image)))
     
-  # format
-  pixel_count = len(new_image_data)  
-  ascii_image = "\n".join([new_image_data[index:(index+40)] for index in range(0, pixel_count, 40)])
-    
-  embed=discord.Embed(description=f"{ascii_image}")
-  embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {member.name}'ᔕ ᑭᖴᑭ")
+    # format
+    pixel_count = len(new_image_data)  
+    ascii_image = "\n".join([new_image_data[index:(index+40)] for index in range(0, pixel_count, 40)])
+
+    embed=discord.Embed(description=f"{ascii_image}")
+    embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {member.name}'ᔕ ᑭᖴᑭ")
   await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
@@ -1496,21 +1523,21 @@ async def addWord(ctx, *, wordToAdd):
   else:
     word = word.translate(str.maketrans('', '', string.punctuation))
   
-  with open("slurs.txt", "r+") as file_object:
-    file_object.seek(0)
-    data = file_object.read(100)
-    if len(data) > 0 :
-        file_object.write("\n")
-    file_object.write(f'{word}')
+  with open("slurs.json", "r") as slurs:
+    slurPrepare = json.load(slurs)
+  print(ctx.guild.id)
 
-  with open("slurs.txt", "r") as slurs:
-    bannedWordsPrepare = slurs.readlines()
+  if str(ctx.guild.id) in slurPrepare:
+    print('hello')
+  else:
+    slurPrepare[ctx.guild.id] = []
+  
+  slurPrepare[str(ctx.guild.id)].append(word)
+    
+  with open('slurs.json','w') as f:
+    json.dump(slurPrepare, f)
 
-  bannedWords = []
-  bannedWords=[l.replace("\n", "") for l in bannedWordsPrepare]
-  print(bannedWords)
   await ctx.send(f'Added {wordToAdd} to the blacklist.')
-  return bannedWords
 
 @client.command(aliases=['slurRemove','removeSlur','unslur'], pass_context=True)
 @commands.has_permissions(kick_members=True)
@@ -1523,20 +1550,20 @@ async def removeWord(ctx, *, wordToRemove):
   else:
     word = word.translate(str.maketrans('', '', string.punctuation))
   
-  with open("slurs.txt", "r+") as f:
-    d = f.readlines()
-    f.seek(0)
-    for i in d:
-        if i != str(word):
-            f.write(i)
-    f.truncate()
+  with open("slurs.json", "r") as slurs:
+    slurPrepare = json.load(slurs)
+  print(ctx.guild.id)
 
-  with open("slurs.txt", "r") as slurs:
-    bannedWordsPrepare = slurs.readlines()
-
-  bannedWords=[]  
-  bannedWords=[l.replace("\n", "") for l in bannedWordsPrepare]
-  print(bannedWords)
+  if str(ctx.guild.id) in slurPrepare:
+    print('hello')
+  else:
+    slurPrepare[ctx.guild.id] = []
+  
+  slurPrepare[str(ctx.guild.id)].remove(word)
+    
+  with open('slurs.json','w') as f:
+    json.dump(slurPrepare, f)
+  
   await ctx.send(f'Removed {wordToRemove} from the blacklist.')
   return bannedWords
 
@@ -2069,63 +2096,64 @@ async def play(ctx, *, url : str):
     else:
       voice = voiceChannel
       print('hello')
-    
-    if httpsResult == False:
-      newUrl=url.replace(' ', '+')
-      html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
-      videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-      thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
-      song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
-      print(song)
-    else:
-      song = url
-      songID = parse_qs(urlparse(song).query)['v'][0]
-      thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
-    
-    API_KEY=os.getenv("ytKey")
-    def VideoDetails():
-      global views
-      global title
-      global likes
-
-      if "youtube" in videoUrl:
-        videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+    async with ctx.typing():
+      if httpsResult == False:
+        newUrl=url.replace(' ', '+')
+        html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+        videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+        thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
+        song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+        print(song)
       else:
-	      videoId = videoUrl
-
-      youtube = build('youtube','v3', developerKey=API_KEY)
-
-      videoRequest=youtube.videos().list(
-	      part='snippet,statistics',
-	      id=videoId
-      )
-
-      videoResponse = videoRequest.execute()
-
-      title = videoResponse['items'][0]['snippet']['title']
-      likes = videoResponse['items'][0]['statistics']['likeCount']
-      views = videoResponse['items'][0]['statistics']['viewCount']
-      return (likes, title, views)
+        song = url
+        songID = parse_qs(urlparse(song).query)['v'][0]
+        thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
     
-    print(f'{title}+{views}+{likes}')
-    videoUrl = song
-    VideoDetails()
+      API_KEY=os.getenv("ytKey")
+      def VideoDetails():
+        global views
+        global title
+        global likes
 
-    try:
-      video, source, hours, mins, seconds = search(song)
-    except:
-      await ctx.reply('Invalid Link')
-      return
+        if "youtube" in videoUrl:
+          videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+        else:
+	        videoId = videoUrl
 
-    embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
-    embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
-    embed.set_thumbnail(url=thumbnail)
-    embed.add_field(name="Likes:", value=f"{likes}", inline=True)
-    embed.add_field(name="Views:", value=f"{views}", inline=True)
-    embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-    embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-    embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
-    embed.set_footer(text="Comet Alert")
+        youtube = build('youtube','v3', developerKey=API_KEY)
+
+        videoRequest=youtube.videos().list(
+	        part='snippet,statistics',
+	        id=videoId
+        )
+
+        videoResponse = videoRequest.execute()
+
+        title = videoResponse['items'][0]['snippet']['title']
+        likes = videoResponse['items'][0]['statistics']['likeCount']
+        views = videoResponse['items'][0]['statistics']['viewCount']
+        return (likes, title, views)
+    
+      print(f'{title}+{views}+{likes}')
+      videoUrl = song
+      VideoDetails()
+
+      try:
+        video, source, hours, mins, seconds = search(song)
+      except:
+        await ctx.reply('Invalid Link')
+        return
+
+      embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
+      embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+      embed.set_thumbnail(url=thumbnail)
+      embed.add_field(name="Likes:", value=f"{likes}", inline=True)
+      embed.add_field(name="Views:", value=f"{views}", inline=True)
+      embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+      embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+      embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+      embed.set_footer(text="Comet Alert")
+
     await ctx.reply(embed=embed)
 
     server = ctx.message.guild
@@ -2351,78 +2379,82 @@ async def tts(ctx, *, text=None):
     # We have nothing to speak
     await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
     return
-  embed=discord.Embed(title="TTS Options", description="React to this message to choose a language. You have 5 seconds.",color=0x00ffee)
-  embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
-  embed.add_field(name="Spanish", value="👍", inline=False)
-  embed.add_field(name="Armenian", value="🌕", inline=False)
-  embed.add_field(name="English", value="🔅", inline=False)
-  embed.add_field(name='Korean', value='✨', inline=False)
-  embed.add_field(name='Filipino', value='🌜', inline=False)
-  embed.set_footer(text="Comet Alert")
-  embed1 = await ctx.send(embed=embed)
-  await embed1.add_reaction('👍')
-  await embed1.add_reaction('🌕')
-  await embed1.add_reaction('🔅')
-  await embed1.add_reaction('✨')
-  await embed1.add_reaction('🌜')
+  async with ctx.typing():
+    embed=discord.Embed(title="TTS Options", description="React to this message to choose a language. You have 5 seconds.",color=0x00ffee)
+    embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
+    embed.add_field(name="Spanish", value="👍", inline=False)
+    embed.add_field(name="Armenian", value="🌕", inline=False)
+    embed.add_field(name="English", value="🔅", inline=False)
+    embed.add_field(name='Korean', value='✨', inline=False)
+    embed.add_field(name='Filipino', value='🌜', inline=False)
+    embed.set_footer(text="Comet Alert")
+    embed1 = await ctx.send(embed=embed)
+    await embed1.add_reaction('👍')
+    await embed1.add_reaction('🌕')
+    await embed1.add_reaction('🔅')
+    await embed1.add_reaction('✨')
+    await embed1.add_reaction('🌜')
 
-  def check(reaction, user):
-    return user == ctx.author and (str(reaction.emoji) == '👍' or str(reaction.emoji) == '🔅' or str(reaction.emoji) == '🌕' or str(reaction.emoji) == '✨' or str(reaction.emoji) == '🌜')
+    def check(reaction, user):
+      return user == ctx.author and (str(reaction.emoji) == '👍' or str(reaction.emoji) == '🔅' or str(reaction.emoji) == '🌕' or str(reaction.emoji) == '✨' or str(reaction.emoji) == '🌜')
 
-  try:
-    reaction, user = await client.wait_for('reaction_add',timeout=3.5, check=check)
+    try:
+      reaction, user = await client.wait_for('reaction_add',timeout=3.5, check=check)
 
-    if str(reaction.emoji) == '👍':
-      translator = Translator()
-      result = translator.translate(text, dest='es')
-      print(result.text)
-      language = 'es'
-    elif str(reaction.emoji) == '🌕':
-      translator = Translator()
-      result = translator.translate(text, dest='hy')
-      language = 'hy'
-    elif str(reaction.emoji) == '🔅':
-      translator = Translator()
-      result = translator.translate(text, dest='en')
-      language = 'en'
-    elif str(reaction.emoji) == '✨':
-      translator = Translator()
-      result = translator.translate(text, dest='ko')
-      language = 'ko'
-    elif str(reaction.emoji) == '🌜':
-      translator = Translator()
-      result = translator.translate(text, dest='tl')
-      language = 'tl'
-    else:
+      if str(reaction.emoji) == '👍':
+        translator = Translator()
+        result = translator.translate(text, dest='es')
+        print(result.text)
+        language = 'es'
+      elif str(reaction.emoji) == '🌕':
+        translator = Translator()
+        result = translator.translate(text, dest='hy')
+        language = 'hy'
+      elif str(reaction.emoji) == '🔅':
+        translator = Translator()
+        result = translator.translate(text, dest='en')
+        language = 'en'
+      elif str(reaction.emoji) == '✨':
+        translator = Translator()
+        result = translator.translate(text, dest='ko')
+        language = 'ko'
+      elif str(reaction.emoji) == '🌜':
+        translator = Translator()
+        result = translator.translate(text, dest='tl')
+        language = 'tl'
+      else:
+        await ctx.send('Defaulted to English')
+        translator = Translator()
+        result = translator.translate(text, dest='tl')
+        language = 'en'
+      
+    except asyncio.TimeoutError:
       await ctx.send('Defaulted to English')
       translator = Translator()
       result = translator.translate(text, dest='tl')
       language = 'en'
-      
-  except asyncio.TimeoutError:
-    await ctx.send('Defaulted to English')
-    language = 'en'
     
-  voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
-  if voiceChannel == None:
-    channel = ctx.message.author.voice.channel
-    voice = await channel.connect()
-  else:
-    print('hello')
+    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voiceChannel == None:
+      channel = ctx.message.author.voice.channel
+      voice = await channel.connect()
+    else:
+      print('hello')
 
     # Lets prepare our text, and then save the audio file
-  tts = gTTS(text=result.text, lang=language)
-  tts.save("text.mp3")
-  with audioread.audio_open('text.mp3') as f:
-    totalsec = f.duration
-    hours, mins, seconds = howLong(int(totalsec))
+    tts = gTTS(text=result.text, lang=language)
+    tts.save("text.mp3")
+    with audioread.audio_open('text.mp3') as f:
+      totalsec = f.duration
+      hours, mins, seconds = howLong(int(totalsec))
     
-  embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x3ce7e4)
-  embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
-  embed2.add_field(name="Text", value=f"{result.text}", inline=True)
-  embed2.add_field(name="Language", value=f"{language}",inline=True)
-  embed2.add_field(name="Duration", value=f"{hours}:{mins}:{seconds}", inline=True)
-  embed2.set_footer(text="Comet Alert")
+    embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x3ce7e4)
+    embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
+    embed2.add_field(name="Text", value=f"{result.text}", inline=True)
+    embed2.add_field(name="Language", value=f"{language}",inline=True)
+    embed2.add_field(name="Duration", value=f"{hours}:{mins}:{seconds}", inline=True)
+    embed2.set_footer(text="Comet Alert")
+    
   await ctx.send(embed=embed2, delete_after=30)
     
   try:
