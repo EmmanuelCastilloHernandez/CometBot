@@ -69,6 +69,7 @@ editMessageAuthor = {}
 beforeMessage = {}
 afterMessage = {}
 usersToLevelUp = {}
+useSpammyCharacters = {}
 users = None
 reactionMessage = None
 title = None
@@ -106,14 +107,6 @@ def search(query):
   seconds = duration
   return (info, info['formats'][0]['url'], hours, mins, seconds)
 
-# NOTE: This is the list used by the blacklist to see if a message contains a slur
-# This is to help keep slurs at bay
-# NOTE: Contains GIFs to be blacklisted
-with open("slurs.txt", "r") as slurs:
-  bannedWordsPrepare = slurs.readlines()
-
-bannedWords=[]  
-bannedWords=[l.replace("\n", "") for l in bannedWordsPrepare]
 
 #prefix for the bot
 intents = discord.Intents.default()
@@ -149,7 +142,8 @@ async def on_guild_remove(guild):
     serverCount = json.load(f)
   
   serverCount["server count"] = len(client.guilds)
-  
+  servers = serverCount["server count"]
+
   with open('serverCount.json','w') as f:
     serverCount = json.dump(serverCount, f)
 
@@ -193,6 +187,8 @@ async def on_message_edit(before, after):
 @client.event
 async def on_message(message):
   await client.process_commands(message)
+
+  allowMessage = True
   # Neo Blacklist Code
   checkBannedWords = ""
   with open("slurs.json", "r") as slurs:
@@ -270,6 +266,18 @@ async def on_message(message):
       f'based {message.author.mention}']
     await message.channel.send(f'{random.choice(agreedReplies)}')
   
+  if message.content.startswith('^'):
+    if f'{message.author.id} | {message.guild.id}' in useSpammyCharacters:
+      allowMessage = False
+      return
+
+    if allowMessage == True:
+      await message.channel.send('^')
+      useSpammyCharacters[f'{message.author.id} | {message.guild.id}'] = message.guild.id
+
+      await asyncio.sleep(30)
+      del useSpammyCharacters[f'{message.author.id} | {message.guild.id}']
+
   if message.content.startswith('Wow. There is no message to snipe buddy.'):
     await message.channel.send('ok')
 
@@ -350,7 +358,15 @@ async def on_message_delete(message):
 
 @client.event
 async def on_ready():
-  await client.change_presence(activity = discord.Streaming(name = '♥ Sugar Crash ♥', url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
+  with open('serverCount.json','r+') as f:
+    serverCount = json.load(f)
+
+  serverCount["server count"] = len(client.guilds)
+  servers = serverCount["server count"]
+
+  with open('serverCount.json','w') as f:
+    serverCount = json.dump(serverCount, f)
+  await client.change_presence(activity = discord.Streaming(name = f'☄️ {servers} Server Network☄️', url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
   print('Ready for deployment. \nThank you for using Comet')
 
 @client.command(pass_context=True)
@@ -373,7 +389,7 @@ async def rank(ctx, member: discord.Member=None):
   embed.add_field(name="Level:", value=f"*__{userBal}__*", inline=True)
   embed.add_field(name="XP:", value=f"*__{levelBal}__*", inline=True)
   embed.add_field(name="XP Needed to Level Up:", value=f"*__{levelThreshold - levelBal}__*", inline=True)
-  embed.set_footer(text="Comet Alert")
+  embed.set_footer(text=f"▧ Rank for {member} ▧")
   await ctx.reply(embed=embed, mention_author=False)
 
 @client.command(pass_context=True)
@@ -1578,7 +1594,7 @@ async def failed(ctx, *, type):
       'https://tenor.com/view/ifailed-iko-uwais-kai-jin-wu-assassins-failure-gif-18615922']
     await ctx.send(f'The server be like: {random.choice(pictures)}')
 
-#Snipe command
+#Snipe commands
 @client.command(help='A super snipe command for snitches')
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def SuperSnipe(ctx, *, messageToRetrieve=1):
@@ -1586,51 +1602,43 @@ async def SuperSnipe(ctx, *, messageToRetrieve=1):
   channel = ctx.channel
 
   try:
-    print('takis')
     if messageToRetrieve == 1:
-      print('nuttala')
-      embed = discord.Embed(description=f'{snipeMessage[channel.id]}')
-      embed.set_footer(
-        text=
-        f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
-        icon_url=ctx.author.avatar_url)
-      embed.set_author(name=f'Sniped from {snipeMessageAuthor[channel.id]}')
+      embed = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}')
+      embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝", color=0x2724ff)
+      embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+      embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
       await ctx.channel.send(embed=embed)
     if messageToRetrieve == 2:
-      print('frosting')
-      embed2 = discord.Embed(description=f'{snipeMessage2[channel.id]}')
-      embed2.set_footer(
-        text=
-        f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
-        icon_url=ctx.author.avatar_url)
-      embed2.set_author(name=f'Sniped from {snipeMessageAuthor2[channel.id]}')
-      await ctx.channel.send(embed=embed2)
+      embed = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}', color=0x2581f8)
+      embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝")
+      embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+      embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+      await ctx.channel.send(embed=embed)
     if messageToRetrieve == 3:
-      print('candy')
-      embed3 = discord.Embed(description=f'{snipeMessage3[channel.id]}')
-      embed3.set_footer(
-        text=
-        f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}",
-        icon_url=ctx.author.avatar_url)
-      embed3.set_author(name=f'Sniped from {snipeMessageAuthor3[channel.id]}')
-      await ctx.channel.send(embed=embed3)
+      embed = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}', color=0x25d9f8)
+      embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝")
+      embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+      embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+      await ctx.channel.send(embed=embed)
   except:
-    await ctx.channel.send(f'No snipable message, {ctx.author.mention}.')
-  
-  await ctx.send(f'{ctx.author.mention} is a snitch! Please use the other command like everyone else.')
-  await ctx.send(f'Fuck off {ctx.author.mention}')
+    embed=discord.Embed(title=" ", color=0x0603bf)
+    embed.set_author(name=f"𝙉𝙤 𝙀𝙣𝙩𝙧𝙞𝙚𝙨 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author.name}")
+    await ctx.send(embed=embed)
   
 @client.command(aliases=['retrieve','snitch','Snipe'], pass_context=True)
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def snipe(ctx):
   channel = ctx.channel
   try:
-    embed = discord.Embed(description=f'{regularSnipeMessage[channel.id]}')
-    embed.set_footer(text=f"Messaged sniped by {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
-    embed.set_author(name=f'Sniped from {regularSnipeAuthor[channel.id]}')
+    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id].name}", description=f'{regularSnipeMessage[channel.id]}', color=0xab01e9)
+    embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+    embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+    embed.set_author(name="⚝ ✶   ✵ 𝙎𝙉𝙄𝙋𝙀 ✵  ✶ ⚝")
     await ctx.channel.send(embed=embed)
   except:
-    await ctx.send(f'There\'s no retrievable message, {ctx.author.mention}')
+    embed=discord.Embed(title=" ", color=0x0603bf)
+    embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
+    await ctx.send(embed=embed)
 
 # Hello command
 # First command in Comet
@@ -2064,7 +2072,6 @@ def checkQueue1(id, server):
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
     player = queues[id].pop(0)
-    queues[id] = player
     video, source = search(player)
 
     voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
@@ -2077,10 +2084,9 @@ def checkQueue2(id, server):
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
     player = queues[id].pop(0)
-    queues[id] = player
     video, source = search(player)
-    
-    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue1(ID, theGuild))
+
+    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
 
 @client.command(pass_context = True)
 async def play(ctx, *, url : str):
@@ -2237,7 +2243,8 @@ async def queue(ctx, *, url: str):
       queues[guild.id].append(song)
       print(queues)
     else:
-      queues[guild.id] = [song]
+      queues[guild.id] = []
+      queues[guild.id].append(song)
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
@@ -2286,7 +2293,7 @@ async def skip(ctx):
 @client.command(aliases=['topic','topis','stopic','Topic','stoc'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def questions(ctx):
-  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','H̵́́o̷̒͘w̴̷̆͗͋̒d̸͌͆ò̶͝ ̶̄̈ẏ̸̃o̸̖͆u̶̾̓ ̶̅͛e̵̍́s̵̓́c̴̎̚a̸͗̑p̴̦͝é̷̉?̸̉̏','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Annette, please, this isn\'t a joke, come out here to California. I\'m sorry.','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'Everyone in this server is Naturally Intelligent, Gorgeous, Generous, Exemplary, & Radiant!', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?', 'https://mee6.xyz/leaderboard/736621294350499931','No topic could be generated. Please try again!','Avery stop stalking Annette lmao you don\’t even know her.', 'The G-Man provides a Xen sample. What do you do?', 'Dev note #6: the warning system took a whole week to make, only for it to not be used :neutral_face:', 'Mention the person with the least friends.', 'I\’m not like other girls!']
+  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','H̵́́o̷̒͘w̴̷̆͗͋̒d̸͌͆ò̶͝ ̶̄̈ẏ̸̃o̸̖͆u̶̾̓ ̶̅͛e̵̍́s̵̓́c̴̎̚a̸͗̑p̴̦͝é̷̉?̸̉̏','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!', 'The G-Man provides a Xen sample. What do you do?', 'Dev note #6: the warning system took a whole week to make, only for it to not be used :neutral_face:', 'Mention the person with the least friends.', 'I\’m not like other girls!']
   await ctx.channel.send(f'{random.choice(randomquestions)}')
 
 @client.command(aliases=['gareb', 'garen',])
@@ -2559,6 +2566,127 @@ async def rps(ctx):
             embed.add_field(name="My Choice", value=comp_choice, inline=True)
             embed.set_footer(text="Comet Game")
             await ctx.send(embed=embed)
+
+async def openWarnUser(member, server):
+  with open('warns.json', 'r') as warnings:
+    warns = json.load(warnings)
+  
+  if str(server.id) in warns:
+    if str(member.id) in warns[str(server.id)]:
+      return False
+    else:
+      warns[str(server.id)][str(member.id)] = {}
+      warns[str(server.id)][str(member.id)]["Warning Count"] = 0
+      warns[str(server.id)][str(member.id)]["Reason"] = []
+  else:
+    warns[str(server.id)] = {}
+    warns[str(server.id)][str(member.id)] = {}
+    warns[str(server.id)][str(member.id)]["Warning Count"] = 0
+    warns[str(server.id)][str(member.id)]["Reason"] = []
+
+  with open('warns.json','w') as warnings:
+    json.dump(warns, warnings)
+  return True
+
+@client.command(aliases=['w','Warn'])
+@commands.cooldown(1, 5, commands.BucketType.user)
+@commands.has_permissions(kick_members=True, administrator=True)
+async def warn(ctx, member: discord.Member, *, reason=None):
+  if member == None:
+    member = ctx.author
+  
+  if member.id == ctx.author.id:
+    embed=discord.Embed(title="⛧ 𝙔𝙤𝙪 𝙘𝙖𝙣'𝙩 𝙪𝙨𝙚 𝙞𝙩 𝙤𝙣 𝙮𝙤𝙪𝙧𝙨𝙚𝙡𝙛 ⛧", color=0xff1414)
+    embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+    await ctx.send(embed=embed)
+    return
+  
+  await openWarnUser(member, ctx.guild)
+  with open('warns.json', 'r') as warnings:
+    warns = json.load(warnings)
+  
+  dateToAdd = datetime.today().strftime('%m/%d/%Y')
+  reasonToAdd = f'{reason} | {dateToAdd}'
+  warns[str(ctx.guild.id)][str(member.id)]["Warning Count"] += 1
+  warns[str(ctx.guild.id)][str(member.id)]["Reason"].append(str(reasonToAdd))
+
+  with open('warns.json','w') as warnings:
+    json.dump(warns, warnings)
+  
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description="/ / / / / / / / / / / **__Warned__** / / / / / / / / / / / / / / /", color=0x009dff)
+  embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+  embed.set_thumbnail(url=member.avatar_url)
+  embed.add_field(name="Warned User:", value=member.mention, inline=True)
+  embed.add_field(name="Moderator:", value=ctx.author.mention, inline=True)
+  embed.add_field(name="Reason:", value=reason, inline=False)
+  embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
+  await ctx.reply(embed=embed)
+  await member.send(embed=embed)
+
+def substringInList(listToScan, substring):
+  for i, s in enumerate(listToScan):
+    if substring in s:
+      return i
+  return -1
+
+@client.command(aliases=['un','Unwarn','UnWarn'])
+@commands.cooldown(1, 5, commands.BucketType.user)
+@commands.has_permissions(kick_members=True, administrator=True)
+async def unwarn(ctx, member: discord.Member, *, reason=None):
+  if member == None:
+    member = ctx.author
+  
+  if member.id == ctx.author.id:
+    embed=discord.Embed(title="⛧ 𝙔𝙤𝙪 𝙘𝙖𝙣'𝙩 𝙪𝙨𝙚 𝙞𝙩 𝙤𝙣 𝙮𝙤𝙪𝙧𝙨𝙚𝙡𝙛 ⛧", color=0xff1414)
+    embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+    await ctx.send(embed=embed)
+    return
+  
+  await openWarnUser(member, ctx.guild)
+  with open('warns.json', 'r') as warnings:
+    warns = json.load(warnings)
+  
+  oldestWarning = substringInList(warns[str(ctx.guild.id)][str(member.id)]["Reason"], reason)
+
+  warns[str(ctx.guild.id)][str(member.id)]["Warning Count"] -= 1
+  del warns[str(ctx.guild.id)][str(member.id)]["Reason"][int(oldestWarning)]
+
+  with open('warns.json','w') as warnings:
+    json.dump(warns, warnings)
+  
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description="/ / / / / / / / / / **__Unwarned__** / / / / / / / / / / / / / / /", color=0x009dff)
+  embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+  embed.set_thumbnail(url=member.avatar_url)
+  embed.add_field(name="Unwarned User:", value=member.mention, inline=True)
+  embed.add_field(name="Moderator:", value=ctx.author.mention, inline=True)
+  embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
+  await ctx.reply(embed=embed)
+  await member.send(embed=embed)
+
+@client.command(aliases=['iw','Infractions','warnsFor'])
+@commands.cooldown(1, 5, commands.BucketType.user)
+async def infractions(ctx, member: discord.Member=None, *, reason=None):
+  if member == None:
+    member = ctx.author
+  
+  await openWarnUser(member, ctx.guild)
+  with open('warns.json', 'r') as warnings:
+    warns = json.load(warnings)
+  warnList = '**``'
+  
+  warnCount = warns[str(ctx.guild.id)][str(member.id)]["Warning Count"]
+  warnings = warns[str(ctx.guild.id)][str(member.id)]["Reason"]
+
+  for warn in warnings:
+    warnList += f'{warn} \n'
+  warnList += '``**'
+
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"/ / / / / / / / / / / / **__Infractions__** / / / / / / / / / / /\n𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝘾𝙤𝙪𝙣𝙩: *__{warnCount}__*\n\n▷ ▷ ▷ ▷ ▷ ▷ ▷ __𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙇𝙞𝙨𝙩__ ▷ ▷ ▷ ▷ ▷ ▷ ▷\n{warnList}", color=0x009dff)
+  embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+  embed.set_thumbnail(url=member.avatar_url)
+  embed.add_field(name="User:", value=member.mention, inline=True)
+  embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
+  await ctx.reply(embed=embed)
 
 # All the error handles
 @questions.error
