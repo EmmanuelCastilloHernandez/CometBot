@@ -2063,7 +2063,6 @@ async def edit(ctx):
   await ctx.send(embed=embed)
   await ctx.send(f'SNITCH {ctx.author.mention}')
 
-
 def checkQueue1(id, server):
   ID = id
   theGuild = server
@@ -2071,8 +2070,10 @@ def checkQueue1(id, server):
 
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
-    player = queues[id].pop(0)
-    video, source = search(player)
+    player = queues[id][0]
+    del queues[id][0]
+    del queueTitles[id][0]
+    video, source, hours, mins, seconds = search(player)
 
     voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
 
@@ -2083,12 +2084,23 @@ def checkQueue2(id, server):
   
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
-    player = queues[id].pop(0)
-    video, source = search(player)
+    player = queues[id][0]
+    del queues[id][0]
+    del queueTitles[id][0]
+    video, source, hours, mins, seconds = search(player)
 
     voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
 
-@client.command(pass_context = True)
+@client.command(aliases=['r'])
+async def remove(ctx, entry: int=1):
+  entryToRemove = int(entry - 1)
+  entryRemoved = queueTitles[ctx.guild.id][entryToRemove]
+  del queues[ctx.guild.id][entryToRemove]
+  del queueTitles[ctx.guild.id][entryToRemove]
+
+  await ctx.reply(f'𝙍𝙚𝙢𝙤𝙫𝙚𝙙 ***__{entryRemoved}__*** 𝙛𝙧𝙤𝙢 𝙩𝙝𝙚 𝙦𝙪𝙚𝙪𝙚 :)')
+
+@client.command(aliases=['p','P','Play'])
 async def play(ctx, *, url : str):
   print(url)
   httpsResult = url.startswith('https')
@@ -2172,88 +2184,106 @@ async def play(ctx, *, url : str):
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
-@client.command(pass_context=True)
+@client.command(aliases=['ql','QueueList'])
+async def queueList(ctx):
+  counter = 1
+  queueList ="**```"
+  guild = ctx.guild
+
+  for item in queueTitles[guild.id]:
+    queueList += f"{counter}. {item}\n"
+    counter += 1
+  queueList += "```**"
+
+  embed=discord.Embed(title="⛧ Ｃｕｒｒｅｎｔ Ｑｕｅｕｅ ⛧:", description=f"{queueList}", color=0x8a84e1)
+  embed.set_author(name="⛆ ⚝ Ｃｏｍｅｔ Ｍｕｓｉｃ Ｐｌａｙｅｒ ⚝ ⛆")
+  embed.set_footer(text="☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+  await ctx.send(embed=embed)
+
+@client.command(aliases=['q','Queue'])
 async def queue(ctx, *, url: str):
   print(url)
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
-    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    
-    if httpsResult == False:
-      newUrl=url.replace(' ', '+')
-      html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
-      videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-      thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
-      song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
-      print(song)
-    else:
-      song = url
-      songID = parse_qs(urlparse(song).query)['v'][0]
-      thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
-    
-    API_KEY=os.getenv("ytKey")
-    def VideoDetails():
-      global views
-      global title
-      global likes
-
-      if "youtube" in videoUrl:
-        videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+    async with ctx.typing():
+      if httpsResult == False:
+        newUrl=url.replace(' ', '+')
+        html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+        videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+        thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
+        song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+        print(song)
       else:
-	      videoId = videoUrl
+        song = url
+        songID = parse_qs(urlparse(song).query)['v'][0]
+        thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
 
-      youtube = build('youtube','v3', developerKey=API_KEY)
+      API_KEY=os.getenv("ytKey")
+      def VideoDetails():
+        global views
+        global title
+        global likes
 
-      videoRequest=youtube.videos().list(
-	      part='snippet,statistics',
-	      id=videoId
-      )
+        if "youtube" in videoUrl:
+          videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+        else:
+	        videoId = videoUrl
 
-      videoResponse = videoRequest.execute()
+        youtube = build('youtube','v3', developerKey=API_KEY)
 
-      title = videoResponse['items'][0]['snippet']['title']
-      likes = videoResponse['items'][0]['statistics']['likeCount']
-      views = videoResponse['items'][0]['statistics']['viewCount']
-      return (likes, title, views)
+        videoRequest=youtube.videos().list(
+	        part='snippet,statistics',
+	        id=videoId
+        )
+
+        videoResponse = videoRequest.execute()
+
+        title = videoResponse['items'][0]['snippet']['title']
+        likes = videoResponse['items'][0]['statistics']['likeCount']
+        views = videoResponse['items'][0]['statistics']['viewCount']
+        return (likes, title, views)
     
-    print(f'{title}+{views}+{likes}')
-    videoUrl = song
-    VideoDetails()
+      print(f'{title}+{views}+{likes}')
+      videoUrl = song
+      VideoDetails()
 
-    try:
-      video, source, hours, mins, seconds = search(song)
-    except:
-      await ctx.reply('Invalid Link')
-      return
+      try:
+        video, source, hours, mins, seconds = search(song)
+      except:
+        await ctx.reply('Invalid Link')
+        return
   
-    embed=discord.Embed(title=f"Queued: {title}", url=f"{song}", description="===================================", color=0xf23136)
-    embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
-    embed.set_thumbnail(url=thumbnail)
-    embed.add_field(name="Likes:", value=f"{likes}", inline=True)
-    embed.add_field(name="Views:", value=f"{views}", inline=True)
-    embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-    embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-    embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
-    embed.set_footer(text="Comet Alert")
+      embed=discord.Embed(title=f"Queued: {title}", url=f"{song}", description="===================================", color=0xf23136)
+      embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+      embed.set_thumbnail(url=thumbnail)
+      embed.add_field(name="Likes:", value=f"{likes}", inline=True)
+      embed.add_field(name="Views:", value=f"{views}", inline=True)
+      embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+      embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+      embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+      embed.set_footer(text="Comet Alert")
+
     await ctx.reply(embed=embed)  
     
-    guild = ctx.message.guild
+    guild = ctx.guild
 
     if guild.id in queues:
       queues[guild.id].append(song)
-      print(queues)
+      queueTitles[guild.id].append(title)
     else:
       queues[guild.id] = []
       queues[guild.id].append(song)
+      queueTitles[guild.id] = []
+      queueTitles[guild.id].append(title)
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
-@client.command(pass_context = True)
+@client.command(aliases=['l'])
 async def leave(ctx):
   if (ctx.voice_client):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
     await ctx.guild.voice_client.disconnect()
-    embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.voice_client}.", color=0xe29797)
+    embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.message.author.voice.channel}.", color=0xe29797)
     embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/leaveIcon.png')
     await ctx.reply(embed=embed)
   else:
