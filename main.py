@@ -12,6 +12,17 @@
 # Garen Gevoryan
 # Discord: Warlex#7860
 
+# This step is only needed if you use poetry in Replit
+import os
+os.system('pip install prsaw')
+chatbotAPIKey = os.getenv('chatbotKey')
+
+try:
+  os.system('pip3 uninstall -y googletrans')
+  os.system('pip3 install googletrans==3.1.0a0')
+except:
+  os.system('pip3 install googletrans==3.1.0a0')
+
 # Importing libraries used in the bot
 import asyncio
 from bs4 import BeautifulSoup
@@ -31,7 +42,6 @@ import math
 # from matplotlib.pyplot import *
 # import numpy as np
 # from numpy import *
-import os
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
 import random
@@ -50,10 +60,14 @@ import audioread
 from urllib.parse import parse_qs, urlparse
 from requests import get
 from youtube_dl import YoutubeDL
+from prsaw import RandomStuff
 
-# This step is only needed if you use poetry in Replit
-os.system('pip3 uninstall -y googletrans')
-os.system('pip3 install googletrans==3.1.0a0')
+# Thanks to CodeWithSwastik for his python tutorials
+# his work is the reason why the bot has a decent warn system
+# and a economy system that works. Also thanks to his work this bot has an AI 
+# chatbot. You are a GOD!
+
+chatBot = RandomStuff(api_key= chatbotAPIKey, async_mode = True)
 
 # Snipe variables
 regularSnipeAuthor = {}
@@ -187,6 +201,14 @@ async def on_message_edit(before, after):
 @client.event
 async def on_message(message):
   await client.process_commands(message)
+
+  if message.content.startswith('@'):
+    response = message.content.replace('@','')
+    print('')
+    responseToSend = await chatBot.get_ai_response(response)
+
+    await message.reply(responseToSend)
+    chatBot.close()
 
   allowMessage = True
   # Neo Blacklist Code
