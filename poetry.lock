@@ -677,6 +677,18 @@ watchdog = ["watchdog"]
 
 [[package]]
 category = "main"
+description = "Wikipedia API for Python"
+name = "wikipedia"
+optional = false
+python-versions = "*"
+version = "1.4.0"
+
+[package.dependencies]
+beautifulsoup4 = "*"
+requests = ">=2.0.0,<3.0.0"
+
+[[package]]
+category = "main"
 description = "Tool to get a large collection of words."
 name = "words"
 optional = false
@@ -712,7 +724,7 @@ python-versions = "*"
 version = "0.6"
 
 [metadata]
-content-hash = "e01f4412be57ba41af729d77accda77bcce736bb659a9ee8e66771a684a4674e"
+content-hash = "9347ffae19f97da491284994ab8b482d2c323d468764a7b3cd551cb71cdde673"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -1203,6 +1215,9 @@ urllib3 = [
 werkzeug = [
     {file = "Werkzeug-1.0.1-py2.py3-none-any.whl", hash = "sha256:2de2a5db0baeae7b2d2664949077c2ac63fbd16d98da0ff71837f7d1dea3fd43"},
     {file = "Werkzeug-1.0.1.tar.gz", hash = "sha256:6c80b1e5ad3665290ea39320b91e1be1e0d5f60652b964a3070216de83d2e47c"},
+]
+wikipedia = [
+    {file = "wikipedia-1.4.0.tar.gz", hash = "sha256:db0fad1829fdd441b1852306e9856398204dc0786d2996dd2e0c8bb8e26133b2"},
 ]
 words = [
     {file = "words-0.0.1.tar.gz", hash = "sha256:6c26114adb50256e1ec2d6a09a50fc611200438558f899d72dd51a2694b02467"},
