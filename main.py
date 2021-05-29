@@ -267,18 +267,17 @@ async def on_message(message):
   if f'{message.author.id} | {message.guild.id}' in usersToLevelUp:
     allowPoints = False
   
-  serverName = message.guild.name
+  await openLevelUser(message.author, message.guild)
   with open('levels.json','r') as f:
     users = json.load(f)
-  await openLevelUser(message.author, serverName)
   awardLevelPoints = random.randint(1, 3)
 
-  levelBal = users[str(message.author.id)][f'{message.guild.name} XP']
-  userBal = users[str(message.author.id)][f'{message.guild.name} Level']
+  levelBal = users[str(message.guild.id)][str(message.author.id)]['XP'] 
+  userBal = users[str(message.guild.id)][str(message.author.id)]['Level']
 
   levelThreshold = 10*1.5*userBal
   if allowPoints != False:
-    await updateLevels(message.author, awardLevelPoints, serverName, f'{message.guild.name} XP')
+    users[str(message.guild.id)][str(message.author.id)]['XP'] += awardLevelPoints
 
     usersToLevelUp[f'{message.author.id} | {message.guild.id}'] = message.guild.id
 
@@ -286,10 +285,12 @@ async def on_message(message):
     del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
 
   if levelBal >= levelThreshold:
-    await updateLevels(message.author, 1, serverName, f'{message.guild.name} Level')
-    await updateLevels(message.author, -1*levelBal, serverName, f'{message.guild.name} XP')
-    userBal = users[str(message.author.id)][f'{message.guild.name} Level']
+    users[str(message.guild.id)][str(message.author.id)]['Level'] += 1
+    users[str(message.guild.id)][str(message.author.id)]['XP'] = 0
+    userBal = users[str(message.guild.id)][str(message.author.id)]['Level']
     await message.channel.send(f'{message.author.mention} has leveled up to level {userBal+1}! Congrats.')
+  with open('levels.json','w') as f:
+    json.dump(users, f)
   # End of Level Code
 
   if message.content.startswith('no one cares'):
@@ -307,34 +308,22 @@ async def openLevelUser(user, server):
   with open('levels.json','r') as f:
     users = json.load(f)
   
-  if str(user.id) in users:
-    if f'{server} Level' in users[str(user.id)]: 
+  if str(server.id) in users:
+    if str(user.id) in users[str(server.id)]: 
       return False
     else:
-      users[str(user.id)][f'{server} Level'] = 1
-      users[str(user.id)][f'{server} XP'] = 0
+      users[str(server.id)][str(user.id)] = {}
+      users[str(server.id)][str(user.id)]['Level'] = 1
+      users[str(server.id)][str(user.id)]['XP'] = 0
   else:
     users[str(server.id)] = {}
     users[str(server.id)][str(user.id)] = {}
-    users[str(user.id)] = {}
-    users[str(user.id)]['Level'] = 1
-    users[str(user.id)][' XP'] = 0
+    users[str(server.id)][str(user.id)]['Level'] = 1
+    users[str(server.id)][str(user.id)]['XP'] = 0
   
   with open('levels.json','w') as f:
     json.dump(users, f)
   return True
-
-async def updateLevels(user, change=0, server=None, mode='Wallet'):
-  with open('levels.json','r') as f:
-    users = json.load(f)
-  
-  users[str(user.id)][mode] += change
-
-  with open('levels.json','w') as f:
-    json.dump(users, f)
-  
-  bal = [users[str(user.id)][f'{server} Level'], users[str(user.id)][f'{server} XP']]
-  return bal
 
 #client event that gets the snipe function's variables ready
 @client.event
