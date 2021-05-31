@@ -656,30 +656,37 @@ async def deathnote(ctx, member:discord.Member=None):
 async def leaderboard(ctx, number=3):
   with open('bank.json','r') as f:
     users = json.load(f)
-  leaderboard = {}
   total = []
 
-  for user in users:
-    name = int(user)
-    totalAmount = users[user]['Wallet'] + users[user]['Bank']
-    leaderboard[totalAmount] = name
-    total.append(totalAmount)
-  
-  total = sorted(total, reverse=True)
+  for user in ctx.guild.members:
+    try:
+      name = str(user.id)
+      totalAmount = users[str(user.id)]['Wallet'] + users[str(user.id)]['Bank']
+      thingToAppend = [user.name, totalAmount]
+      total.append(thingToAppend)
+    except:
+      uselessVariable = 1
 
-  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Now Showing {number} Users of The Economy ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x0502c5)
+  total.sort(reverse=True, key=lambda totalThing: totalThing[1])
+
+  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Top {number} Users of {ctx.guild.name} ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x0502c5)
+
   index = 1
-  for amt in leaderboard:
-    id_ = leaderboard[amt]
-    member = client.get_user(id_)
-    name = member.name
-    embed.add_field(name = f'{index}. {name}', value=f'{amt}', inline=False)
-    if index == number:
-      break
-    else:
+  if number > len(total):
+    number = int(len(total))
+  
+  loopCount = 0
+  rankDisplay = '```'
+  for entry in total:
+    if loopCount < number:
+      rankDisplay += f'{index}. {entry[0]}:\nTotal Balance {entry[1]}\n'
       index += 1
+      loopCount += 1
 
-  embed.set_author(name="The ※ U S E R  L I S T ※")
+  rankDisplay += '```'
+  embed.add_field(name = '--------------------------', value=f'{rankDisplay}', inline=False)
+
+  embed.set_author(name="The ※ Rank System ※")
   embed.set_thumbnail(url="https://images.vexels.com/media/users/3/135932/isolated/preview/5873339dddecea4a26d7366462d0eec6-checklist-file-icon-by-vexels.png")
   embed.set_footer(text="Comet Economy Alert")
   await ctx.send(embed=embed)
