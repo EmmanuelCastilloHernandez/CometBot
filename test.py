@@ -1,4 +1,7 @@
 string = '4'
-print(string)
+try:
+  print(int(string)/0)
+except:
+  print(string)
 string = '5'
 print(string)

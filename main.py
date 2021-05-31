@@ -143,7 +143,7 @@ async def on_guild_join(guild):
   
   general = find(lambda x: x.name == 'general',  guild.text_channels)
   if general and general.permissions_for(guild.me).send_messages:
-    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and\n you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nThank you for choosing Comet 1.0.0", color=0x00b3ff)
+    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and\n you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 1.0.0.", color=0x00b3ff)
     embed.set_author(name=f"Hello, {guild.name}")
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
     embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
@@ -203,8 +203,8 @@ async def on_message_edit(before, after):
 async def on_message(message):
   await client.process_commands(message)
 
-  if message.content.startswith(':'):
-    response = message.content.replace(':','')
+  if message.content.startswith(';'):
+    response = message.content.replace(';','')
     print('')
     responseToSend = await chatBot.get_ai_response(response)
 
@@ -230,20 +230,19 @@ async def on_message(message):
   content = str(message.content)
   httpsResult = content.startswith('https')
   emojiResult = content.startswith('<a:')
+
   if emojiResult == True or httpsResult == True:
     print('hello')
   else:
     content = content.translate(str.maketrans('', '', string.punctuation))
-  print(content)
+
   content = content.lower()
   content = content.split()
-  print(content)
-  
+    
   for x in content:
     if (message.author.bot):
       return
     elif x in checkBannedWords:
-      print('Emmanuel Castillo')
       await message.delete()
   # End of Neo Blacklist code
   
@@ -267,29 +266,31 @@ async def on_message(message):
   if f'{message.author.id} | {message.guild.id}' in usersToLevelUp:
     allowPoints = False
   
-  serverName = message.guild.name
+  await openLevelUser(message.author, message.guild)
   with open('levels.json','r') as f:
     users = json.load(f)
-  await openLevelUser(message.author, serverName)
   awardLevelPoints = random.randint(1, 3)
 
-  levelBal = users[str(message.author.id)][f'{message.guild.name} XP']
-  userBal = users[str(message.author.id)][f'{message.guild.name} Level']
+  levelBal = users[str(message.guild.id)][str(message.author.id)]['XP'] 
+  userBal = users[str(message.guild.id)][str(message.author.id)]['Level']
 
-  levelThreshold = 10*1.5*userBal
-  if allowPoints != False:
-    await updateLevels(message.author, awardLevelPoints, serverName, f'{message.guild.name} XP')
+  levelThreshold = 15*userBal
+  if allowPoints == True:
+    await updateLevels(message.author, 1*awardLevelPoints, message.guild, 'XP')
 
     usersToLevelUp[f'{message.author.id} | {message.guild.id}'] = message.guild.id
 
     await asyncio.sleep(60)
     del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
 
-  if levelBal >= levelThreshold:
-    await updateLevels(message.author, 1, serverName, f'{message.guild.name} Level')
-    await updateLevels(message.author, -1*levelBal, serverName, f'{message.guild.name} XP')
-    userBal = users[str(message.author.id)][f'{message.guild.name} Level']
-    await message.channel.send(f'{message.author.mention} has leveled up to level {userBal+1}! Congrats.')
+  if levelBal > levelThreshold:
+    users[str(message.guild.id)][str(message.author.id)]['XP'] = users[str(message.guild.id)][str(message.author.id)]['XP'] - users[str(message.guild.id)][str(message.author.id)]['XP']
+    users[str(message.guild.id)][str(message.author.id)]['Level'] += 1
+
+    await message.channel.send(f'{message.author.mention} has leveled up to level {userBal}! Congrats.')
+  
+  with open('levels.json','w') as f:
+    json.dump(users, f)
   # End of Level Code
 
   if message.content.startswith('no one cares'):
@@ -307,33 +308,33 @@ async def openLevelUser(user, server):
   with open('levels.json','r') as f:
     users = json.load(f)
   
-  if str(user.id) in users:
-    if f'{server} Level' in users[str(user.id)]: 
+  if str(server.id) in users:
+    if str(user.id) in users[str(server.id)]: 
       return False
     else:
-      users[str(user.id)][f'{server} Level'] = 1
-      users[str(user.id)][f'{server} XP'] = 0
+      users[str(server.id)][str(user.id)] = {}
+      users[str(server.id)][str(user.id)]['Level'] = 1
+      users[str(server.id)][str(user.id)]['XP'] = 0
   else:
     users[str(server.id)] = {}
     users[str(server.id)][str(user.id)] = {}
-    users[str(user.id)] = {}
-    users[str(user.id)]['Level'] = 1
-    users[str(user.id)][' XP'] = 0
+    users[str(server.id)][str(user.id)]['Level'] = 1
+    users[str(server.id)][str(user.id)]['XP'] = 0
   
   with open('levels.json','w') as f:
     json.dump(users, f)
   return True
 
-async def updateLevels(user, change=0, server=None, mode='Wallet'):
+async def updateLevels(user, change=0, server=None, mode='Level'):
   with open('levels.json','r') as f:
     users = json.load(f)
   
-  users[str(user.id)][mode] += change
+  users[str(server.id)][str(user.id)][mode] += change
 
   with open('levels.json','w') as f:
     json.dump(users, f)
   
-  bal = [users[str(user.id)][f'{server} Level'], users[str(user.id)][f'{server} XP']]
+  bal = [users[str(server.id)][str(user.id)]["Level"], users[str(server.id)][str(user.id)]["XP"]]
   return bal
 
 #client event that gets the snipe function's variables ready
@@ -394,25 +395,51 @@ async def on_ready():
   print('Ready for deployment. \nThank you for using Comet')
 
 @client.command(pass_context=True)
-async def rank(ctx, member: discord.Member=None):
-  serverName = ctx.guild.name
+async def rank(ctx, show=5, member: discord.Member=None):
+  serverName = ctx.guild
+  rankList = []
   if member == None:
     member = ctx.author
   with open('levels.json','r') as f:
     users = json.load(f)
   await openLevelUser(member, serverName)
 
-  levelBal = users[str(member.id)][f'{serverName} XP']
-  userBal = users[str(member.id)][f'{serverName} Level']
+  for user in ctx.guild.members:
+    try:
+      userBal = users[str(ctx.guild.id)][str(user.id)]['Level']
+      levelBal = users[str(ctx.guild.id)][str(user.id)]['XP']
+      valueToAppend = [user.name, userBal, levelBal]
+      rankList.append(valueToAppend)
+    except:
+      x = 1
+  print(rankList)
+  rankList.sort(reverse=True, key=lambda rank: rank[2])
+  rankList.sort(reverse=True, key=lambda rank: rank[1])
+  if show > len(rankList):
+    show = int(len(rankList))
 
+  levelBal = users[str(ctx.guild.id)][str(member.id)]['XP'] 
+  userBal = users[str(ctx.guild.id)][str(member.id)]['Level'] 
+  print(rankList)
+  counter = 1
+  loopCount = 0
+  rankDisplay = '```'
+  for entry in rankList:
+    if loopCount < show:
+      rankDisplay += f'{counter}. {entry[0]}:\nLevel: {entry[1]}, XP: {entry[2]}\n'
+      counter += 1
+      loopCount += 1
+
+  rankDisplay += '```'
   levelThreshold = 10*1.5*userBal
 
-  embed=discord.Embed(title=f"▧ Rank for {member} ▧", description="=============================")
+  embed=discord.Embed(description="=============================")
   embed.set_author(name="▞ Comet Rank System ▚")
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Level:", value=f"*__{userBal}__*", inline=True)
   embed.add_field(name="XP:", value=f"*__{levelBal}__*", inline=True)
   embed.add_field(name="XP Needed to Level Up:", value=f"*__{levelThreshold - levelBal}__*", inline=True)
+  embed.add_field(name="Rank List:", value=rankDisplay, inline=False)
   embed.set_footer(text=f"▧ Rank for {member} ▧")
   await ctx.reply(embed=embed, mention_author=False)
 
@@ -629,30 +656,37 @@ async def deathnote(ctx, member:discord.Member=None):
 async def leaderboard(ctx, number=3):
   with open('bank.json','r') as f:
     users = json.load(f)
-  leaderboard = {}
   total = []
 
-  for user in users:
-    name = int(user)
-    totalAmount = users[user]['Wallet'] + users[user]['Bank']
-    leaderboard[totalAmount] = name
-    total.append(totalAmount)
-  
-  total = sorted(total, reverse=True)
+  for user in ctx.guild.members:
+    try:
+      name = str(user.id)
+      totalAmount = users[str(user.id)]['Wallet'] + users[str(user.id)]['Bank']
+      thingToAppend = [user.name, totalAmount]
+      total.append(thingToAppend)
+    except:
+      uselessVariable = 1
 
-  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Now Showing {number} Users of The Economy ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x0502c5)
+  total.sort(reverse=True, key=lambda totalThing: totalThing[1])
+
+  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Top {number} Users of {ctx.guild.name} ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x0502c5)
+
   index = 1
-  for amt in leaderboard:
-    id_ = leaderboard[amt]
-    member = client.get_user(id_)
-    name = member.name
-    embed.add_field(name = f'{index}. {name}', value=f'{amt}', inline=False)
-    if index == number:
-      break
-    else:
+  if number > len(total):
+    number = int(len(total))
+  
+  loopCount = 0
+  rankDisplay = '```'
+  for entry in total:
+    if loopCount < number:
+      rankDisplay += f'{index}. {entry[0]}:\nTotal Balance {entry[1]}\n'
       index += 1
+      loopCount += 1
 
-  embed.set_author(name="The ※ U S E R  L I S T ※")
+  rankDisplay += '```'
+  embed.add_field(name = '--------------------------', value=f'{rankDisplay}', inline=False)
+
+  embed.set_author(name="The ※ Rank System ※")
   embed.set_thumbnail(url="https://images.vexels.com/media/users/3/135932/isolated/preview/5873339dddecea4a26d7366462d0eec6-checklist-file-icon-by-vexels.png")
   embed.set_footer(text="Comet Economy Alert")
   await ctx.send(embed=embed)
@@ -1568,7 +1602,7 @@ async def addWord(ctx, *, wordToAdd):
   print(ctx.guild.id)
 
   if str(ctx.guild.id) in slurPrepare:
-    print('hello')
+    uselessVariable = 1
   else:
     slurPrepare[ctx.guild.id] = []
   
@@ -1595,7 +1629,7 @@ async def removeWord(ctx, *, wordToRemove):
   print(ctx.guild.id)
 
   if str(ctx.guild.id) in slurPrepare:
-    print('hello')
+    uselessVariable = 1
   else:
     slurPrepare[ctx.guild.id] = []
   
@@ -2078,7 +2112,7 @@ async def play(ctx, *, url : str):
       voice = await channel.connect()
     else:
       voice = voiceChannel
-      print('hello')
+    
     async with ctx.typing():
       if httpsResult == False:
         newUrl=url.replace(' ', '+')
@@ -2396,7 +2430,7 @@ async def tts(ctx, *, text=None):
       channel = ctx.message.author.voice.channel
       voice = await channel.connect()
     else:
-      print('hello')
+      uselessVariable = 1
 
     # Lets prepare our text, and then save the audio file
     tts = gTTS(text=result.text, lang=language)
