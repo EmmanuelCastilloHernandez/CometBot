@@ -32,6 +32,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord.utils import find
 from discord import FFmpegPCMAudio
+from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
 from dontDie import dontDieOnMe
 from googletrans import Translator
 from gtts import gTTS
@@ -386,6 +387,7 @@ async def on_ready():
   with open('serverCount.json','r+') as f:
     serverCount = json.load(f)
 
+  DiscordComponents(client)
   serverCount["server count"] = len(client.guilds)
   servers = serverCount["server count"]
 
@@ -2371,45 +2373,43 @@ async def tts(ctx, *, text=None):
     await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
     return
   async with ctx.typing():
-    embed=discord.Embed(title="TTS Options", description="React to this message to choose a language. You have 5 seconds.",color=0x00ffee)
+    embed=discord.Embed(title="TTS Options", description="Click one of the buttons in this message to choose a language. You have 5 seconds.",color=0x00ffee)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
-    embed.add_field(name="Spanish", value="👍", inline=False)
-    embed.add_field(name="Armenian", value="🌕", inline=False)
-    embed.add_field(name="English", value="🔅", inline=False)
-    embed.add_field(name='Korean', value='✨', inline=False)
-    embed.add_field(name='Filipino', value='🌜', inline=False)
-    embed.set_footer(text="Comet Alert")
-    embed1 = await ctx.send(embed=embed)
-    await embed1.add_reaction('👍')
-    await embed1.add_reaction('🌕')
-    await embed1.add_reaction('🔅')
-    await embed1.add_reaction('✨')
-    await embed1.add_reaction('🌜')
+    embed1 = await ctx.send(embed=embed,
+      components = [
+        [
+          Button(style = ButtonStyle.blue, label = "English"),
+          Button(style = ButtonStyle.red, label = "Spanish"),
+          Button(style = ButtonStyle.green, label = "Armenian"),
+          Button(style = ButtonStyle.red, label = "Korean"),
+          Button(style = ButtonStyle.blue, label = "Tagalog (Filipino)")
+        ]
+      ])
 
-    def check(reaction, user):
-      return user == ctx.author and (str(reaction.emoji) == '👍' or str(reaction.emoji) == '🔅' or str(reaction.emoji) == '🌕' or str(reaction.emoji) == '✨' or str(reaction.emoji) == '🌜')
+    def check(buttonCheck):
+      return buttonCheck.channel == ctx.channel
 
     try:
-      reaction, user = await client.wait_for('reaction_add',timeout=3.5, check=check)
+      buttonCheck = await client.wait_for("button_click", timeout=5, check=check)
 
-      if str(reaction.emoji) == '👍':
+      if buttonCheck.component.label == 'Spanish':
         translator = Translator()
         result = translator.translate(text, dest='es')
         print(result.text)
         language = 'es'
-      elif str(reaction.emoji) == '🌕':
+      elif buttonCheck.component.label == 'Armenian':
         translator = Translator()
         result = translator.translate(text, dest='hy')
         language = 'hy'
-      elif str(reaction.emoji) == '🔅':
+      elif buttonCheck.component.label == 'English':
         translator = Translator()
         result = translator.translate(text, dest='en')
         language = 'en'
-      elif str(reaction.emoji) == '✨':
+      elif buttonCheck.component.label == 'Korean':
         translator = Translator()
         result = translator.translate(text, dest='ko')
         language = 'ko'
-      elif str(reaction.emoji) == '🌜':
+      elif buttonCheck.component.label == 'Tagalog (Filipino)':
         translator = Translator()
         result = translator.translate(text, dest='tl')
         language = 'tl'
@@ -2790,7 +2790,7 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
   await ctx.reply(embed=embed)
 
 def wikipediaSummary(arg):
-  result = wikipedia.summary(arg, sentences=3, chars=1000, auto_suggest=True, redirect=True)
+  result = wikipedia.summary(arg, sentences=6, chars=1000, auto_suggest=True, redirect=True)
   return result
 
 @client.command(pass_context=True)
