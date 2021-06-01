@@ -2794,7 +2794,7 @@ def wikipediaSummary(arg):
   return result
 
 @client.command(pass_context=True)
-async def search(ctx, *, search):
+async def wikisearch(ctx, *, search):
   try:
     result = wikipediaSummary(search)
     title = wikipedia.suggest(search)
