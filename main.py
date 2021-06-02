@@ -275,7 +275,7 @@ async def on_message(message):
       amountToDelete = int(len(x))
       await message.channel.purge(limit=amountToDelete, check=check)
       intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
-      await messsage.channel.send('***Don\'t try to spam this word to circumvent the bot. It will not work.***')
+      await message.channel.send('***Message deleted due to a blacklisted word detected***', delete_after=10)
 
   # End of Neo Blacklist code
   
@@ -302,33 +302,23 @@ async def on_message(message):
   await openLevelUser(message.author, message.guild)
   with open('levels.json','r') as f:
     users = json.load(f)
-  awardLevelPoints = random.randint(1, 3)
 
-  levelBal = users[str(message.guild.id)][str(message.author.id)]['XP'] 
-  userBal = users[str(message.guild.id)][str(message.author.id)]['Level']
-
-  levelThreshold = 15*userBal
+  levelThreshold = 15*users[str(message.guild.id)][str(message.author.id)]['Level']
   if allowPoints == True:
-    await updateLevels(message.author, 1*awardLevelPoints, message.guild, 'XP')
+    await updateLevels(message.author, message.guild, random.randint(1, 4), 'XP')
 
     usersToLevelUp[f'{message.author.id} | {message.guild.id}'] = message.guild.id
 
     await asyncio.sleep(60)
     del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
 
-  if levelBal > levelThreshold:
-    users[str(message.guild.id)][str(message.author.id)]['XP'] = users[str(message.guild.id)][str(message.author.id)]['XP'] - users[str(message.guild.id)][str(message.author.id)]['XP']
-    users[str(message.guild.id)][str(message.author.id)]['Level'] += 1
+  if users[str(message.guild.id)][str(message.author.id)]['XP'] >= levelThreshold:
+    await updateLevels(message.author, message.guild, 1, 'Level')
+    await updateLevels(message.author, message.guild, -1*users[str(message.guild.id)][str(message.author.id)]['XP'], 'XP')
 
-    await message.channel.send(f'{message.author.mention} has leveled up to level {userBal}! Congrats.')
-    with open('levels.json','w') as f:
-      json.dump(users, f)
-    
+    level = users[str(message.guild.id)][str(message.author.id)]['Level']
+    await message.channel.send(f'{message.author.mention} has leveled up to level {level+1}! Congrats.')
     return
-    
-  
-  with open('levels.json','w') as f:
-    json.dump(users, f)
   # End of Level Code
 
   if message.content.startswith('no one cares'):
@@ -363,7 +353,7 @@ async def openLevelUser(user, server):
     json.dump(users, f)
   return True
 
-async def updateLevels(user, change=0, server=None, mode='Level'):
+async def updateLevels(user, server=None, change=0, mode='Level'):
   with open('levels.json','r') as f:
     users = json.load(f)
   
@@ -434,7 +424,7 @@ async def on_ready():
   print('Ready for deployment. \nThank you for using Comet')
 
 @client.command(pass_context=True)
-async def rank(ctx, show=5, member: discord.Member=None):
+async def rank(ctx, member: discord.Member=None, show=5):
   serverName = ctx.guild
   rankList = []
   if member == None:
