@@ -23,6 +23,7 @@ try:
 except:
   os.system('pip3 install googletrans==3.1.0a0')
 
+os.system('pip install discord_components')
 # Importing libraries used in the bot
 import asyncio
 from bs4 import BeautifulSoup
@@ -86,6 +87,7 @@ beforeMessage = {}
 afterMessage = {}
 usersToLevelUp = {}
 useSpammyCharacters = {}
+intuitiveBlacklist = {}
 users = None
 reactionMessage = None
 title = None
@@ -219,9 +221,9 @@ async def on_message(message):
   print(message.guild.id)
 
   if str(message.guild.id) in slurPrepare:
-    print('hello')
+    uselessVariable = 1
   else:
-    slurPrepare[str(message.guild.id)] = [""]
+    slurPrepare[str(message.guild.id)] = []
   
   checkBannedWords = slurPrepare[str(message.guild.id)]
     
@@ -231,20 +233,50 @@ async def on_message(message):
   content = str(message.content)
   httpsResult = content.startswith('https')
   emojiResult = content.startswith('<a:')
-
+  content = content.lower()
   if emojiResult == True or httpsResult == True:
-    print('hello')
+    uselessVariable = 1
   else:
     content = content.translate(str.maketrans('', '', string.punctuation))
 
-  content = content.lower()
+  if message.guild.id in intuitiveBlacklist:
+    if message.author.id in intuitiveBlacklist[message.guild.id]:
+      if 'message' in intuitiveBlacklist[message.guild.id][message.author.id]:
+        intuitiveBlacklist[message.guild.id][message.author.id]['message'].append(content)
+      else:
+        intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
+        intuitiveBlacklist[message.guild.id][message.author.id]['message'].append(content)
+    else:
+      intuitiveBlacklist[message.guild.id][message.author.id] = {}
+      intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
+      intuitiveBlacklist[message.guild.id][message.author.id]['message'].append(content)
+  else:
+    intuitiveBlacklist[message.guild.id] = {}
+    intuitiveBlacklist[message.guild.id][message.author.id] = {}
+    intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
+    intuitiveBlacklist[message.guild.id][message.author.id]['message'].append(content)
+  
   content = content.split()
-    
   for x in content:
     if (message.author.bot):
       return
     elif x in checkBannedWords:
       await message.delete()
+      return
+  
+  for x in checkBannedWords:
+    def check(m):
+      return m.author == message.author
+    
+    checkThePhrase = ''.join(intuitiveBlacklist[message.guild.id][message.author.id]['message'])
+    print(checkThePhrase)
+    if (message.author.bot):
+      return
+    elif x in checkThePhrase:
+      amountToDelete = int(len(x))
+      await message.channel.purge(limit=amountToDelete, check=check)
+      intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
+
   # End of Neo Blacklist code
   
   if message.content.startswith('^'):
@@ -289,6 +321,11 @@ async def on_message(message):
     users[str(message.guild.id)][str(message.author.id)]['Level'] += 1
 
     await message.channel.send(f'{message.author.mention} has leveled up to level {userBal}! Congrats.')
+    with open('levels.json','w') as f:
+      json.dump(users, f)
+    
+    return
+    
   
   with open('levels.json','w') as f:
     json.dump(users, f)
@@ -801,33 +838,38 @@ async def phone(ctx):
   
   for item in users[str(user.id)]['Inventory']:
     if item['Item'] == 'phone' and item['Amount'] > 0:
-      embed=discord.Embed(title="Phone Options", description=f"Hey {user.mention}, react to this message to choose an option. You have 30 seconds.", color=0x00ffee)
+      embed=discord.Embed(title="Phone Options", description=f"Hey {user.mention}, click one of the buttons to do an action before the phone's battery runs out in 20 seconds.", color=0x00ffee)
       embed.set_thumbnail(url="https://images.vexels.com/media/users/3/128754/isolated/preview/d7966cba43a9c647bb596a02c6756f3f-smart-phone-icon-by-vexels.png")
-      embed.add_field(name="Scam", value="🧡", inline=True)
-      embed.add_field(name="VC TTS", value="💛", inline=True)
-      embed.add_field(name="Send a DM to a User", value="💙", inline=True)
-      embed.set_footer(text="Comet Phone Alert")
-      embed1 = await ctx.send(embed=embed)
-      await embed1.add_reaction('🧡')
-      await embed1.add_reaction('💛')
-      await embed1.add_reaction('💙')
+      embed.set_footer(text="Castillo Phone")
+      embed1 = await ctx.send(embed=embed,
+      components = [
+        [
+          Button(style = ButtonStyle.red, label = "Scam"),
+          Button(style = ButtonStyle.blue, label = "TTS on Voice Channel"),
+          Button(style = ButtonStyle.green, label = "DM a User")
+        ]
+      ])
     
-      def check(reaction, user):
-        return user == ctx.author and (str(reaction.emoji) == '🧡' or str(reaction.emoji) == '💛' or str(reaction.emoji) == '💙')
+      def check(buttonCheck):
+        return buttonCheck.channel == ctx.channel
 
       try:
-        reaction, user = await client.wait_for('reaction_add', timeout=20.0, check=check)
+        buttonCheck = await client.wait_for("button_click", timeout=20, check=check)
 
-        if str(reaction.emoji) == '🧡':
+        if buttonCheck.component.label == 'Scam':
           await ctx.send('Ping the user you want to scam.')
           try:
             def check(m):
               return m.author == ctx.author
 
             msg = await client.wait_for('message', timeout=20, check=check)
-            prepare1 = msg.content.replace('<@!', '')
-            prepare2 = prepare1.replace('>', '')
-            finalPrepare = int(prepare2)
+            try:
+              prepare1 = msg.content.replace('<@!', '')
+              prepare2 = prepare1.replace('>', '')
+              finalPrepare = int(prepare2)
+            except:
+              prepare3 = prepare2.replace('<@', '')
+              finalPrepare = int(prepare3)
 
             userToScam = client.get_user(finalPrepare)
             print(userToScam)
@@ -835,7 +877,7 @@ async def phone(ctx):
             await ctx.invoke(client.get_command('rob'), member=userToScam, scam=True, phoneRobber=ctx.author)
           except asyncio.TimeoutError:
             await ctx.send('The phone\'s battery ran out.')
-        if str(reaction.emoji) == '💛':
+        elif buttonCheck.component.label == 'TTS on Voice Channel':
           await ctx.reply('Input the text you want ***Comet*** to say.', mention_author=False)
           try:
             def check(m):
@@ -848,7 +890,7 @@ async def phone(ctx):
 
           except asyncio.TimeoutError:
             await ctx.send('The phone\'s battery ran out.')
-        if str(reaction.emoji) == '💙':
+        elif buttonCheck.component.label == 'DM a User':
           await ctx.reply('Ping the user you want to send the message to (Don\'t worry I\'ll delete the ping).', mention_author=False)
           try:
             def check(m):
@@ -856,9 +898,13 @@ async def phone(ctx):
 
             msg = await client.wait_for('message', timeout=20, check=check)
 
-            prepare1 = msg.content.replace('<@!', '')
-            prepare2 = prepare1.replace('>', '')
-            finalPrepare = int(prepare2)
+            try:
+              prepare1 = msg.content.replace('<@!', '')
+              prepare2 = prepare1.replace('>', '')
+              finalPrepare = int(prepare2)
+            except:
+              prepare3 = prepare2.replace('<@', '')
+              finalPrepare = int(prepare3)
             userToDM = client.get_user(finalPrepare)
 
             await msg.delete()
@@ -873,7 +919,7 @@ async def phone(ctx):
               await userToDM.send(f'New DM from a user in **`{ctx.guild.name}`**\n**__{ctx.author.id}__**: {msgText.content}')
 
             except asyncio.TimeoutError:
-              await ctx.send('Your Mobile data ran out. Thank the 5 GB Haley-Mobile Data Plab.')
+              await ctx.send('Your Mobile data ran out. Thank the 5 GB Haley-Mobile Data Plan.')
 
           except asyncio.TimeoutError:
             await ctx.send('The phone\'s battery ran out.')
@@ -906,7 +952,7 @@ async def fuck(ctx, *, member:discord.Member):
           await ctx.reply('Item doesn\'t exist.', mention_author=False)
           return
         if res[1] == 2:
-          await ctx.reply(f'You don\'t have fuck cards.', mention_author=False)
+          await ctx.reply(f'You don\'t have enough fuck cards.', mention_author=False)
           return
         if res[1] == 3:
           await ctx.reply(f'You don\'t own a fuck card.', mention_author=False)
@@ -1762,7 +1808,7 @@ async def _8ball(ctx, *, question):
     'I\'m very doubtful about this one...\u047c']
   await ctx.send(f'The question was: {question}\n:8ball: My answer is: {random.choice(responses)}')
 
-@client.command(aliases=['delete', 'delet', 'clear'], help='Clear command obviously.')
+@client.command(aliases=['delete', 'delet', 'clear','del'], help='Clear command obviously.')
 @commands.has_permissions(manage_messages=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def purge(ctx, maxamount=30):
