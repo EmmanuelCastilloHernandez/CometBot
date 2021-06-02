@@ -269,13 +269,13 @@ async def on_message(message):
       return m.author == message.author
     
     checkThePhrase = ''.join(intuitiveBlacklist[message.guild.id][message.author.id]['message'])
-    print(checkThePhrase)
     if (message.author.bot):
       return
     elif x in checkThePhrase:
       amountToDelete = int(len(x))
       await message.channel.purge(limit=amountToDelete, check=check)
       intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
+      await messsage.channel.send('***Don\'t try to spam this word to circumvent the bot. It will not work.***')
 
   # End of Neo Blacklist code
   
