@@ -275,7 +275,7 @@ async def on_message(message):
       amountToDelete = int(len(x))
       await message.channel.purge(limit=amountToDelete, check=check)
       intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
-      await message.channel.send('***Message deleted due to a blacklisted word detected***', delete_after=10)
+      await message.channel.send('***Message deleted due to a blacklisted word being detected***', delete_after=10)
 
   # End of Neo Blacklist code
   
@@ -452,8 +452,11 @@ async def rank(ctx, member: discord.Member=None, show=5):
   print(rankList)
   counter = 1
   loopCount = 0
+  userRank = 0
   rankDisplay = '```'
   for entry in rankList:
+    if entry[0] == ctx.author.name:
+        userRank = counter
     if loopCount < show:
       rankDisplay += f'{counter}. {entry[0]}:\nLevel: {entry[1]}, XP: {entry[2]}\n'
       counter += 1
@@ -462,7 +465,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
   rankDisplay += '```'
   levelThreshold = 10*1.5*userBal
 
-  embed=discord.Embed(description="=============================")
+  embed=discord.Embed(description=f"========= ***Rank {userRank}*** ==============")
   embed.set_author(name="▞ Comet Rank System ▚")
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Level:", value=f"*__{userBal}__*", inline=True)
@@ -2414,11 +2417,17 @@ async def tts(ctx, *, text=None):
     embed1 = await ctx.send(embed=embed,
       components = [
         [
-          Button(style = ButtonStyle.blue, label = "English"),
-          Button(style = ButtonStyle.red, label = "Spanish"),
-          Button(style = ButtonStyle.green, label = "Armenian"),
-          Button(style = ButtonStyle.red, label = "Korean"),
-          Button(style = ButtonStyle.blue, label = "Tagalog (Filipino)")
+          Button(style = ButtonStyle.blue, label = "English (en)"),
+          Button(style = ButtonStyle.blue, label = "Spanish (es)"),
+          Button(style = ButtonStyle.red, label = "Armenian (hy)"),
+          Button(style = ButtonStyle.red, label = "Korean (ko)"),
+          Button(style = ButtonStyle.green, label = "Tagalog (Filipino) (tl)")
+        ],
+        [
+          Button(style = ButtonStyle.green, label = "Russian (ru)"),
+          Button(style = ButtonStyle.red, label = "Chinese (Mandarin/Taiwan) (zh-TW)"),
+          Button(style = ButtonStyle.blue, label = "German (de)"),
+          Button(style = ButtonStyle.blue, label = "French (fr)")
         ]
       ])
 
@@ -2428,37 +2437,60 @@ async def tts(ctx, *, text=None):
     try:
       buttonCheck = await client.wait_for("button_click", timeout=5, check=check)
 
-      if buttonCheck.component.label == 'Spanish':
+      if buttonCheck.component.label == 'Spanish (es)':
         translator = Translator()
         result = translator.translate(text, dest='es')
         print(result.text)
         language = 'es'
-      elif buttonCheck.component.label == 'Armenian':
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'Armenian (hy)':
         translator = Translator()
         result = translator.translate(text, dest='hy')
         language = 'hy'
-      elif buttonCheck.component.label == 'English':
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'English (en)':
         translator = Translator()
         result = translator.translate(text, dest='en')
         language = 'en'
-      elif buttonCheck.component.label == 'Korean':
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'Korean (ko)':
         translator = Translator()
         result = translator.translate(text, dest='ko')
         language = 'ko'
-      elif buttonCheck.component.label == 'Tagalog (Filipino)':
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'Tagalog (Filipino) (tl)':
         translator = Translator()
         result = translator.translate(text, dest='tl')
         language = 'tl'
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'Russian (ru)':
+        translator = Translator()
+        result = translator.translate(text, dest='ru')
+        language = 'ru'
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'Chinese (Mandarin/Taiwan) (zh-TW)':
+        translator = Translator()
+        result = translator.translate(text, dest='zh-TW')
+        language = 'zh-TW'
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'German (de)':
+        translator = Translator()
+        result = translator.translate(text, dest='de')
+        language = 'de'
+        tts = gTTS(text=result.text, lang=language)
+      elif buttonCheck.component.label == 'French (fr)':
+        translator = Translator()
+        result = translator.translate(text, dest='fr')
+        language = 'fr'
+        tts = gTTS(text=result.text, lang=language)
       else:
         await ctx.send('Defaulted to English')
-        translator = Translator()
-        result = translator.translate(text, dest='tl')
+        tts = gTTS(text=result.text)
         language = 'en'
       
     except asyncio.TimeoutError:
       await ctx.send('Defaulted to English')
-      translator = Translator()
-      result = translator.translate(text, dest='tl')
+      tts = gTTS(text=text)
       language = 'en'
     
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
@@ -2467,9 +2499,7 @@ async def tts(ctx, *, text=None):
       voice = await channel.connect()
     else:
       uselessVariable = 1
-
-    # Lets prepare our text, and then save the audio file
-    tts = gTTS(text=result.text, lang=language)
+    
     tts.save("text.mp3")
     with audioread.audio_open('text.mp3') as f:
       totalsec = f.duration
@@ -2478,11 +2508,12 @@ async def tts(ctx, *, text=None):
     embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x3ce7e4)
     embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
     embed2.add_field(name="Text", value=f"{result.text}", inline=True)
-    embed2.add_field(name="Language", value=f"{language}",inline=True)
-    embed2.add_field(name="Duration", value=f"{hours}:{mins}:{seconds}", inline=True)
-    embed2.set_footer(text="Comet Alert")
+    embed2.add_field(name="Language", value=f"{language}",inline=False)
+    embed2.add_field(name="Duration", value=f"{hours} Hours: {mins} Minutes:{seconds} Seconds", inline=False)
     
-  await ctx.send(embed=embed2, delete_after=30)
+  await embed1.edit(embed=embed2, components=[
+    Button(style = ButtonStyle.red, label = "Done")
+  ])
     
   try:
     guild = ctx.message.guild
