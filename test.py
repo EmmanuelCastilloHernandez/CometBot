@@ -1,7 +1,4 @@
-string = '4'
-try:
-  print(int(string)/0)
-except:
-  print(string)
-string = '5'
-print(string)
+lst = ['hello', 'my', 'purpose', 'is', 'to', 'be', 'a', 'test'] 
+print(lst)
+lst = [lst[i:i + 3] for i in range(0, len(lst), 3)]
+print(lst)

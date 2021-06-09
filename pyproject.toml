@@ -26,6 +26,7 @@ google-api-python-client = "^2.4.0"
 mutagen = "^1.45.1"
 audioread = "^2.1.9"
 wikipedia = "^1.4.0"
+sympy = "^1.8"
 
 [tool.poetry.dev-dependencies]
 

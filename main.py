@@ -40,16 +40,15 @@ from gtts import gTTS
 import lxml
 from lxml import etree
 import math
-# import matplotlib.pyplot as plt
-# from matplotlib.pyplot import *
-# import numpy as np
-# from numpy import *
+import numpy as np
+from numpy import *
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 from io import BytesIO
 import random
 from random import randint
 import randfacts
 import string
+import sympy as sp
 import ffmpeg
 import urllib
 import urllib.request
@@ -146,7 +145,7 @@ async def on_guild_join(guild):
   
   general = find(lambda x: x.name == 'general',  guild.text_channels)
   if general and general.permissions_for(guild.me).send_messages:
-    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and\n you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 1.0.0.", color=0x00b3ff)
+    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 1.0.0.", color=0x34363b)
     embed.set_author(name=f"Hello, {guild.name}")
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
     embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
@@ -275,7 +274,7 @@ async def on_message(message):
       amountToDelete = int(len(x))
       await message.channel.purge(limit=amountToDelete, check=check)
       intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
-      await message.channel.send('***Message deleted due to a blacklisted word being detected***', delete_after=10)
+      await message.channel.send('***Message deleted due to a blacklisted word/phrase being detected***', delete_after=10)
 
   # End of Neo Blacklist code
   
@@ -411,10 +410,10 @@ async def on_message_delete(message):
 
 @client.event
 async def on_ready():
+  DiscordComponents(client)
   with open('serverCount.json','r+') as f:
     serverCount = json.load(f)
 
-  DiscordComponents(client)
   serverCount["server count"] = len(client.guilds)
   servers = serverCount["server count"]
 
@@ -465,7 +464,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
   rankDisplay += '```'
   levelThreshold = 10*1.5*userBal
 
-  embed=discord.Embed(description=f"========= ***Rank {userRank}*** ==============")
+  embed=discord.Embed(description=f"========= ***Rank {userRank}*** ==============", color=0x34363b)
   embed.set_author(name="▞ Comet Rank System ▚")
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Level:", value=f"*__{userBal}__*", inline=True)
@@ -494,7 +493,7 @@ async def levels(ctx, number=5):
   
   levelList = sorted(levelList, reverse=True)
 
-  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Now Showing Top {number} Users in {serverName} ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x0502c5)
+  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Now Showing Top {number} Users in {serverName} ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x34363b)
   index = 1
   for amt in level:
     id_ = level[amt]
@@ -512,57 +511,32 @@ async def levels(ctx, number=5):
   await ctx.send(embed=embed)
 
 
-# @client.command(aliases=['graph','showMe','plot'])
-# async def graphFunction(ctx, type, val1=0, val2=0, val3=0, val4=0):
-#  v1 = int(val1)
-#  v2 = int(val2)
-#  v3 = int(val3)
-#  v4 = int(val3)
-#
-#  x = linspace(-5,5,5000)
-#  if (str(type) == 'linear' or str(type) == 'l'):
-#    if v1 == 0:
-#      y=v2*x
-#    else:
-#      y = v1+v2*x
-#    graphEquation = f'{v2}X+{v1}'
-#  if (str(type) == 'quadratic' or str(type) == 'q'):
-#    if v1 == 0:
-#      y = v2*x+v3*x**2
-#    elif (v2 == 0 and v1 == 0):
-#      y = v3*x**2
-#    elif v2 == 0:
-#      y = v1+v3*x**2
-#    else:
-#      y = v1+v2*x+v3*x**2
-#    graphEquation = f'{v3}X^2+{v2}X+{v1}'
-#  if (str(type) == 'cubic' or str(type) == 'c'):
-#    if v1 == 0:
-#      y = v2*x+v3*x**2+v4*x**3
-#    if v2 == 0:
-#      y = v2*x+v3*x**2+v4*x**3
-#    if v3 == 0:
-#      y = v2*x+v3*x**2+v4*x**3
-#    if v4 == 0:
-#      y = v2*x+v3*x**2+v4*x**3
-#    
-#    y = v1+v2*x+v3*x**2+v4*x**3
-#    graphEquation = f'{v4}X^3+{v3}X^2+{v2}X+{v1}'
-#  
-#  plt.plot(x,y)
-#  plt.xlabel("X-axis")
-#  plt.ylabel("Y-axis")
-#  plt.grid(axis='both', color = 'green', linestyle = '--', linewidth = 0.5)
-#  plt.axhline(0, color='red')
-#  plt.axvline(0, color='red')
-#  plt.title(graphEquation)
-#  plt.savefig('plot.png')
-#  chart = file=discord.File("/home/runner/Comet/plot.png")
-#  embed=discord.Embed(title=f"Here is your graph for {graphEquation}", color=0x00ffee)
-#  embed.set_image(url="attachment://plot.png")
-#  embed.set_author(name="Comet Calculator")
-#  await ctx.send(embed=embed, file=chart)
-#  plt.clf()
+@client.command(aliases=['Solve'])
+async def solve(ctx, v1: int=0, v2: int=0, v3: int=0, v4: int=0, v5: int=0, v6: int=0, v7: int=0):
+
+  x = sp.Symbol('x')
+  y = v1+v2*x+v3*x**2+v4*x**3+v5*x**4+v6*x**5+v7*x**6
+  solve = f'{v1} + {v2}X + {v3}X^2 + {v4}X^3 + {v5}X^4 + {v6}X^5 + {v7}x^6'
+  x = sp.solve(y)
+  try:
+    embed=discord.Embed(title=f"***Here are the solutions for __{solve}__***", description='***NOTE: Ignore the brackets. Those are because of the text color formatting***', color=0x00ffee)
+
+    counter = 1
+    for entry in x:
+      entry = str(entry)
+      if '**' in entry:
+        entry = entry.replace('**', '^')
+      if 'I' in entry:
+        entry = entry.replace('I', 'i')
+      thingToShow = f"```ini\n[ {entry} ]\n```"
+      print
+      embed.add_field(name = f'Solution #{counter}:', value=thingToShow, inline=False)
+      counter += 1
+  except:
+    await ctx.send('***ERROR: Unknown entries***')
+    return
+  embed.set_author(name="Comet Calculator")
+  await ctx.send(embed=embed)
 
 # START OF THE ECONOMY SECTION
 shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics. Using them will give you a special surprise.'},
@@ -620,7 +594,7 @@ async def ascii(ctx, *, member: discord.Member=None):
     pixel_count = len(new_image_data)  
     ascii_image = "\n".join([new_image_data[index:(index+40)] for index in range(0, pixel_count, 40)])
 
-    embed=discord.Embed(description=f"{ascii_image}")
+    embed=discord.Embed(description=f"{ascii_image}", color=0x34363b)
     embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {member.name}'ᔕ ᑭᖴᑭ")
   await ctx.send(embed=embed)
 
@@ -1422,7 +1396,7 @@ async def slots(ctx, amount=0):
     embed=discord.Embed(title="The slots have decided", description=f"You won {reward} ⌬.", color=0x76f60e)
     embed.set_author(name="Comet Casino")
     embed.set_thumbnail(url="https://lh3.googleusercontent.com/RHapVuBKiqZpODpQ8hDua-xQw6G4dzQG5w1HlXztJRE3Zu3WlRnEFawjjfyQsqILBEltOw=s85")
-    embed.add_field(name="The Slot Result:", value=f"{slot}", inline=True)
+    embed.add_field(name="The Slot Result:", value=f"{slot[0]} {slot[1]} {slot[2]}", inline=True)
     embed.set_footer(text="Comet Bank Alert")
     await ctx.reply(embed=embed, mention_author=False)
     await updateBank(ctx.author, reward, 'Wallet')
@@ -1489,8 +1463,14 @@ async def devnote(ctx):
     'Dev Note #2: Comet\'s codename is Wolf Rayet. :star:',
     'Dev Note #3: The bot is written in Python. :snake:',
     'Dev Note #4: Comet\'s is open source',
-    'Dev Note #5: Comet Music Player supports text search',
-    'Dev Note #6: Hangman on an embed was hell.']
+    'Dev Note #5: Comet Music Player supports text search.',
+    'Dev Note #6: Hangman on an embed was hell.',
+    'Dev Note #7: Comet was originally made for one server, but the creator decided to make it open source and readily available.',
+    'Dev Note #8: The first warning system for the bot sucked because no matter where you went the warnings given in one place trasferred to another and the full potential of the warning system could only have been seen in one server. 2.0.0 Aldebaran fixes that.',
+    'Dev Note #9: #tts originally played a tts message in text channels. It was changed to a voice channel TTS because people exploited it.',
+    'Dev Note #10: #tts has multi-language support. This means that the bot can read text in Mandarin, English, Spanish, Armenian, Russian, etc.',
+    'Dev Note #11: The bot has a wikipedia search that is inaccurate because of the API scrambling up the search term.',
+    'Dev Note #12: T̵h̶e̸ ̵b̵l̷a̶c̵k̵l̵i̷s̴t̵ ̸i̵s̵ ̷w̸a̶t̵c̶h̶i̵n̷g̵ ̷y̴o̴u̶ ̷:̷)̵']
   await ctx.send(f'{random.choice(randomDevNotes)}')
 
 @client.command(pass_context=True)
@@ -1509,7 +1489,7 @@ async def bad(ctx, *, option):
 @client.command(description="Returns all commands available")
 async def help(ctx, pg=1):
   embedCommands = 0
-  embed=discord.Embed(title=f"List of all commands: Page {pg}", color=0xfff024)
+  embed=discord.Embed(title=f"List of all commands: Page {pg}", color=0x34363b)
   embed.set_author(name="Help Center")
   embed.set_thumbnail(url="https://images.vexels.com/media/users/3/153750/isolated/preview/1fb0b5422a7584ed0df14dfacdc68c64-internet-settings-colored-stroke-icon-by-vexels.png")
   embed.set_footer(text="Comet Alert")
@@ -1580,7 +1560,7 @@ async def weatherReport(ctx):
 
     fahrenheit_temp = math.floor(fahrenheit_temp)
   
-    embed=discord.Embed(description=f"Temperature (in fahrenheit): __**{str(fahrenheit_temp)}\u00b0**__\nAtmospheric pressure (in hPa unit): **__{str(current_pressure)}__**\nHumidity: **__{str(current_humidiy)}\u0025__**\nDescription: **__{str(weather_description)}__**", color=0x13f6e7)
+    embed=discord.Embed(description=f"Temperature (in fahrenheit): __**{str(fahrenheit_temp)}\u00b0**__\nAtmospheric pressure (in hPa unit): **__{str(current_pressure)}__**\nHumidity: **__{str(current_humidiy)}\u0025__**\nDescription: **__{str(weather_description)}__**", color=0x34363b)
     embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20190924/original/pngtree-planet-earth-icon-design-png-image_4804418.jpg")
     embed.set_author(name=f"Weather Report for {city.upper()} by {ctx.author.name}", icon_url=ctx.author.avatar_url)
     await ctx.send(embed=embed)
@@ -1729,7 +1709,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve=1):
 async def snipe(ctx):
   channel = ctx.channel
   try:
-    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id].name}", description=f'{regularSnipeMessage[channel.id]}', color=0xab01e9)
+    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id].name}", description=f'{regularSnipeMessage[channel.id]}', color=0x34363b)
     embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
     embed.set_author(name="⚝ ✶   ✵ 𝙎𝙉𝙄𝙋𝙀 ✵  ✶ ⚝")
@@ -1864,16 +1844,6 @@ winningConditions = [
 @client.command(pass_context=True)
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def tictactoe(ctx, p1: discord.Member, p2: discord.Member):
-    if ctx.channel.id == 736621294799552542:
-      message = ctx.message
-      await message.delete()
-
-      errorEmbed=discord.Embed(title="Command Not Allowed", description=f"{ctx.author.mention}, this command (**{message.content}**) is not allowed here. Try in a separate channel.", color=0xff0000)
-      errorEmbed.set_thumbnail(url="https://media.discordapp.net/attachments/736621294799552542/833749796602642492/unknown.png?width=586&height=586")
-      errorEmbed.add_field(name="Examples of Channels Where it Works:", value="spam, botcommands", inline=False)
-      errorEmbed.set_footer(text="Comet Alert")
-      return await ctx.send(embed=errorEmbed, delete_after=10)
-
     global count
     global player1
     global player2
@@ -1916,16 +1886,6 @@ async def tictactoe(ctx, p1: discord.Member, p2: discord.Member):
 @client.command(pass_context=True)
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def place(ctx, pos: int):
-    if ctx.channel.id == 736621294799552542:
-      message = ctx.message
-      await message.delete()
-
-      errorEmbed=discord.Embed(title="Command Not Allowed", description=f"{ctx.author.mention}, this command (**{message.content}**) is not allowed here. Try in a separate channel.", color=0xff0000)
-      errorEmbed.set_thumbnail(url="https://media.discordapp.net/attachments/736621294799552542/833749796602642492/unknown.png?width=586&height=586")
-      errorEmbed.add_field(name="Examples of Channels Where it Works:", value="spam, botcommands", inline=False)
-      errorEmbed.set_footer(text="Comet Alert")
-      return await ctx.send(embed=errorEmbed, delete_after=10)
-
     global turn
     global player1
     global player2
@@ -2026,7 +1986,7 @@ async def hangman(ctx):
   prepareWord = random.choice(words)
 
   word = list(prepareWord)
-  hangmanEmbed = discord.Embed(description=hangmanPoses[tries])
+  hangmanEmbed = discord.Embed(description=hangmanPoses[tries], color=0x34363b)
   hangmanEmbed.set_author(name='Hangman by E.C.H.', icon_url=ctx.author.avatar_url)
   
   for character in word:
@@ -2096,7 +2056,7 @@ async def makeZalgo(ctx, *, textToZalgofy: str):
 @client.command(help='Edit command for snitches')
 @commands.cooldown(1, 10, commands.BucketType.guild)
 async def edit(ctx):
-  embed=discord.Embed(title=f"Author: {editMessageAuthor}", color=0x61ffd2)
+  embed=discord.Embed(title=f"Author: {editMessageAuthor}", color=0x34363b)
   embed.set_author(name="Messaged Edited")
   embed.add_field(name="Before:", value=f"{beforeMessage}", inline=False)
   embed.add_field(name="After:", value=f"{afterMessage}", inline=True)
@@ -2159,7 +2119,7 @@ async def play(ctx, *, url : str):
         newUrl=url.replace(' ', '+')
         html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
         videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-        thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/hqdefault.jpg"
+        thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
         song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
         print(song)
       else:
@@ -2202,7 +2162,7 @@ async def play(ctx, *, url : str):
         await ctx.reply('Invalid Link')
         return
 
-      embed=discord.Embed(title=f"Now playing: {title}", url=f"{song}", description="===================================", color=0xf23136)
+      embed=discord.Embed(title=f"𝙉𝙊𝙒 𝙋𝙇𝘼𝙔𝙄𝙉𝙂: {title}", url=f"{song}", description="◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍", color=0xf23136)
       embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
       embed.set_thumbnail(url=thumbnail)
       embed.add_field(name="Likes:", value=f"{likes}", inline=True)
@@ -2211,16 +2171,17 @@ async def play(ctx, *, url : str):
       embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
       embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
       embed.set_footer(text="Comet Alert")
+    try:
+      server = ctx.message.guild
+      player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-    await ctx.reply(embed=embed)
+      voice.play(player, after=lambda e: checkQueue1(server.id, server))
+      voice.is_playing()
 
-    server = ctx.message.guild
-    player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
-
-    voice.play(player, after=lambda e: checkQueue1(server.id, server))
-    voice.is_playing()
-
-    players[server.id] = source
+      players[server.id] = source
+      await ctx.reply(embed=embed)
+    except:
+      await ctx.invoke(client.get_command('queue'), url=song)
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
@@ -2229,6 +2190,8 @@ async def queueList(ctx):
   counter = 1
   queueList ="**```"
   guild = ctx.guild
+  theQueue = [queueTitles[guild.id][i:i + 3] for i in range(0, len(queueTitles[guild.id]), 3)]
+  print(theQueue)
 
   for item in queueTitles[guild.id]:
     queueList += f"{counter}. {item}\n"
@@ -2293,7 +2256,7 @@ async def queue(ctx, *, url: str):
         await ctx.reply('Invalid Link')
         return
   
-      embed=discord.Embed(title=f"Queued: {title}", url=f"{song}", description="===================================", color=0xf23136)
+      embed=discord.Embed(title=f"🆀🆄🅴🆄🅴🅳: {title}", url=f"{song}", description="◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍", color=0xf23136)
       embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
       embed.set_thumbnail(url=thumbnail)
       embed.add_field(name="Likes:", value=f"{likes}", inline=True)
@@ -2412,7 +2375,7 @@ async def tts(ctx, *, text=None):
     await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
     return
   async with ctx.typing():
-    embed=discord.Embed(title="TTS Options", description="Click one of the buttons in this message to choose a language. You have 5 seconds.",color=0x00ffee)
+    embed=discord.Embed(title="Comet TTS Options", description="Click one of the buttons in this message to choose a language. You have 5 seconds before it defaults to english.",color=0x2f3136)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
     embed1 = await ctx.send(embed=embed,
       components = [
@@ -2443,55 +2406,63 @@ async def tts(ctx, *, text=None):
         print(result.text)
         language = 'es'
         tts = gTTS(text=result.text, lang=language)
+        language = 'Spanish'
       elif buttonCheck.component.label == 'Armenian (hy)':
         translator = Translator()
         result = translator.translate(text, dest='hy')
         language = 'hy'
         tts = gTTS(text=result.text, lang=language)
+        language = 'Armenian'
       elif buttonCheck.component.label == 'English (en)':
         translator = Translator()
         result = translator.translate(text, dest='en')
         language = 'en'
         tts = gTTS(text=result.text, lang=language)
+        language = 'English'
       elif buttonCheck.component.label == 'Korean (ko)':
         translator = Translator()
         result = translator.translate(text, dest='ko')
         language = 'ko'
         tts = gTTS(text=result.text, lang=language)
+        language = 'Korean'
       elif buttonCheck.component.label == 'Tagalog (Filipino) (tl)':
         translator = Translator()
         result = translator.translate(text, dest='tl')
         language = 'tl'
         tts = gTTS(text=result.text, lang=language)
+        language = 'Tagalog (Filipino)'
       elif buttonCheck.component.label == 'Russian (ru)':
         translator = Translator()
         result = translator.translate(text, dest='ru')
         language = 'ru'
         tts = gTTS(text=result.text, lang=language)
+        language = 'Russian'
       elif buttonCheck.component.label == 'Chinese (Mandarin/Taiwan) (zh-TW)':
         translator = Translator()
         result = translator.translate(text, dest='zh-TW')
-        language = 'zh-TW'
-        tts = gTTS(text=result.text, lang=language)
+        language = 'Chinese (Mandarin/Taiwan)'
+        tts = gTTS(text=result.text, lang='zh-TW')
       elif buttonCheck.component.label == 'German (de)':
         translator = Translator()
         result = translator.translate(text, dest='de')
         language = 'de'
         tts = gTTS(text=result.text, lang=language)
+        language = 'German'
       elif buttonCheck.component.label == 'French (fr)':
         translator = Translator()
         result = translator.translate(text, dest='fr')
         language = 'fr'
         tts = gTTS(text=result.text, lang=language)
+        language = 'French'
       else:
         await ctx.send('Defaulted to English')
-        tts = gTTS(text=result.text)
-        language = 'en'
+        tts = gTTS(text=text, lang='en')
+        language = 'English'
       
     except asyncio.TimeoutError:
       await ctx.send('Defaulted to English')
-      tts = gTTS(text=text)
-      language = 'en'
+      tts = gTTS(text=text, lang='en')
+      language = 'English'
     
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
     if voiceChannel == None:
@@ -2505,14 +2476,17 @@ async def tts(ctx, *, text=None):
       totalsec = f.duration
       hours, mins, seconds = howLong(int(totalsec))
     
-    embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x3ce7e4)
+    embed2=discord.Embed(title="TTS Notification",description="Successfully set up.", color=0x2f3136)
     embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
-    embed2.add_field(name="Text", value=f"{result.text}", inline=True)
-    embed2.add_field(name="Language", value=f"{language}",inline=False)
-    embed2.add_field(name="Duration", value=f"{hours} Hours: {mins} Minutes:{seconds} Seconds", inline=False)
+    try:
+      embed2.add_field(name="Text:", value=f"{result.text}", inline=True)
+    except:
+      embed2.add_field(name="Text:", value=f"{text}", inline=True)
+    embed2.add_field(name="Language:", value=f"```{language}```",inline=False)
+    embed2.add_field(name="Duration:", value=f"```{hours} Hours: {mins} Minutes: {seconds} Seconds```", inline=False)
     
   await embed1.edit(embed=embed2, components=[
-    Button(style = ButtonStyle.red, label = "Done")
+    Button(style = ButtonStyle.red, label = "☁~~☁~~☀~~☁~~~~Done~~~~☁~~~☁~~☁~~☁~~☁", disabled=True)
   ])
     
   try:
@@ -2998,37 +2972,14 @@ async def unwarn_error(ctx, error):
   else:
     raise error
 
-@addWord.error
-async def addWordError(ctx, error):
-  if isinstance(error, commands.MissingPermissions):
-    ctx.channel.purge(limit=1)
-    embed=discord.Embed(title="Permission Denied", description="You don't have the permissions to run the command.", color=0xff0000)
-    embed.set_author(name="STOP", icon_url="https://images.vexels.com/media/users/3/193117/isolated/preview/391dc07c463639a67dcb5d471d068bff-stop-covid-badge-by-vexels.png")
-    embed.set_thumbnail(url="https://images.vexels.com/media/users/3/136933/isolated/preview/12e4ab9fce4498ed36b9f1d162678300-stop-button-icon-by-vexels.png")
-    embed.add_field(name="People who have permissions to run it:", value="Mods", inline=False)
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@removeWord.error
-async def removeWordError(ctx, error):
-  if isinstance(error, commands.MissingPermissions):
-    ctx.channel.purge(limit=1)
-    embed=discord.Embed(title="Permission Denied", description="You don't have the permissions to run the command.", color=0xff0000)
-    embed.set_author(name="STOP", icon_url="https://images.vexels.com/media/users/3/193117/isolated/preview/391dc07c463639a67dcb5d471d068bff-stop-covid-badge-by-vexels.png")
-    embed.set_thumbnail(url="https://images.vexels.com/media/users/3/136933/isolated/preview/12e4ab9fce4498ed36b9f1d162678300-stop-button-icon-by-vexels.png")
-    embed.add_field(name="People who have permissions to run it:", value="Mods", inline=False)
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
 @client.event
-async def on_command_error(ctx, error):
-  if isinstance(error, discord.ext.commands.errors.CommandNotFound):
-    msg = 'I am sorry. That command doesnt exist. Try typing it differently or just don\'t type it.'
-    embed=discord.Embed(title="Command Doesn't Exist", description=msg, color=0xff0000)
+async def permError(ctx, error):
+  if isinstance(error, commands.MissingPermissions):
+    ctx.channel.purge(limit=1)
+    embed=discord.Embed(title="Permission Denied", description="You don't have the permissions to run the command.", color=0xff0000)
+    embed.set_author(name="STOP", icon_url="https://images.vexels.com/media/users/3/193117/isolated/preview/391dc07c463639a67dcb5d471d068bff-stop-covid-badge-by-vexels.png")
+    embed.set_thumbnail(url="https://images.vexels.com/media/users/3/136933/isolated/preview/12e4ab9fce4498ed36b9f1d162678300-stop-button-icon-by-vexels.png")
+    embed.add_field(name="People who have permissions to run it:", value="Mods", inline=False)
     embed.set_footer(text="Comet Alert")
     await ctx.send(embed=embed, delete_after=10)
   else:
