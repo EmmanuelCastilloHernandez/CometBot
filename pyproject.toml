@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Comet"
-version = "1.0.0"
+version = "2.0.0"
 description = "A open-source discord.py bot."
 authors = ["Emmanuel Castillo emmanuelino2@gmail.com","Garen Gevorgyan"]
 

@@ -30,6 +30,7 @@ As is, the bot is packed with features, such as:
 * Blacklist
 * Warning System
 * Economy Game
+* Edit Snipe
 
 ### Super Snipe
 Typical snipe bots only snipe one message at a time and when another message gets deleted, so does that message. This bot solves that issue because it can capture up to three deleted messages before discarding them in favor of new ones.
@@ -54,6 +55,8 @@ Comet's original system in the 1.0.0 Betas was based on the Replit Database libr
 ### Economy Game
 Comet is equipped with an economy game, where you can gain, rob, and send Chem Coins (⌬), which is the currency of the bot. You can use `#shop` to see what is available and to buy something you run `#bal <amount> <itemName>`. To begin playing, run `#bal` and the bot will make an account for you and to gain money you do `#beg`. 
 
+### Edit Snipe
+A message's meaning can be altered by obviously editing it. This means that if you wanted to see what the message read previously, you had to be there or download 3rd-Party addons to see it. Thankfully, Comet bypasses this by the creation of the `#edit` command, which shows you how a message was before it was edited and how it is after its edited. Multiple edit message viewing is planned for V3 by latest. Beware `#edit` has a 60-second timer to check what were the contents of the message before the command gets cleared
 
 # Commands
 To run a ~~cum~~command, you have to use the `#` prefix. Simple.
@@ -70,7 +73,7 @@ Here is a list of some bot commands as of 2.0.0 __**`Aldebaran`**__:
 * #tictactoe
 * #warn
 * #unwarn
-* :
+* ;
 * #dead chat
 * #dead server
 * #snipe

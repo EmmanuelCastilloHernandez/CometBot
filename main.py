@@ -14,14 +14,15 @@
 
 # This step is only needed if you use poetry in Replit
 import os
-os.system('pip install prsaw')
-chatbotAPIKey = os.getenv('chatbotKey')
 
 try:
   os.system('pip3 uninstall -y googletrans')
   os.system('pip3 install googletrans==3.1.0a0')
 except:
   os.system('pip3 install googletrans==3.1.0a0')
+
+os.system('pip install prsaw')
+chatbotAPIKey = os.getenv('chatbotKey')
 
 os.system('pip install discord_components')
 # Importing libraries used in the bot
@@ -95,6 +96,20 @@ likes = 0
 length = 0
 queuedMusic = None
 
+def startupMsg():
+  '''
+  ░█████╗░░█████╗░███╗░░░███╗███████╗████████╗
+  ██╔══██╗██╔══██╗████╗░████║██╔════╝╚══██╔══╝
+  ██║░░╚═╝██║░░██║██╔████╔██║█████╗░░░░░██║░░░
+  ██║░░██╗██║░░██║██║╚██╔╝██║██╔══╝░░░░░██║░░░
+  ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
+  ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
+  
+  Version **2** Aldebaran ready to use!
+  '''
+
+  pass
+
 # Comet audio player dictionary
 players = {}
 queues = {}
@@ -123,7 +138,6 @@ def search(query):
   duration %= 60
   seconds = duration
   return (info, info['formats'][0]['url'], hours, mins, seconds)
-
 
 #prefix for the bot
 intents = discord.Intents.default()
@@ -159,19 +173,20 @@ async def on_guild_remove(guild):
     serverCount = json.load(f)
   
   serverCount["server count"] = len(client.guilds)
-  servers = serverCount["server count"]
 
   with open('serverCount.json','w') as f:
     serverCount = json.dump(serverCount, f)
 
 @client.event
 async def on_member_join(member):
-  # This code is put in place at the request of one of the patron
-  # servers after a member who solicited two girls for inappropriate
-  # pictures left before he could get banned. This code should
-  # only affect the server that requested it
+  '''
+  This code is put in place at the request of one of the patron
+  servers after a member who solicited two girls for inappropriate
+  pictures left before he could get banned. This code should
+  only affect the server that requested it
   channel = client.get_channel(777364217673678858)
   methuDetect = client.get_user(member.id)
+  '''
 
   if methuDetect == 713566308695932950:
     if member.guild_id == 736621294350499931:
@@ -190,15 +205,15 @@ async def on_message_edit(before, after):
   global beforeMessage
   global afterMessage
   if before.content != after.content:
-    editMessageAuthor = before.author
-    beforeMessage = before.content
-    afterMessage = after.content
+    editMessageAuthor[before.channel.id] = before.author
+    beforeMessage[before.channel.id] = before.content
+    afterMessage[after.channel.id] = after.content
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(45)
 
-    editMessageAuthor = None
-    beforeMessage = None
-    afterMessage = None
+    del editMessageAuthor[before.channel.id]
+    del beforeMessage[before.channel.id]
+    del afterMessage[after.channel.id]
 
 # This executes when a message is sent
 @client.event
@@ -206,37 +221,30 @@ async def on_message(message):
   await client.process_commands(message)
 
   if message.content.startswith(';'):
-    response = message.content.replace(';','')
     print('')
-    responseToSend = await chatBot.get_ai_response(response)
+    msg = message.content.replace(';','')
+    responseToSend = await chatBot.get_ai_response(msg)
 
     await message.reply(responseToSend)
 
   allowMessage = True
   # Neo Blacklist Code
   checkBannedWords = ""
-  with open("slurs.json", "r") as slurs:
-    slurPrepare = json.load(slurs)
-  print(message.guild.id)
+  with open("slurs.json", "r") as slurs: slurPrepare = json.load(slurs)
 
-  if str(message.guild.id) in slurPrepare:
-    uselessVariable = 1
-  else:
-    slurPrepare[str(message.guild.id)] = []
+  if str(message.guild.id) in slurPrepare: uselessVariable = 1
+  else: slurPrepare[str(message.guild.id)] = []
   
   checkBannedWords = slurPrepare[str(message.guild.id)]
     
-  with open('slurs.json','w') as f:
-    json.dump(slurPrepare, f)
+  with open('slurs.json','w') as f: json.dump(slurPrepare, f)
 
   content = str(message.content)
   httpsResult = content.startswith('https')
   emojiResult = content.startswith('<a:')
   content = content.lower()
-  if emojiResult == True or httpsResult == True:
-    uselessVariable = 1
-  else:
-    content = content.translate(str.maketrans('', '', string.punctuation))
+  if emojiResult == True or httpsResult == True: uselessVariable = 1
+  else: content = content.translate(str.maketrans('', '', string.punctuation))
 
   if message.guild.id in intuitiveBlacklist:
     if message.author.id in intuitiveBlacklist[message.guild.id]:
@@ -257,19 +265,16 @@ async def on_message(message):
   
   content = content.split()
   for x in content:
-    if (message.author.bot):
-      return
+    if (message.author.bot): return
     elif x in checkBannedWords:
       await message.delete()
       return
   
   for x in checkBannedWords:
-    def check(m):
-      return m.author == message.author
+    def check(m): return m.author == message.author
     
     checkThePhrase = ''.join(intuitiveBlacklist[message.guild.id][message.author.id]['message'])
-    if (message.author.bot):
-      return
+    if (message.author.bot): return
     elif x in checkThePhrase:
       amountToDelete = int(len(x))
       await message.channel.purge(limit=amountToDelete, check=check)
@@ -313,7 +318,7 @@ async def on_message(message):
 
   if users[str(message.guild.id)][str(message.author.id)]['XP'] >= levelThreshold:
     await updateLevels(message.author, message.guild, 1, 'Level')
-    await updateLevels(message.author, message.guild, -1*users[str(message.guild.id)][str(message.author.id)]['XP'], 'XP')
+    await updateLevels(message.author, message.guild, -1*levelThreshold, 'XP')
 
     level = users[str(message.guild.id)][str(message.author.id)]['Level']
     await message.channel.send(f'{message.author.mention} has leveled up to level {level+1}! Congrats.')
@@ -332,8 +337,7 @@ async def on_message(message):
     await message.channel.send('ok')
 
 async def openLevelUser(user, server):
-  with open('levels.json','r') as f:
-    users = json.load(f)
+  with open('levels.json','r') as f: users = json.load(f)
   
   if str(server.id) in users:
     if str(user.id) in users[str(server.id)]: 
@@ -348,22 +352,20 @@ async def openLevelUser(user, server):
     users[str(server.id)][str(user.id)]['Level'] = 1
     users[str(server.id)][str(user.id)]['XP'] = 0
   
-  with open('levels.json','w') as f:
-    json.dump(users, f)
+  with open('levels.json','w') as f: json.dump(users, f)
   return True
 
 async def updateLevels(user, server=None, change=0, mode='Level'):
-  with open('levels.json','r') as f:
-    users = json.load(f)
+  with open('levels.json','r') as f: users = json.load(f)
   
   users[str(server.id)][str(user.id)][mode] += change
 
-  with open('levels.json','w') as f:
-    json.dump(users, f)
+  with open('levels.json','w') as f: json.dump(users, f)
   
   bal = [users[str(server.id)][str(user.id)]["Level"], users[str(server.id)][str(user.id)]["XP"]]
   return bal
 
+snipeCounter = {}
 #client event that gets the snipe function's variables ready
 @client.event
 async def on_message_delete(message):
@@ -377,28 +379,33 @@ async def on_message_delete(message):
   global snipeMessageAuthor3
   global snipeCounter
 
+  if message.guild.id not in snipeCounter:
+    snipeCounter[message.guild.id] = 1
+  
   regularSnipeAuthor[message.channel.id] = message.author
   regularSnipeMessage[message.channel.id] = message.content
-  if snipeCounter == 1:
+
+  if snipeCounter[message.guild.id] == 1:
     snipeMessage[message.channel.id] = message.content
     snipeMessageAuthor[message.channel.id] = message.author
-    snipeCounter += 1
-
-  elif snipeCounter == 2:
+    print(snipeMessage[message.channel.id])
+    snipeCounter[message.guild.id] += 1
+  elif snipeCounter[message.guild.id] == 2:
     snipeMessage2[message.channel.id] = message.content
     snipeMessageAuthor2[message.channel.id] = message.author
-    snipeCounter += 1
-
-  elif snipeCounter == 3:
+    snipeCounter[message.guild.id] += 1
+    print(snipeMessage2[message.channel.id])
+  elif snipeCounter[message.guild.id] == 3:
     snipeMessage3[message.channel.id] = message.content
     snipeMessageAuthor3[message.channel.id] = message.author
+    print(snipeMessage3[message.channel.id])
 
-    snipeCounter = 1
-    print('New snipe val: '+ str(snipeCounter))
+    snipeCounter[message.guild.id] = 1
+    print(f'New snipe val for {message.guild}: '+ str(snipeCounter[message.guild.id]))
 
   await asyncio.sleep(120)
 
-  snipeCounter = 1
+  snipeCounter[message.guild.id] = 1
   del regularSnipeAuthor[message.channel.id]
   del regularSnipeMessage[message.channel.id]
   del snipeMessageAuthor[message.channel.id]
@@ -411,6 +418,7 @@ async def on_message_delete(message):
 @client.event
 async def on_ready():
   DiscordComponents(client)
+  channel = client.get_channel(839960483398549514)
   with open('serverCount.json','r+') as f:
     serverCount = json.load(f)
 
@@ -419,17 +427,24 @@ async def on_ready():
 
   with open('serverCount.json','w') as f:
     serverCount = json.dump(serverCount, f)
-  await client.change_presence(activity = discord.Streaming(name = f'☄️ {servers} Server Network☄️', url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
-  print('Ready for deployment. \nThank you for using Comet')
+  await client.change_presence(activity = discord.Streaming(name = f'☄️ {servers} Stars in the Sky ☄️', url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
+  print(startupMsg.__doc__)
+  await channel.send(startupMsg.__doc__, components = [
+    [
+      Button(style = ButtonStyle.blue, label = f"Servers with Comet: {servers}", disabled = True),
+      Button(style = ButtonStyle.green, label = "Creator: Emmanuel Castillo", disabled = True)
+    ]
+  ])
+
+@client.command(aliases = ['rev'])
+async def reverse(ctx, *, msg): await ctx.reply(msg[::-1])
 
 @client.command(pass_context=True)
 async def rank(ctx, member: discord.Member=None, show=5):
   serverName = ctx.guild
   rankList = []
-  if member == None:
-    member = ctx.author
-  with open('levels.json','r') as f:
-    users = json.load(f)
+  if member == None: member = ctx.author
+  with open('levels.json','r') as f: users = json.load(f)
   await openLevelUser(member, serverName)
 
   for user in ctx.guild.members:
@@ -455,7 +470,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
   rankDisplay = '```'
   for entry in rankList:
     if entry[0] == ctx.author.name:
-        userRank = counter
+      userRank = counter
     if loopCount < show:
       rankDisplay += f'{counter}. {entry[0]}:\nLevel: {entry[1]}, XP: {entry[2]}\n'
       counter += 1
@@ -464,7 +479,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
   rankDisplay += '```'
   levelThreshold = 10*1.5*userBal
 
-  embed=discord.Embed(description=f"========= ***Rank {userRank}*** ==============", color=0x34363b)
+  embed=discord.Embed(description=f"========= ***Rank {userRank}*** ==============", color=0x2f3136)
   embed.set_author(name="▞ Comet Rank System ▚")
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Level:", value=f"*__{userBal}__*", inline=True)
@@ -480,16 +495,12 @@ async def levels(ctx, number=5):
   with open('levels.json','r') as f:
     users = json.load(f)
   await openLevelUser(ctx.author, serverName)
-  level = {}
   levelList = []
 
   levelChecker = f'{serverName} Level'
 
-  for user in users:
-    name = int(user)
-    userBal = users[user][levelChecker]
-    level[userBal] = name
-    levelList.append(userBal)
+  for user in ctx.guild.members:
+    print('hello')
   
   levelList = sorted(levelList, reverse=True)
 
@@ -510,7 +521,6 @@ async def levels(ctx, number=5):
   embed.set_footer(text="Comet Economy Alert")
   await ctx.send(embed=embed)
 
-
 @client.command(aliases=['Solve'])
 async def solve(ctx, v1: int=0, v2: int=0, v3: int=0, v4: int=0, v5: int=0, v6: int=0, v7: int=0):
 
@@ -519,7 +529,7 @@ async def solve(ctx, v1: int=0, v2: int=0, v3: int=0, v4: int=0, v5: int=0, v6: 
   solve = f'{v1} + {v2}X + {v3}X^2 + {v4}X^3 + {v5}X^4 + {v6}X^5 + {v7}x^6'
   x = sp.solve(y)
   try:
-    embed=discord.Embed(title=f"***Here are the solutions for __{solve}__***", description='***NOTE: Ignore the brackets. Those are because of the text color formatting***', color=0x00ffee)
+    embed=discord.Embed(title=f"***Here are the solutions for __{solve}__***", description='***NOTE: Ignore the brackets. Those are because of the text color formatting***', color=0x2f3136)
 
     counter = 1
     for entry in x:
@@ -546,6 +556,48 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Phone','price':500,'description':'The Castillo Phone 2XS Pro MAX. Use #phone to be able to scam people and do other things.'},
   {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #Padlock to use it.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
+
+@client.command()
+async def emo(ctx, *, member: discord.Member=None):
+  if member == None:
+    member = ctx.author
+
+  asset = member.avatar_url_as(size=512)
+  data = BytesIO(await asset.read())
+  pfp = Image.open(data)
+  emoOverlay = Image.open('emoOverlay.png')
+  pfp = pfp.resize((512,512))
+  emoOverlay = emoOverlay.resize((512,512))
+
+  pfp.paste(emoOverlay, (0, 0), emoOverlay)
+  pfp.save('emoPic.png')
+
+  await ctx.reply(file = discord.File('emoPic.png'), mention_author=False)
+
+@client.command(aliases=['queer','gay','pride'])
+async def lgbt(ctx, member: discord.Member=None, flag: str=None):
+  if member == None:
+    member = ctx.author
+  prideOverlays = ['/home/runner/CometBot/prideTemplates/prideHearts.png',
+  '/home/runner/CometBot/prideTemplates/prideOverlay.png',
+  '/home/runner/CometBot/prideTemplates/prideCornerOverlay.png']
+
+  asset = member.avatar_url_as(size=512)
+  data = BytesIO(await asset.read())
+  pfp = Image.open(data)
+
+  if flag != None:
+    prideOverlay = Image.open(f'/home/runner/CometBot/prideTemplates/{flag}.png')
+  else:
+    prideOverlay = Image.open(random.choice(prideOverlays))
+  
+  pfp = pfp.resize((512,512))
+  prideOverlay = prideOverlay.resize((512,512))
+
+  pfp.paste(prideOverlay, (0, 0), prideOverlay)
+  pfp.save('pridePic.png')
+
+  await ctx.reply(file = discord.File('pridePic.png'), mention_author=False)
 
 # Code made by KITECO on GitHub
 # This version of their code was adapted for use in Discord
@@ -1527,9 +1579,12 @@ async def weatherReport(ctx):
 
   base_url = "http://api.openweathermap.org/data/2.5/weather?"
 
+  def check(msg):
+    return msg.author == ctx.author
+
   try:
     await ctx.send("`Input your city now:`")
-    grabCity = await client.wait_for('message', check=None, timeout=15)
+    grabCity = await client.wait_for('message', check=check, timeout=15)
     city = grabCity.content
 
   except asyncio.TimeoutError:
@@ -1662,43 +1717,60 @@ async def removeWord(ctx, *, wordToRemove):
   await ctx.send(f'Removed {wordToRemove} from the blacklist.')
   return bannedWords
 
-@client.command(help='Use when the server failed')
-@commands.cooldown(1, 10, commands.BucketType.user)
-async def failed(ctx, *, type):
-  if (str(type) == 'server'):
-    pictures = ['https://tenor.com/view/reaction-mrw-ihave-failed-you-obi-wan-kenobi-gif-4991213',
-      'https://tenor.com/view/you-failed-gif-15415391',
-      'https://tenor.com/view/failed-rayya-gif-18980198',
-      'https://tenor.com/view/adventure-time-ice-king-ifailed-failure-upset-gif-4910391',
-      'https://tenor.com/view/ifailed-iko-uwais-kai-jin-wu-assassins-failure-gif-18615922']
-    await ctx.send(f'The server be like: {random.choice(pictures)}')
-
 #Snipe commands
-@client.command(help='A super snipe command for snitches')
-@commands.cooldown(1, 5, commands.BucketType.user)
-async def SuperSnipe(ctx, *, messageToRetrieve=1):
-  messageToRetrieve = int(messageToRetrieve)
+@client.command(aliases=['ssnipe','snipe+'],help='A super snipe command for snitches')
+async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
   channel = ctx.channel
+  print(snipeMessage)
 
   try:
     if messageToRetrieve == 1:
-      embed = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}')
+      embed = discord.Embed(title=f"{snipeMessageAuthor[ctx.channel.id]}", description=f'{snipeMessage[ctx.channel.id]}')
       embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝", color=0x2724ff)
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
-      await ctx.channel.send(embed=embed)
     if messageToRetrieve == 2:
-      embed = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}', color=0x2581f8)
+      embed = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}', color=0x2f3136)
       embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝")
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
-      await ctx.channel.send(embed=embed)
     if messageToRetrieve == 3:
       embed = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}', color=0x25d9f8)
       embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝")
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
-      await ctx.channel.send(embed=embed)
+    mg = await ctx.send(embed=embed, components=[[
+      Button(style = ButtonStyle.red, label = "1"),
+      Button(style = ButtonStyle.blue, label = "2"),
+      Button(style = ButtonStyle.green, label = "3"),
+    ]])
+
+    while True:
+      def check(buttonCheck):
+        return buttonCheck.channel == ctx.channel
+      
+      try:
+        buttonCheck = await client.wait_for("button_click", check=check)
+        if buttonCheck.component.label == '1':
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}')
+          embed2.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {buttonCheck.component.label} ✶   ✵ ⚝", color=0x2724ff)
+          embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user}", icon_url=buttonCheck.user.avatar_url)
+          await mg.edit(embed=embed2)
+        if buttonCheck.component.label == '2':
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}')
+          embed2.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {buttonCheck.component.label} ✶   ✵ ⚝", color=0x2724ff)
+          embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user}", icon_url=buttonCheck.user.avatar_url)
+          await mg.edit(embed=embed2)
+        if buttonCheck.component.label == '3':
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}')
+          embed2.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {buttonCheck.component.label} ✶   ✵ ⚝", color=0x2724ff)
+          embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user}", icon_url=buttonCheck.user.avatar_url)
+          await mg.edit(embed=embed2)
+      except:
+        await mg.edit(content='Error')
   except:
     embed=discord.Embed(title=" ", color=0x0603bf)
     embed.set_author(name=f"𝙉𝙤 𝙀𝙣𝙩𝙧𝙞𝙚𝙨 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author.name}")
@@ -1713,7 +1785,7 @@ async def snipe(ctx):
     embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
     embed.set_author(name="⚝ ✶   ✵ 𝙎𝙉𝙄𝙋𝙀 ✵  ✶ ⚝")
-    await ctx.channel.send(embed=embed)
+    await ctx.send(embed=embed)
   except:
     embed=discord.Embed(title=" ", color=0x0603bf)
     embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
@@ -2054,14 +2126,17 @@ async def makeZalgo(ctx, *, textToZalgofy: str):
   await ctx.send(f'`{finalText}`')
 
 @client.command(help='Edit command for snitches')
-@commands.cooldown(1, 10, commands.BucketType.guild)
 async def edit(ctx):
-  embed=discord.Embed(title=f"Author: {editMessageAuthor}", color=0x34363b)
-  embed.set_author(name="Messaged Edited")
-  embed.add_field(name="Before:", value=f"{beforeMessage}", inline=False)
-  embed.add_field(name="After:", value=f"{afterMessage}", inline=True)
-  await ctx.send(embed=embed)
-  await ctx.send(f'SNITCH {ctx.author.mention}')
+  try:
+    embed=discord.Embed(title=f"Author: {editMessageAuthor[ctx.channel.id]}", color=0x2f3136)
+    embed.set_author(name="Messaged Edited in {}".format(ctx.channel.name))
+    embed.add_field(name="Before:", value=f"{beforeMessage[ctx.channel.id]}", inline=False)
+    embed.add_field(name="After:", value=f"{afterMessage[ctx.channel.id]}", inline=True)
+    await ctx.send(embed=embed)
+  except:
+    embed=discord.Embed(title=" ", color=0x0603bf)
+    embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
+    await ctx.send(embed=embed)
 
 def checkQueue1(id, server):
   ID = id
@@ -2281,7 +2356,7 @@ async def queue(ctx, *, url: str):
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
-@client.command(aliases=['l'])
+@client.command(aliases=['die'])
 async def leave(ctx):
   if (ctx.voice_client):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
@@ -2326,7 +2401,7 @@ async def skip(ctx):
 @client.command(aliases=['topic','topis','stopic','Topic','stoc'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def questions(ctx):
-  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','H̵́́o̷̒͘w̴̷̆͗͋̒d̸͌͆ò̶͝ ̶̄̈ẏ̸̃o̸̖͆u̶̾̓ ̶̅͛e̵̍́s̵̓́c̴̎̚a̸͗̑p̴̦͝é̷̉?̸̉̏','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!', 'The G-Man provides a Xen sample. What do you do?', 'Mention the person with the least friends.', 'I\’m not like other girls!']
+  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!', 'The G-Man provides a Xen sample. What do you do?', 'Mention the person with the least friends.', 'I\’m not like other girls!']
   await ctx.channel.send(f'{random.choice(randomquestions)}')
 
 @client.command(aliases=['gareb', 'garen',])
@@ -2400,6 +2475,7 @@ async def tts(ctx, *, text=None):
     try:
       buttonCheck = await client.wait_for("button_click", timeout=5, check=check)
 
+      await buttonCheck.respond(content = f'{buttonCheck.component.label} Selected')
       if buttonCheck.component.label == 'Spanish (es)':
         translator = Translator()
         result = translator.translate(text, dest='es')
@@ -2486,7 +2562,10 @@ async def tts(ctx, *, text=None):
     embed2.add_field(name="Duration:", value=f"```{hours} Hours: {mins} Minutes: {seconds} Seconds```", inline=False)
     
   await embed1.edit(embed=embed2, components=[
-    Button(style = ButtonStyle.red, label = "☁~~☁~~☀~~☁~~~~Done~~~~☁~~~☁~~☁~~☁~~☁", disabled=True)
+    [
+      Button(style = ButtonStyle.blue, label = "☁  ☁  ☀  ☁ Done  ☁  ☁  ☁  ☁  ☁", disabled=True),
+      Button(style = ButtonStyle.blue, label = "☁  ☁  ☁  ☁  ☁  ☁  ☁  ☁", disabled=True)
+    ]
   ])
     
   try:
@@ -2505,92 +2584,7 @@ async def tts(ctx, *, text=None):
 
 @client.command(help="Play with #rps")
 async def rps(ctx):
-    rpsGame = ['rock', 'paper', 'scissors']
-    await ctx.send(f"Rock, paper, or scissors? Choose wisely...")
-
-    def check(msg):
-        return msg.author == ctx.author and msg.channel == ctx.channel and msg.content.lower() in rpsGame
-
-    user_choice = (await client.wait_for('message', check=check)).content
-
-    comp_choice = random.choice(rpsGame)
-    if user_choice == 'rock':
-        if comp_choice == 'rock':
-            embed=discord.Embed(title="It was a tie", color=0xebee20)
-            embed.set_author(name="Tie", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-        elif comp_choice == 'paper':
-            embed=discord.Embed(title=f"{ctx.author.nick} lost", color=0xb30000)
-            embed.set_author(name="Comet Won", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-        elif comp_choice == 'scissors':
-            embed=discord.Embed(color=0xa5e199)
-            embed.set_author(name=f"{ctx.author.nick} Won", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-
-    elif user_choice == 'paper':
-        if comp_choice == 'rock':
-            embed=discord.Embed(color=0xa5e199)
-            embed.set_author(name=f"{ctx.author.nick} Won", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-        elif comp_choice == 'paper':
-            embed=discord.Embed(title="It was a tie", color=0xebee20)
-            embed.set_author(name="Tie", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-        elif comp_choice == 'scissors':
-            embed=discord.Embed(title=f"{ctx.author.nick} lost", color=0xb30000)
-            embed.set_author(name="Comet Won", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-
-    elif user_choice == 'scissors':
-        if comp_choice == 'rock':
-            embed=discord.Embed(title=f"{ctx.author.nick} lost", color=0xb30000)
-            embed.set_author(name="Comet Won", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-        elif comp_choice == 'paper':
-            embed=discord.Embed(color=0xa5e199)
-            embed.set_author(name=f"{ctx.author.nick} Won", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
-        elif comp_choice == 'scissors':
-            embed=discord.Embed(title="It was a tie", color=0xebee20)
-            embed.set_author(name="Tie", icon_url="https://toppng.com/uploads/preview/rock-paper-scissors-circle-11562962494dqcjusyikw.png")
-            embed.set_thumbnail(url="https://www.pngkey.com/png/full/87-876078_rock-paper-scissors-vector-rock-paper-scissors-clipart.png")
-            embed.add_field(name="Your Choice", value=user_choice, inline=True)
-            embed.add_field(name="My Choice", value=comp_choice, inline=True)
-            embed.set_footer(text="Comet Game")
-            await ctx.send(embed=embed)
+  rpsGame = ['rock', 'paper', 'scissors']
 
 async def openWarnUser(member, server):
   with open('warns.json', 'r') as warnings:
@@ -2627,6 +2621,8 @@ async def openSetupAccount(server):
     setting[str(server.id)]["Role 1 Warns"] = 3
     setting[str(server.id)]["Role 2 Warns"] = 6
     setting[str(server.id)]["Admin Role Warns"] = 3
+    setting[str(server.id)]["Receive Bot Notifications"] = 'False'
+    setting[str(server.id)]["Notification Channel"] = 0
 
   with open('setup.json','w') as setup:
     json.dump(setting, setup)
@@ -2635,8 +2631,11 @@ async def openSetupAccount(server):
 @client.command(aliases=['sU','Setup'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 @commands.has_permissions(administrator=True)
-async def setup(ctx, *, setupOption='warning'):
+async def setup(ctx, *, setupOption: str='warning'):
   await openSetupAccount(ctx.guild)
+  if setupOption == 'notif' or setupOption == 'notification' or setupOption == 'n':
+    await ctx.reply('𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐭𝐡𝐞 𝐂𝐨𝐦𝐞𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧 𝐒𝐞𝐭𝐮𝐩. 𝐓𝐡𝐢𝐬 𝐢𝐬 𝐮𝐬𝐞𝐝 𝐭𝐨 𝐬𝐞𝐭 𝐮𝐩 𝐛𝐨𝐭 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐢𝐧 𝐚 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐨𝐟 𝐭𝐡𝐢𝐬 𝐬𝐞𝐫𝐯𝐞𝐫. 𝐌𝐚𝐤𝐞 𝐬𝐮𝐫𝐞 𝐭𝐨 𝐡𝐚𝐯𝐞 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐈𝐃 𝐨𝐟 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐲𝐨𝐮 𝐚𝐫𝐞 𝐠𝐨𝐢𝐧𝐠 𝐭𝐨 𝐮𝐬𝐞 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐨𝐧 𝐡𝐚𝐧𝐝 𝐭𝐨 𝐦𝐚𝐤𝐞 𝐭𝐡𝐢𝐬 𝐩𝐫𝐨𝐜𝐞𝐬𝐬 𝐟𝐚𝐬𝐭𝐞𝐫.')
+    pass
   if setupOption == 'warning':
     adminRole = ''
     role1 = ''
@@ -2744,13 +2743,13 @@ async def warn(ctx, member: discord.Member, *, reason=None):
 
     for role in member.roles:
       if role == adminRole and timesWarned > adminWarn:
-        await ctx.send(f'𝙎𝙤𝙧𝙧𝙮 𝙩𝙤 𝙗𝙤𝙩𝙝𝙚𝙧 𝙮𝙤𝙪 {adminRole.mention}, 𝙗𝙪𝙩 𝙖 𝙛𝙚𝙡𝙡𝙤𝙬 𝙢𝙚𝙢𝙗𝙚𝙧 ***({member.mention})*** 𝙝𝙖𝙨 𝙜𝙖𝙩𝙝𝙚𝙧𝙚𝙙 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙨 𝙩𝙤 𝙜𝙚𝙩 𝙩𝙝𝙚𝙞𝙧 𝙢𝙤𝙙𝙚𝙧𝙖𝙩𝙤𝙧/𝙖𝙙𝙢𝙞𝙣 𝙨𝙩𝙖𝙩𝙪𝙨 𝙧𝙚𝙢𝙤𝙫𝙚𝙙. 𝙋𝙡𝙚𝙖𝙨𝙚 𝙙𝙞𝙨𝙘𝙪𝙨𝙨 𝙩𝙝𝙞𝙨 𝙩𝙤 𝙛𝙞𝙜𝙪𝙧𝙚 𝙤𝙪𝙩 𝙬𝙝𝙖𝙩 𝙩𝙤 𝙙𝙤.')
+        await ctx.send(f'𝙎𝙤𝙧𝙧𝙮 𝙩𝙤 𝙗𝙤𝙩𝙝𝙚𝙧 𝙮𝙤𝙪 {adminRole.mention}, 𝙗𝙪𝙩 𝙖 𝙢𝙚𝙢𝙗𝙚𝙧 ***({member.mention})*** 𝙝𝙖𝙨 𝙜𝙖𝙩𝙝𝙚𝙧𝙚𝙙 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙨 𝙩𝙤 𝙜𝙚𝙩 𝙩𝙝𝙚𝙞𝙧 𝙢𝙤𝙙𝙚𝙧𝙖𝙩𝙤𝙧/𝙖𝙙𝙢𝙞𝙣 𝙨𝙩𝙖𝙩𝙪𝙨 𝙧𝙚𝙢𝙤𝙫𝙚𝙙. 𝙋𝙡𝙚𝙖𝙨𝙚 𝙙𝙞𝙨𝙘𝙪𝙨𝙨 𝙩𝙝𝙞𝙨 𝙩𝙤 𝙛𝙞𝙜𝙪𝙧𝙚 𝙤𝙪𝙩 𝙬𝙝𝙖𝙩 𝙩𝙤 𝙙𝙤.')
         break
       if role == role1 and timesWarned > role1Warn:
-        await ctx.send(f'𝙎𝙤𝙧𝙧𝙮 𝙩𝙤 𝙗𝙤𝙩𝙝𝙚𝙧 𝙮𝙤𝙪  {adminRole.mention}, 𝙗𝙪𝙩 𝙖 𝙛𝙚𝙡𝙡𝙤𝙬 𝙢𝙚𝙢𝙗𝙚𝙧 ({member.mention}) 𝙝𝙖𝙨 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙨 𝙩𝙤 𝙜𝙚𝙩 𝙠𝙞𝙘𝙠𝙚𝙙/𝙗𝙖𝙣𝙣𝙚𝙙 𝙛𝙧𝙤𝙢 {ctx.guild.name}.')
+        await ctx.send(f'𝙎𝙤𝙧𝙧𝙮 𝙩𝙤 𝙗𝙤𝙩𝙝𝙚𝙧 𝙮𝙤𝙪  {adminRole.mention}, 𝙗𝙪𝙩 𝙖 𝙢𝙚𝙢𝙗𝙚𝙧 ({member.mention}) 𝙝𝙖𝙨 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙨 𝙩𝙤 𝙜𝙚𝙩 𝙠𝙞𝙘𝙠𝙚𝙙/𝙗𝙖𝙣𝙣𝙚𝙙 𝙛𝙧𝙤𝙢 {ctx.guild.name}.')
         break
       if role == role2 and timesWarned > role2Warn:
-        await ctx.send(f'Sorry to bother you {adminRole.mention}, but a fellow member ({member.mention}) has enough warns to get kicked/banned from {ctx.guild.name}.')
+        await ctx.send(f'Sorry to bother you {adminRole.mention}, but a member ({member.mention}) has enough warns to get kicked/banned from {ctx.guild.name}.')
         break
   else:
     await ctx.reply('⚝ __𝙒𝘼𝙍𝙉𝙄𝙉𝙂__ ⚝: 𝙋𝙡𝙚𝙖𝙨𝙚 𝙘𝙤𝙢𝙥𝙡𝙚𝙩𝙚 𝙩𝙝𝙚 𝙒𝘼𝙍𝙉𝙄𝙉𝙂 𝙎𝙔𝙎𝙏𝙀𝙈 𝙎𝙚𝙩𝙪𝙥 𝙖𝙨 𝙨𝙤𝙤𝙣 𝙖𝙨 𝙥𝙤𝙨𝙨𝙞𝙗𝙡𝙚! 𝙔𝙤𝙪 𝙘𝙖𝙣 𝙙𝙤 𝙩𝙝𝙞𝙨 𝙗𝙮 𝙧𝙪𝙣𝙣𝙞𝙣𝙜 `#𝙨𝙚𝙩𝙪𝙥`.')
@@ -2851,137 +2850,24 @@ async def wikisearch(ctx, *, search):
   await ctx.send(embed=embed)
 
 # All the error handles
-@questions.error
-async def topic_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Wait **{:.2f}** seconds to get a new topic.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@snipe.error
-async def snipe_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Wait **{:.2f}** seconds to snipe again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@eman.error
-async def eman_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Wait **{:.2f}** seconds before using <@588931051103977494>\'s command again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@makeZalgo.error
-async def zalgo_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Wait **{:.2f}** seconds before creating more z̷̠͒a̡ͨ͞l̴ͬͫg̷̏͘ǫ̫͎ ṱ̷̳e̸̸͍x̢̾̇t̵̥͞.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@weatherReport.error
-async def weather_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Weather Report is on cooldown. Try again in **{:.2f}** seconds.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@dead.error
-async def dead_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Please wait another **{:.2f}** seconds before reminding us the server/chat is dead.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@beg.error
-async def beg_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Please wait another **{:.2f}** seconds before begging again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@rob.error
-async def rob_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Please wait another **{:.2f}** seconds before robbing again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@shoot.error
-async def shoot_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Please wait another **{:.2f}** seconds before shoting people again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@warn.error
-async def warn_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Please wait another **{:.2f}** before warning someone again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
-@unwarn.error
-async def unwarn_error(ctx, error):
-  if isinstance(error, commands.CommandOnCooldown):
-    msg = 'Please wait another **{:.2f}** before unwarning someone again.'.format(error.retry_after)
-    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
-    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
-    embed.set_footer(text="Comet Alert")
-    await ctx.send(embed=embed, delete_after=10)
-  else:
-    raise error
-
 @client.event
-async def permError(ctx, error):
+async def on_command_error(ctx, error):
+  if isinstance(error, commands.CommandOnCooldown):
+    msg = 'Please wait another **{:.2f}** before using the command again.'.format(error.retry_after)
+    embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
+    embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
+    embed.set_footer(text="Comet Alert")
+    await ctx.send(embed=embed, delete_after=10)
+    return
   if isinstance(error, commands.MissingPermissions):
-    ctx.channel.purge(limit=1)
+    ctx.channel.delete()
     embed=discord.Embed(title="Permission Denied", description="You don't have the permissions to run the command.", color=0xff0000)
     embed.set_author(name="STOP", icon_url="https://images.vexels.com/media/users/3/193117/isolated/preview/391dc07c463639a67dcb5d471d068bff-stop-covid-badge-by-vexels.png")
     embed.set_thumbnail(url="https://images.vexels.com/media/users/3/136933/isolated/preview/12e4ab9fce4498ed36b9f1d162678300-stop-button-icon-by-vexels.png")
     embed.add_field(name="People who have permissions to run it:", value="Mods", inline=False)
     embed.set_footer(text="Comet Alert")
     await ctx.send(embed=embed, delete_after=10)
+    return
   else:
     raise error
 
