@@ -1,27 +1,26 @@
-# Comet's code
-# This program was made by Emmanuel Castillo
-# Student at NHHS in NH, CA, USA
+''' 
+Comet's code
+This program was made by Emmanuel Castillo
+Student at NHHS in NH, CA, USA
 
-# Developers:
+Developers:
+Emmanuel Castillo
+GitHub: EmmanuelCastilloHernandez
+Discord: eta_c4rinae#7810
+Email: emmanuelino2@gmail.com
 
-# Emmanuel Castillo
-# GitHub: EmmanuelCastilloHernandez
-# Discord: eta_c4rinae#7810
-# Email: emmanuelino2@gmail.com
+Garen Gevoryan
+Discord: Warlex#7860
+'''
 
-# Garen Gevoryan
-# Discord: Warlex#7860
-
-# This step is only needed if you use poetry in Replit
 import os
-
 try:
   os.system('pip3 uninstall -y googletrans')
   os.system('pip3 install googletrans==3.1.0a0')
 except:
   os.system('pip3 install googletrans==3.1.0a0')
 
-os.system('pip install prsaw')
+os.system('pip install git+https://github.com/CodeWithSwastik/prsaw.git')
 chatbotAPIKey = os.getenv('chatbotKey')
 
 os.system('pip install discord_components')
@@ -74,6 +73,7 @@ chatBot = RandomStuff(api_key = chatbotAPIKey, async_mode = True)
 
 # Snipe variables
 regularSnipeAuthor = {}
+regularSnipeImage = {}
 regularSnipeMessage = {}
 snipeMessage = {}
 snipeMessageAuthor = {}
@@ -82,12 +82,11 @@ snipeMessageAuthor2 = {}
 snipeMessage3 = {}
 snipeMessageAuthor3 = {}
 snipeCounter = 1
-editMessageAuthor = {}
-beforeMessage = {}
-afterMessage = {}
+
 usersToLevelUp = {}
 useSpammyCharacters = {}
 intuitiveBlacklist = {}
+levelUpCheck = {}
 users = None
 reactionMessage = None
 title = None
@@ -143,7 +142,7 @@ def search(query):
 intents = discord.Intents.default()
 intents.members = True
 intents.reactions = True
-client = commands.Bot(command_prefix="#", intents=intents)
+client = commands.Bot(command_prefix=["#",'comet do ','COMET ', 'comet ', 'Comet '], intents=intents)
 client.remove_command('help')
 
 @client.event
@@ -184,12 +183,11 @@ async def on_member_join(member):
   servers after a member who solicited two girls for inappropriate
   pictures left before he could get banned. This code should
   only affect the server that requested it
-  channel = client.get_channel(777364217673678858)
-  methuDetect = client.get_user(member.id)
   '''
 
-  if methuDetect == 713566308695932950:
+  if member.id == 713566308695932950:
     if member.guild_id == 736621294350499931:
+      channel = client.get_channel(777364217673678858)
       embed=discord.Embed(title=f"{member.name} TRIED TO COME BACK", color=0xc53302)
       embed.set_author(name="UNWANTED USER DETECTED")
       embed.add_field(name=f"Hi {member.name},", value="If you're seeing this, it's because the bot caught you trying to slip back into a server you were barred from entering. You are banned from entering again because you asked two underaged girls to show you their boobs as part of a $5 bet by dav#0560. You don't go and ask for boob pics from girls you 13-year old pervert. Get a life and learn some basic manners because you are going to be in some serious problems in the future, you sellout.", inline=True)
@@ -199,21 +197,25 @@ async def on_member_join(member):
       await member.ban()
       await channel.send(embed=embed)
 
+regEditMessageAuthor = {}
+regBeforeMessage = {}
+regAfterMessage = {}
 @client.event
 async def on_message_edit(before, after):
-  global editMessageAuthor
-  global beforeMessage
-  global afterMessage
+  global regEditMessageAuthor
+  global regBeforeMessage
+  global regAfterMessage
+
   if before.content != after.content:
-    editMessageAuthor[before.channel.id] = before.author
-    beforeMessage[before.channel.id] = before.content
-    afterMessage[after.channel.id] = after.content
-
-    await asyncio.sleep(45)
-
-    del editMessageAuthor[before.channel.id]
-    del beforeMessage[before.channel.id]
-    del afterMessage[after.channel.id]
+    regEditMessageAuthor[before.channel.id] = before.author
+    regBeforeMessage[before.channel.id] = before.content
+    regAfterMessage[after.channel.id] = after.content
+    
+    await asyncio.sleep(80)
+    
+    del regEditMessageAuthor[before.channel.id]
+    del regBeforeMessage[before.channel.id]
+    del regAfterMessage[after.channel.id]
 
 # This executes when a message is sent
 @client.event
@@ -221,11 +223,10 @@ async def on_message(message):
   await client.process_commands(message)
 
   if message.content.startswith(';'):
-    print('')
     msg = message.content.replace(';','')
     responseToSend = await chatBot.get_ai_response(msg)
-
-    await message.reply(responseToSend)
+  
+    await message.reply(responseToSend[0]["message"])
 
   allowMessage = True
   # Neo Blacklist Code
@@ -286,9 +287,10 @@ async def on_message(message):
   if message.content.startswith('^'):
     if f'{message.author.id} | {message.guild.id}' in useSpammyCharacters:
       allowMessage = False
-      return
 
-    if allowMessage == True:
+    if allowMessage == False:
+      pass
+    else:
       await message.channel.send('^')
       useSpammyCharacters[f'{message.author.id} | {message.guild.id}'] = message.guild.id
 
@@ -316,13 +318,19 @@ async def on_message(message):
     await asyncio.sleep(60)
     del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
 
-  if users[str(message.guild.id)][str(message.author.id)]['XP'] >= levelThreshold:
-    await updateLevels(message.author, message.guild, 1, 'Level')
-    await updateLevels(message.author, message.guild, -1*levelThreshold, 'XP')
+  global levelUpCheck
+  if users[str(message.guild.id)][str(message.author.id)]['XP'] > levelThreshold:
+    if f'{message.author.id} | {message.guild.id}' in levelUpCheck:
+      pass
+    else:
+      newLevel = users[str(message.guild.id)][str(message.author.id)]['Level'] + 1
+      await levelUpUser(message.author, message.guild)
+      await message.channel.send(f'{message.author.mention} has leveled up to level **`{newLevel}`**. Keep it up!')
+      levelUpCheck[f'{message.author.id} | {message.guild.id}'] = True
 
-    level = users[str(message.guild.id)][str(message.author.id)]['Level']
-    await message.channel.send(f'{message.author.mention} has leveled up to level {level+1}! Congrats.')
-    return
+      await asyncio.sleep(60)
+      del levelUpCheck[f'{message.author.id} | {message.guild.id}']
+
   # End of Level Code
 
   if message.content.startswith('no one cares'):
@@ -335,6 +343,20 @@ async def on_message(message):
 
   if message.content.startswith('Wow. There is no message to snipe buddy.'):
     await message.channel.send('ok')
+
+async def levelUpUser(user, server):
+  global levelUpCheck
+  with open('levels.json','r') as f: users = json.load(f)
+
+  if f'{user.id} | {server.id}' not in levelUpCheck:
+    levelThreshold = 15*users[str(server.id)][str(user.id)]['Level']
+
+    users[str(server.id)][str(user.id)]['XP'] -= levelThreshold
+    users[str(server.id)][str(user.id)]['Level'] += 1
+
+    with open('levels.json','w') as f: json.dump(users, f)
+  
+  return True
 
 async def openLevelUser(user, server):
   with open('levels.json','r') as f: users = json.load(f)
@@ -370,6 +392,7 @@ snipeCounter = {}
 @client.event
 async def on_message_delete(message):
   global regularSnipeAuthor
+  global regularSnipeImage
   global regularSnipeMessage
   global snipeMessage
   global snipeMessageAuthor
@@ -384,7 +407,11 @@ async def on_message_delete(message):
   
   regularSnipeAuthor[message.channel.id] = message.author
   regularSnipeMessage[message.channel.id] = message.content
-
+  try:
+    regularSnipeImage[message.channel.id] = await message.attachments[-1].to_file()
+  except:
+    pass
+  
   if snipeCounter[message.guild.id] == 1:
     snipeMessage[message.channel.id] = message.content
     snipeMessageAuthor[message.channel.id] = message.author
@@ -407,6 +434,12 @@ async def on_message_delete(message):
 
   snipeCounter[message.guild.id] = 1
   del regularSnipeAuthor[message.channel.id]
+  
+  try:
+    del regularSnipeImage[message.channel.id]
+  except:
+    pass
+
   del regularSnipeMessage[message.channel.id]
   del snipeMessageAuthor[message.channel.id]
   del snipeMessage[message.channel.id]
@@ -469,7 +502,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
   userRank = 0
   rankDisplay = '```'
   for entry in rankList:
-    if entry[0] == ctx.author.name:
+    if entry[0] == member.name:
       userRank = counter
     if loopCount < show:
       rankDisplay += f'{counter}. {entry[0]}:\nLevel: {entry[1]}, XP: {entry[2]}\n'
@@ -554,7 +587,7 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Gun','price':1000,'description':'Used to shoot.'},
   {'name':'Laptop','price':500,'description':'Use it to surf the Web'},
   {'name':'Phone','price':500,'description':'The Castillo Phone 2XS Pro MAX. Use #phone to be able to scam people and do other things.'},
-  {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #Padlock to use it.'},
+  {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #use <amount> padlock to use it.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
 
 @client.command()
@@ -698,12 +731,17 @@ async def arrest(ctx, member:discord.Member=None, *, reason=None):
 async def deathnote(ctx, member:discord.Member=None):
   if member == None:
     member = ctx.author
-
+  
   wanted = Image.open("deathnote.jpg")
   font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", 35)
   textToRotate=Image.new('L', (500,50))
   textDraw = ImageDraw.Draw(textToRotate)
-  textDraw.text((0, 0), f"{member.nick}",  font=font, fill=255)
+  
+  if member.nick == None:
+    textDraw.text((0, 0), f"{member.name}",  font=font, fill=255)
+  else:
+    textDraw.text((0, 0), f"{member.nick}",  font=font, fill=255)
+
   w = textToRotate.rotate(17.5,  expand=1)
   wanted.paste(ImageOps.colorize(w, (0,0,0), (23,23,80)), (116,-10),  w)
   wanted.save('deathNote.jpg')
@@ -807,8 +845,7 @@ async def shoot(ctx, member:discord.Member):
   await openBankAccount(ctx.author)
   user = ctx.author
   gunCount = 0
-  with open('bank.json','r') as f:
-    users = json.load(f)
+  with open('bank.json','r') as f: users = json.load(f)
   
   for item in users[str(user.id)]['Inventory']:
     if item['Item'] == 'gun' and item['Amount'] > 0:
@@ -835,8 +872,8 @@ async def shoot(ctx, member:discord.Member):
             f'The bullet ended up fireing, but it became sentient and fell in love with {member.mention}. As a result, the bullet changed course and hit you instead, causing your death.']
           await ctx.reply(f'{random.choice(responses)}', mention_author=False)
         if shooterDies == False:
-          responses = ['The bullet richcheted and hit you. You didn\'t die',
-            f'Instead of shooting {member.mention} , you go || . . . || them. Horny bastard.',
+          responses = ['The bullet ricocheted and hit you. You didn\'t die',
+            f'You tried to shoot {member.mention}, but turns out you brought a bubble gun instead. They live.',
             f'The gun gets jammed. This unfortunately means that {member.mention} still lives.',
             'The gun was listening to Gotye and disintegrated because it was emo. It\'s last words were `You\'re just somebody I used to know.` before turning to dust.']
           await ctx.reply(f'{random.choice(responses)}', mention_author=False)
@@ -1721,22 +1758,23 @@ async def removeWord(ctx, *, wordToRemove):
 @client.command(aliases=['ssnipe','snipe+'],help='A super snipe command for snitches')
 async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
   channel = ctx.channel
-  print(snipeMessage)
 
   try:
+    if messageToRetrieve < 0:
+      await ctx.send('***Value too low. TF***')
     if messageToRetrieve == 1:
-      embed = discord.Embed(title=f"{snipeMessageAuthor[ctx.channel.id]}", description=f'{snipeMessage[ctx.channel.id]}')
-      embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝", color=0x2724ff)
+      embed = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}', color=0x2f3136)
+      embed.set_author(name=f"Snipe Page 1: {channel.name}")
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     if messageToRetrieve == 2:
       embed = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}', color=0x2f3136)
-      embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝")
+      embed.set_author(name=f"Snipe Page 2: {channel.name}")
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     if messageToRetrieve == 3:
       embed = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}', color=0x25d9f8)
-      embed.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {messageToRetrieve} ✶   ✵ ⚝")
+      embed.set_author(name=f"Snipe Page 3: {channel.name}")
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     mg = await ctx.send(embed=embed, components=[[
@@ -1751,43 +1789,53 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
       
       try:
         buttonCheck = await client.wait_for("button_click", check=check)
+
+        await buttonCheck.respond(content='Changing Super Snipe Page')
         if buttonCheck.component.label == '1':
-          embed2 = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}')
-          embed2.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {buttonCheck.component.label} ✶   ✵ ⚝", color=0x2724ff)
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}', color=0x2f3136)
+          embed2.set_author(name=f"Snipe Page 1: {channel.name}")
           embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
-          embed2.set_footer(text=f"Sniper: {buttonCheck.user}", icon_url=buttonCheck.user.avatar_url)
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user.name}#{buttonCheck.user.discriminator}", icon_url=buttonCheck.user.avatar_url)
           await mg.edit(embed=embed2)
         if buttonCheck.component.label == '2':
-          embed2 = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}')
-          embed2.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {buttonCheck.component.label} ✶   ✵ ⚝", color=0x2724ff)
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor2[channel.id]}", description=f'{snipeMessage2[channel.id]}', color=0x2f3136)
+          embed2.set_author(name=f"Snipe Page 2: {channel.name}")
           embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
-          embed2.set_footer(text=f"Sniper: {buttonCheck.user}", icon_url=buttonCheck.user.avatar_url)
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user.name}#{buttonCheck.user.discriminator}", icon_url=buttonCheck.user.avatar_url)
           await mg.edit(embed=embed2)
         if buttonCheck.component.label == '3':
-          embed2 = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}')
-          embed2.set_author(name=f"⚝ ✵   ✶ 𝙎𝙉𝙄𝙋𝙀 𝙋𝙖𝙜𝙚 {buttonCheck.component.label} ✶   ✵ ⚝", color=0x2724ff)
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}', color=0x2f3136)
+          embed2.set_author(name=f"Snipe Page 3: {channel.name}")
           embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
-          embed2.set_footer(text=f"Sniper: {buttonCheck.user}", icon_url=buttonCheck.user.avatar_url)
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user.name}#{buttonCheck.user.discriminator}", icon_url=buttonCheck.user.avatar_url)
           await mg.edit(embed=embed2)
       except:
-        await mg.edit(content='Error')
+        pass
   except:
-    embed=discord.Embed(title=" ", color=0x0603bf)
+    embed=discord.Embed(title=" ", color=0x34363b)
     embed.set_author(name=f"𝙉𝙤 𝙀𝙣𝙩𝙧𝙞𝙚𝙨 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author.name}")
     await ctx.send(embed=embed)
-  
+
 @client.command(aliases=['retrieve','snitch','Snipe'], pass_context=True)
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def snipe(ctx):
   channel = ctx.channel
   try:
-    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id].name}", description=f'{regularSnipeMessage[channel.id]}', color=0x34363b)
+    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id]}", description=f'{regularSnipeMessage[channel.id]}', color=0x34363b)
     embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
-    embed.set_author(name="⚝ ✶   ✵ 𝙎𝙉𝙄𝙋𝙀 ✵  ✶ ⚝")
-    await ctx.send(embed=embed)
+
+    try:
+      embed.set_image(url=f"attachment://{regularSnipeImage[channel.id].filename}")
+    except: pass
+
+    embed.set_author(name=f"Snipe: {channel.name}")
+    try:
+      await ctx.send(file=regularSnipeImage[channel.id], embed=embed)
+    except:
+      await ctx.send(embed=embed)
   except:
-    embed=discord.Embed(title=" ", color=0x0603bf)
+    embed=discord.Embed(title=" ", color=0x34363b)
     embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
     await ctx.send(embed=embed)
 
@@ -1829,7 +1877,6 @@ async def caught(ctx):
 
 #8ball code
 @client.command(aliases=['8ball', 'truther'], help='A sassy 8Ball. Also known as truther\nUse #8ball or #truther to use it!')
-@commands.cooldown(1, 10, commands.BucketType.user)
 async def _8ball(ctx, *, question):
   responses = ['Certain. Its only a matter of time now',
     'It is decidedly so :smiley:',
@@ -1842,7 +1889,7 @@ async def _8ball(ctx, *, question):
     'Yes :smiley:',
     'Signs are pointing to yes...',
     'The reply I have is hazy af. Try again or ask a different question :|',
-    'Mx. Person try asking that again :|. You were mumbling...',
+    'Too busy breaking my own code. Try saying that again :no_mouth:',
     'I\'m not telling you that rn :no_mouth:',
     'I\'m too busy to predict rn. Try again l8r :rage:',
     'Concentrate porque ahorita se estas sonando como un troglodita...:rage:',
@@ -1851,6 +1898,7 @@ async def _8ball(ctx, *, question):
     'Sources close to me have spoken. They say ***N O P E***',
     'Forecast is bad for this one...\u047e',
     'I\'m very doubtful about this one...\u047c']
+
   await ctx.send(f'The question was: {question}\n:8ball: My answer is: {random.choice(responses)}')
 
 @client.command(aliases=['delete', 'delet', 'clear','del'], help='Clear command obviously.')
@@ -1876,6 +1924,7 @@ async def dababyCommand(ctx):
   await ctx.channel.send(f'{random.choice(daBabyGIFs)}')
 
 # Gives a random fact - super simple
+# By Garen
 @client.command(aliases=['rf', 'randomfact'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def Arandomfack(ctx):
@@ -2125,13 +2174,13 @@ async def makeZalgo(ctx, *, textToZalgofy: str):
   finalText = ''.join(zalgoList)
   await ctx.send(f'`{finalText}`')
 
-@client.command(help='Edit command for snitches')
+@client.command(aliases=['rdit','Edit','stevenImproveUrSpelling', 'garentoo'], help='Edit command for snitches')
 async def edit(ctx):
   try:
-    embed=discord.Embed(title=f"Author: {editMessageAuthor[ctx.channel.id]}", color=0x2f3136)
+    embed=discord.Embed(title=f"Author: {regEditMessageAuthor[ctx.channel.id]}", color=0x2f3136)
     embed.set_author(name="Messaged Edited in {}".format(ctx.channel.name))
-    embed.add_field(name="Before:", value=f"{beforeMessage[ctx.channel.id]}", inline=False)
-    embed.add_field(name="After:", value=f"{afterMessage[ctx.channel.id]}", inline=True)
+    embed.add_field(name="Before:", value=f"{regBeforeMessage[ctx.channel.id]}", inline=False)
+    embed.add_field(name="After:", value=f"{regAfterMessage[ctx.channel.id]}", inline=True)
     await ctx.send(embed=embed)
   except:
     embed=discord.Embed(title=" ", color=0x0603bf)
@@ -2237,7 +2286,7 @@ async def play(ctx, *, url : str):
         await ctx.reply('Invalid Link')
         return
 
-      embed=discord.Embed(title=f"𝙉𝙊𝙒 𝙋𝙇𝘼𝙔𝙄𝙉𝙂: {title}", url=f"{song}", description="◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍", color=0xf23136)
+      embed=discord.Embed(title=f"𝙋𝙇𝘼𝙔𝙄𝙉𝙂: {title}", url=f"{song}", description="◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍", color=0xf23136)
       embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
       embed.set_thumbnail(url=thumbnail)
       embed.add_field(name="Likes:", value=f"{likes}", inline=True)
