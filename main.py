@@ -720,7 +720,12 @@ async def wanted(ctx, member:discord.Member=None):
     asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
 
     pfp = Image.open(ctx.message.attachments[0].filename)
-    nick = ctx.message.attachments[0].filename
+
+    if len(ctx.message.attachments[0].filename) > 12:
+      nick = ctx.message.attachments[0].filename
+      nick = nick[:12:]
+    else:
+      nick = ctx.message.attachments[0].filename
   except:
     if member == None:
       member = ctx.author
@@ -738,7 +743,7 @@ async def wanted(ctx, member:discord.Member=None):
   draw = ImageDraw.Draw(wanted)
   font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", 35)
 
-  reward = ['Nothing','Amogus','$10 or even ¢1', '$0', '$100', '$500', '$1,000', '$5,000', '$10,000','$20,000','$25,000','$50,000','$60,000','$75,000','$85,000','$100,000','$150,000','$250,000','$1,000,000','My Heart \u2665']
+  reward = ['Nothing','Amogus','$10 at max', '$0', '$15','$45', '$100', '$500', '$1,000', '$5,000', '$10,000','$20,000','$25,000','$50,000','$60,000','Sussy Baka','$75,000','$85,000','$100,000','$150,000','$250,000','$1,000,000','My Heart \u2665', '\u269D The cosmos \u269D']
 
   pfp = pfp.resize((305,305))
   draw.text((101,150), f"{nick}", font=font, fill=(23, 23, 80))
