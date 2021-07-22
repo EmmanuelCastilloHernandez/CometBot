@@ -59,17 +59,18 @@ import re
 from googleapiclient.discovery import build
 import audioread
 from urllib.parse import parse_qs, urlparse
+import requests
 from requests import get
 import wikipedia
 from youtube_dl import YoutubeDL
-from prsaw import RandomStuff
+#from prsaw import RandomStuff
 
 # Thanks to CodeWithSwastik for his python tutorials
 # his work is the reason why the bot has a decent warn system
 # and a economy system that works. Also thanks to his work this bot has an AI 
 # chatbot. You are a GOD!
 
-chatBot = RandomStuff(api_key = chatbotAPIKey, async_mode = True)
+#chatBot = RandomStuff(api_key = chatbotAPIKey, async_mode = True)
 
 # Snipe variables
 regularSnipeAuthor = {}
@@ -158,7 +159,7 @@ async def on_guild_join(guild):
   
   general = find(lambda x: x.name == 'general',  guild.text_channels)
   if general and general.permissions_for(guild.me).send_messages:
-    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 1.0.0.", color=0x34363b)
+    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 2.0.0.", color=0x34363b)
     embed.set_author(name=f"Hello, {guild.name}")
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
     embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
@@ -222,11 +223,11 @@ async def on_message_edit(before, after):
 async def on_message(message):
   await client.process_commands(message)
 
-  if message.content.startswith(';'):
+  '''if message.content.startswith(';'):
     msg = message.content.replace(';','')
     responseToSend = await chatBot.get_ai_response(msg)
   
-    await message.reply(responseToSend[0]["message"])
+    await message.reply(responseToSend[0]["message"])'''
 
   allowMessage = True
   # Neo Blacklist Code
@@ -244,7 +245,7 @@ async def on_message(message):
   httpsResult = content.startswith('https')
   emojiResult = content.startswith('<a:')
   content = content.lower()
-  if emojiResult == True or httpsResult == True: uselessVariable = 1
+  if emojiResult == True or httpsResult == True: pass
   else: content = content.translate(str.maketrans('', '', string.punctuation))
 
   if message.guild.id in intuitiveBlacklist:
@@ -592,12 +593,18 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
 
 @client.command()
 async def emo(ctx, *, member: discord.Member=None):
-  if member == None:
-    member = ctx.author
+  try:
+    asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
 
-  asset = member.avatar_url_as(size=512)
-  data = BytesIO(await asset.read())
-  pfp = Image.open(data)
+    pfp = Image.open(ctx.message.attachments[0].filename)
+  except:
+    if member == None:
+      member = ctx.author
+    
+    asset = member.avatar_url_as(size=512)
+    data = BytesIO(await asset.read())
+    pfp = Image.open(data)
+  
   emoOverlay = Image.open('emoOverlay.png')
   pfp = pfp.resize((512,512))
   emoOverlay = emoOverlay.resize((512,512))
@@ -606,18 +613,31 @@ async def emo(ctx, *, member: discord.Member=None):
   pfp.save('emoPic.png')
 
   await ctx.reply(file = discord.File('emoPic.png'), mention_author=False)
+  try:
+    os.remove(ctx.message.attachments[0].filename)
+    os.remove('emoPic.png')
+    os.system('touch emoPic.png')
+  except:
+    os.remove('emoPic.png')
+    os.system('touch emoPic.png')
 
 @client.command(aliases=['queer','gay','pride'])
 async def lgbt(ctx, member: discord.Member=None, flag: str=None):
-  if member == None:
-    member = ctx.author
+  try:
+    asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
+
+    pfp = Image.open(ctx.message.attachments[0].filename)
+  except:
+    if member == None:
+      member = ctx.author
+    
+    asset = member.avatar_url_as(size=512)
+    data = BytesIO(await asset.read())
+    pfp = Image.open(data)
+  
   prideOverlays = ['/home/runner/CometBot/prideTemplates/prideHearts.png',
   '/home/runner/CometBot/prideTemplates/prideOverlay.png',
   '/home/runner/CometBot/prideTemplates/prideCornerOverlay.png']
-
-  asset = member.avatar_url_as(size=512)
-  data = BytesIO(await asset.read())
-  pfp = Image.open(data)
 
   if flag != None:
     prideOverlay = Image.open(f'/home/runner/CometBot/prideTemplates/{flag}.png')
@@ -631,6 +651,14 @@ async def lgbt(ctx, member: discord.Member=None, flag: str=None):
   pfp.save('pridePic.png')
 
   await ctx.reply(file = discord.File('pridePic.png'), mention_author=False)
+
+  try:
+    os.remove(ctx.message.attachments[0].filename)
+    os.remove('pridePic.png')
+    os.system('touch pridePic.png')
+  except:
+    os.remove('pridePic.png')
+    os.system('touch pridePic.png')
 
 # Code made by KITECO on GitHub
 # This version of their code was adapted for use in Discord
@@ -681,30 +709,53 @@ async def ascii(ctx, *, member: discord.Member=None):
 
     embed=discord.Embed(description=f"{ascii_image}", color=0x34363b)
     embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {member.name}'ᔕ ᑭᖴᑭ")
+  
+  os.remove('pfp.png')
+  os.system('touch pfp.png')
   await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
 async def wanted(ctx, member:discord.Member=None):
-  if member == None:
-    member = ctx.author
+  try:
+    asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
+
+    pfp = Image.open(ctx.message.attachments[0].filename)
+    nick = ctx.message.attachments[0].filename
+  except:
+    if member == None:
+      member = ctx.author
+    
+    if member.name == None:
+      nick = member.name
+    else:
+      nick = member.nick
+  
+    asset = member.avatar_url_as(size=256)
+    data = BytesIO(await asset.read())
+    pfp = Image.open(data)
 
   wanted = Image.open("wanted.png")
   draw = ImageDraw.Draw(wanted)
   font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", 35)
 
-  asset = member.avatar_url_as(size=256)
-  data = BytesIO(await asset.read())
-  pfp = Image.open(data)
   reward = ['Nothing','Amogus','$10 or even ¢1', '$0', '$100', '$500', '$1,000', '$5,000', '$10,000','$20,000','$25,000','$50,000','$60,000','$75,000','$85,000','$100,000','$150,000','$250,000','$1,000,000','My Heart \u2665']
 
   pfp = pfp.resize((305,305))
-  draw.text((101,150), f"{member.nick}", font=font, fill=(23, 23, 80))
+  draw.text((101,150), f"{nick}", font=font, fill=(23, 23, 80))
   wanted.paste(pfp, (101,190))
   draw.text((101,506), f"REWARD:", font=font, fill=(23, 23, 80))
   draw.text((101,540), f"{random.choice(reward)}", font=font, fill=(23, 23, 80))
   wanted.save('wantedPoster.png')
 
   await ctx.reply(file = discord.File('wantedPoster.png'), mention_author=False)
+
+  try:
+    os.remove(ctx.message.attachments[0].filename)
+    os.remove('wantedPoster.png')
+    os.system('touch wantedPoster.png')
+  except:
+    os.remove('wantedPoster.png')
+    os.system('touch wantedPoster.png')
 
 @client.command(pass_context=True)
 async def arrest(ctx, member:discord.Member=None, *, reason=None):
@@ -1649,10 +1700,8 @@ async def weatherReport(ctx):
     tempToConvert = current_temperature
     celcisus_temp = tempToConvert - 273.15
     fahrenheit_temp = celcisus_temp * ( 9 / 5 ) + 32
-
-    fahrenheit_temp = math.floor(fahrenheit_temp)
   
-    embed=discord.Embed(description=f"Temperature (in fahrenheit): __**{str(fahrenheit_temp)}\u00b0**__\nAtmospheric pressure (in hPa unit): **__{str(current_pressure)}__**\nHumidity: **__{str(current_humidiy)}\u0025__**\nDescription: **__{str(weather_description)}__**", color=0x34363b)
+    embed=discord.Embed(description=f"Temperature (in fahrenheit): __**{'{:.2f}'.format(fahrenheit_temp)}\u00b0**__\nAtmospheric pressure (in hPa unit): **__{str(current_pressure)}__**\nHumidity: **__{str(current_humidiy)}\u0025__**\nDescription: **__{str(weather_description)}__**", color=0x34363b)
     embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20190924/original/pngtree-planet-earth-icon-design-png-image_4804418.jpg")
     embed.set_author(name=f"Weather Report for {city.upper()} by {ctx.author.name}", icon_url=ctx.author.avatar_url)
     await ctx.send(embed=embed)
@@ -1662,7 +1711,7 @@ async def weatherReport(ctx):
 
 @client.command(help='Use it with chat or server when they are dead.')
 @commands.cooldown(1, 10, commands.BucketType.user)
-async def dead(ctx, *, type=None):
+async def dead(ctx, *, Type=None):
   if (str(type) == 'server'):
     deadServerPictures=['https://tenor.com/view/server-gif-18897740',
       'https://tenor.com/view/delete-server-gif-19419553']
@@ -1742,7 +1791,7 @@ async def removeWord(ctx, *, wordToRemove):
   print(ctx.guild.id)
 
   if str(ctx.guild.id) in slurPrepare:
-    uselessVariable = 1
+    pass
   else:
     slurPrepare[ctx.guild.id] = []
   
@@ -1821,7 +1870,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
 async def snipe(ctx):
   channel = ctx.channel
   try:
-    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id]}", description=f'{regularSnipeMessage[channel.id]}', color=0x34363b)
+    embed = discord.Embed(title=f"{regularSnipeAuthor[channel.id]}", description=f'{regularSnipeMessage[channel.id]}', color=0x2f3136)
     embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
 
@@ -1835,7 +1884,7 @@ async def snipe(ctx):
     except:
       await ctx.send(embed=embed)
   except:
-    embed=discord.Embed(title=" ", color=0x34363b)
+    embed=discord.Embed(title=" ", color=0x2f3136)
     embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
     await ctx.send(embed=embed)
 
@@ -1905,8 +1954,9 @@ async def _8ball(ctx, *, question):
 @commands.has_permissions(manage_messages=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def purge(ctx, maxamount=30):
+  await ctx.message.delete()
   await ctx.channel.purge(limit=maxamount)
-  await ctx.channel.send(f'Deleted **{maxamount}** messages.')
+  await ctx.channel.send(f'Deleted **{maxamount}** messages.', delete_after=5)
 
 @client.command(aliases=['dababy', 'dacar'])
 @commands.cooldown(1, 5, commands.BucketType.user)
@@ -1929,7 +1979,7 @@ async def dababyCommand(ctx):
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def Arandomfack(ctx):
   fct = randfacts.getFact()
-  await ctx.channel.send(fct)
+  await ctx.send(fct)
 
 @client.command(pass_context=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
@@ -2081,15 +2131,6 @@ async def place_error(ctx, error):
 @client.command(aliases=['Hangman', 'hangma'], help='hangman duh')
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def hangman(ctx):
-  if ctx.channel.id == 736621294799552542:
-    message = ctx.message
-    await message.delete()
-
-    errorEmbed=discord.Embed(title="Command Not Allowed", description=f"{ctx.author.mention}, this command (**{message.content}**) is not allowed here. Try in a separate channel.", color=0xff0000)
-    errorEmbed.set_thumbnail(url="https://media.discordapp.net/attachments/736621294799552542/833749796602642492/unknown.png?width=586&height=586")
-    errorEmbed.add_field(name="Examples of Channels Where it Works:", value="spam, botcommands", inline=False)
-    errorEmbed.set_footer(text="Comet Alert")
-    return await ctx.send(embed=errorEmbed, delete_after=10)
   tries = 0
   guess = None
   wonHangman = False
@@ -2102,9 +2143,16 @@ async def hangman(ctx):
     f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225\n\u2225\n\u2225\n++++++++++++++++',
     f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225||----------||\u2225\n\u2225\n\u2225\n++++++++++++++++',
     f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225||----------||\u2225\n\u2225||---------||/\\ \n\u2225\n++++++++++++++++']
-  words = ['captain','Comet', 'slower', 'proton', 'minecraft', 'fake', 'coldplay','avicii', 'spam','fortnite', 'megillah', 'chemistry', 'exist', 'fox']
   
-  prepareWord = random.choice(words)
+  getWordList = urllib.request.urlopen("https://www.mit.edu/~ecprice/wordlist.10000")
+  prepWordList = getWordList.read()
+  words = prepWordList.splitlines()
+
+  prepareWord = str(random.choice(words))
+  while '\'' in prepareWord:
+    prepareWord = prepareWord.replace('\'', '')
+  
+  prepareWord = prepareWord.replace('b','')
 
   word = list(prepareWord)
   hangmanEmbed = discord.Embed(description=hangmanPoses[tries], color=0x34363b)
@@ -2153,7 +2201,7 @@ async def hangman(ctx):
         tries = 0
         return hangman
 
-    if all("_" == char for char in word) or word == guess:
+    if all("_" == char for char in word):
       await ctx.send(f'**YOU WON**. The word was indeed **__`{prepareWord}`__**')
       wonHangman = True
 
@@ -2684,6 +2732,15 @@ async def setup(ctx, *, setupOption: str='warning'):
   await openSetupAccount(ctx.guild)
   if setupOption == 'notif' or setupOption == 'notification' or setupOption == 'n':
     await ctx.reply('𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐭𝐡𝐞 𝐂𝐨𝐦𝐞𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧 𝐒𝐞𝐭𝐮𝐩. 𝐓𝐡𝐢𝐬 𝐢𝐬 𝐮𝐬𝐞𝐝 𝐭𝐨 𝐬𝐞𝐭 𝐮𝐩 𝐛𝐨𝐭 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐢𝐧 𝐚 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐨𝐟 𝐭𝐡𝐢𝐬 𝐬𝐞𝐫𝐯𝐞𝐫. 𝐌𝐚𝐤𝐞 𝐬𝐮𝐫𝐞 𝐭𝐨 𝐡𝐚𝐯𝐞 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐈𝐃 𝐨𝐟 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐲𝐨𝐮 𝐚𝐫𝐞 𝐠𝐨𝐢𝐧𝐠 𝐭𝐨 𝐮𝐬𝐞 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐨𝐧 𝐡𝐚𝐧𝐝 𝐭𝐨 𝐦𝐚𝐤𝐞 𝐭𝐡𝐢𝐬 𝐩𝐫𝐨𝐜𝐞𝐬𝐬 𝐟𝐚𝐬𝐭𝐞𝐫.')
+
+    await ctx.reply('𝐄𝐧𝐭𝐞𝐫 𝐭𝐡𝐞 𝐈𝐃 𝐨𝐟 𝐭𝐡𝐞 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 𝐰𝐞𝐫𝐞 𝐂𝐨𝐦𝐞𝐭 𝐰𝐢𝐥𝐥 𝐬𝐞𝐧𝐝 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐭𝐨:')
+    try:
+      purpose = await client.wait_for("message", check=check, timeout=30)
+      await purpose.add_reaction('✅')
+      adminRole = purpose.content
+    except asyncio.TimeoutError:
+      await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
+      return
     pass
   if setupOption == 'warning':
     adminRole = ''
