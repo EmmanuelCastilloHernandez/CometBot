@@ -50,6 +50,7 @@ import randfacts
 import string
 import sympy as sp
 import ffmpeg
+import unicodedata
 import urllib
 import urllib.request
 import requests, json
@@ -82,6 +83,10 @@ snipeMessage2 = {}
 snipeMessageAuthor2 = {}
 snipeMessage3 = {}
 snipeMessageAuthor3 = {}
+snipeMessage4 = {}
+snipeMessageAuthor4 = {}
+snipeMessage5 = {}
+snipeMessageAuthor5 = {}
 snipeCounter = 1
 
 usersToLevelUp = {}
@@ -104,8 +109,8 @@ def startupMsg():
   ██║░░██╗██║░░██║██║╚██╔╝██║██╔══╝░░░░░██║░░░
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
-  
-  Version **2** Aldebaran ready to use!
+  - - - - - - - - - - - - - - - - - - - - - -
+  Version **3** Bellatrix Beta 1 ready to use!
   '''
 
   pass
@@ -157,14 +162,14 @@ async def on_guild_join(guild):
   with open('serverCount.json','w') as f:
     serverCount = json.dump(serverCount, f)
   
-  general = find(lambda x: x.name == 'general',  guild.text_channels)
+  general = find(lambda x: 'general'.encode('utf-8') in unicodedata.normalize('NFKD', x.name).encode('ascii', 'ignore'),  guild.text_channels)
   if general and general.permissions_for(guild.me).send_messages:
     embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 2.0.0.", color=0x34363b)
     embed.set_author(name=f"Hello, {guild.name}")
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
     embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
-    embed.add_field(name="This bot now runs on:", value=f"{servers} servers", inline=False)
-    embed.set_footer(text="Comet Welcome Message")
+    embed.add_field(name="Now Powering:", value=f"**__{servers}__** servers", inline=True)
+    embed.set_footer(text=f"Thank you, {guild.name}!")
     await general.send(embed=embed)
 
 @client.event
@@ -241,7 +246,7 @@ async def on_message(message):
     
   with open('slurs.json','w') as f: json.dump(slurPrepare, f)
 
-  content = str(message.content)
+  content = str(unicodedata.normalize('NFKD', str(message.content)).encode('ascii', 'ignore'))
   httpsResult = content.startswith('https')
   emojiResult = content.startswith('<a:')
   content = content.lower()
@@ -266,11 +271,12 @@ async def on_message(message):
     intuitiveBlacklist[message.guild.id][message.author.id]['message'].append(content)
   
   content = content.split()
-  for x in content:
+  for i in checkBannedWords:
     if (message.author.bot): return
-    elif x in checkBannedWords:
+    elif i in content:
       await message.delete()
-      return
+      intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
+      break
   
   for x in checkBannedWords:
     def check(m): return m.author == message.author
@@ -401,6 +407,10 @@ async def on_message_delete(message):
   global snipeMessageAuthor2
   global snipeMessage3
   global snipeMessageAuthor3
+  global snipeMessage4
+  global snipeMessageAuthor4
+  global snipeMessage5
+  global snipeMessageAuthor5
   global snipeCounter
 
   if message.guild.id not in snipeCounter:
@@ -416,20 +426,24 @@ async def on_message_delete(message):
   if snipeCounter[message.guild.id] == 1:
     snipeMessage[message.channel.id] = message.content
     snipeMessageAuthor[message.channel.id] = message.author
-    print(snipeMessage[message.channel.id])
     snipeCounter[message.guild.id] += 1
   elif snipeCounter[message.guild.id] == 2:
     snipeMessage2[message.channel.id] = message.content
     snipeMessageAuthor2[message.channel.id] = message.author
     snipeCounter[message.guild.id] += 1
-    print(snipeMessage2[message.channel.id])
   elif snipeCounter[message.guild.id] == 3:
     snipeMessage3[message.channel.id] = message.content
     snipeMessageAuthor3[message.channel.id] = message.author
-    print(snipeMessage3[message.channel.id])
+    snipeCounter[message.guild.id] += 1
+  elif snipeCounter[message.guild.id] == 4:
+    snipeMessage4[message.channel.id] = message.content
+    snipeMessageAuthor4[message.channel.id] = message.author
+    snipeCounter[message.guild.id] += 1
+  elif snipeCounter[message.guild.id] == 5:
+    snipeMessage5[message.channel.id] = message.content
+    snipeMessageAuthor5[message.channel.id] = message.author
 
     snipeCounter[message.guild.id] = 1
-    print(f'New snipe val for {message.guild}: '+ str(snipeCounter[message.guild.id]))
 
   await asyncio.sleep(120)
 
@@ -448,6 +462,10 @@ async def on_message_delete(message):
   del snipeMessage2[message.channel.id]
   del snipeMessageAuthor3[message.channel.id]
   del snipeMessage3[message.channel.id]
+  del snipeMessageAuthor4[message.channel.id]
+  del snipeMessage4[message.channel.id]
+  del snipeMessageAuthor5[message.channel.id]
+  del snipeMessage5[message.channel.id]
 
 @client.event
 async def on_ready():
@@ -469,6 +487,18 @@ async def on_ready():
       Button(style = ButtonStyle.green, label = "Creator: Emmanuel Castillo", disabled = True)
     ]
   ])
+
+@client.group(invoke_without_command=True)
+async def help(ctx):
+  embed=discord.Embed(title="List of all Comet Commands", description="/////////////////////////////////////////////////////////////////////////////////////////", color=0x2f3136)
+  embed.add_field(name="Moderation:", value="warn, unwarn, infractions, clear", inline=True)
+  embed.add_field(name="Snipes:", value="ssnipe, snipe, edit", inline=True)
+  embed.add_field(name="Image Commands:", value="pride, emo, wanted", inline=True)
+  embed.add_field(name="Games:", value="tictactoe, place, hangman", inline=True)
+  embed.add_field(name="Economy:", value="beg, shop, buy, use, inv, shoot, phone", inline=True)
+  embed.add_field(name="Voice Channel / Music:", value="tts, play, skip, pause, stop, queue, ql, leave", inline=True)
+  
+  await ctx.send(embed=embed)
 
 @client.command(aliases = ['rev'])
 async def reverse(ctx, *, msg): await ctx.reply(msg[::-1])
@@ -591,6 +621,13 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #use <amount> padlock to use it.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
 
+@help.command()
+async def emo(ctx):
+  embed=discord.Embed(title="Emo Image Generator", description="Creates an emo-temed image based on a user's PFP or a image attached to the command message.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#emo <user>`** to use a user's PFP, **`#emo`** to use your PFP or a image attachment on the command", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  await ctx.send(embed=embed)
+
 @client.command()
 async def emo(ctx, *, member: discord.Member=None):
   try:
@@ -620,6 +657,14 @@ async def emo(ctx, *, member: discord.Member=None):
   except:
     os.remove('emoPic.png')
     os.system('touch emoPic.png')
+
+@help.command(aliases=['queer','gay','lgbt'])
+async def pride(ctx):
+  embed=discord.Embed(title="Pride Image Generator", description="Celebrate your pride with #pride, where Comet creates a pride-themed profile picture for you.", color=0x2f3136)
+  embed.add_field(name="Aliases:", value="queer, gay, pride, lgbt", inline=True)
+  embed.add_field(name="Options for <flag>:", value="bi, pan, gay, lesbian, ace (Asexual), nb (Non-binary), trans", inline=True)
+  embed.add_field(name="Use:", value="**`#pride <user>`** to use a user's PFP, **`#pride`** to use your PFP or a image attachment on the command. TO use a different pride flag, do **`#pride <user> <flag>`**. NOTE: to be able to use <flag>, <user> needs to be stated.", inline=False)
+  await ctx.send(embed=embed)
 
 @client.command(aliases=['queer','gay','pride'])
 async def lgbt(ctx, member: discord.Member=None, flag: str=None):
@@ -662,14 +707,33 @@ async def lgbt(ctx, member: discord.Member=None, flag: str=None):
 
 # Code made by KITECO on GitHub
 # This version of their code was adapted for use in Discord
-@client.command()
+@help.command()
+async def ascii(ctx):
+  embed=discord.Embed(title="ASCII Image Generator", description="Creates an ASCII image based on a user's PFP or a image attached to the command message.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#ascii <user>`** to use a user's PFP, **`#ascii`** to use your PFP or a image attachment on the command", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  await ctx.send(embed=embed)
+
+@client.command(pass_context=True)
 async def ascii(ctx, *, member: discord.Member=None):
-  if member == None:
-    member = ctx.author
+  try:
+    asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
+    nick = ctx.message.attachments[0].filename[:12:]
+
+    pfp = Image.open(ctx.message.attachments[0].filename)
+  except:
+    if member == None:
+      member = ctx.author
+    
+    if member.name == None:
+      nick = member.name
+    else:
+      nick = member.nick
+    
+    asset = member.avatar_url_as(size=512)
+    data = BytesIO(await asset.read())
+    pfp = Image.open(data)
   
-  asset = member.avatar_url_as(size=64)
-  data = BytesIO(await asset.read())
-  pfp = Image.open(data)
   pfp.save('pfp.png')
 
   image = Image.open('pfp.png')
@@ -708,10 +772,17 @@ async def ascii(ctx, *, member: discord.Member=None):
     ascii_image = "\n".join([new_image_data[index:(index+40)] for index in range(0, pixel_count, 40)])
 
     embed=discord.Embed(description=f"{ascii_image}", color=0x34363b)
-    embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {member.name}'ᔕ ᑭᖴᑭ")
+    embed.set_footer(text=f"ᑌᑎIᑕOᗪE ᑭᗩIᑎTIᑎG Oᖴ {nick}'ᔕ ᑭᖴᑭ")
   
   os.remove('pfp.png')
   os.system('touch pfp.png')
+  await ctx.send(embed=embed)
+
+@help.command()
+async def wanted(ctx):
+  embed=discord.Embed(title="Wanted Poster Generator", description="Creates a wanted poster based on a user's PFP or a image attached to the command message. The poster will contain a random value that will correspond to the reward amount and the name on top will correspond to the name of the file (or the first 12 of the file name) or the name of the user inputted in the command", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#wanted <user>`** to use a user's PFP, **`#ascii`** to use your PFP or a image attachment on the command", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
   await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
@@ -743,7 +814,7 @@ async def wanted(ctx, member:discord.Member=None):
   draw = ImageDraw.Draw(wanted)
   font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", 35)
 
-  reward = ['Nothing','Amogus','$10 at max', '$0', '$15','$45', '$100', '$500', '$1,000', '$5,000', '$10,000','$20,000','$25,000','$50,000','$60,000','Sussy Baka','$75,000','$85,000','$100,000','$150,000','$250,000','$1,000,000','My Heart \u2665', '\u269D The cosmos \u269D']
+  reward = ['Nothing','Amogus','$10 at max', '$0', '$15','$45', '$100', '$500', '$1,000', '$5,000', '$10,000','$20,000','$25,000','$50,000','$60,000','Sussy Baka','$75,000','$85,000','$100,000','$150,000','$250,000','$1,000,000','My Heart \u2665', '\u272B The Cosmos \u272B']
 
   pfp = pfp.resize((305,305))
   draw.text((101,150), f"{nick}", font=font, fill=(23, 23, 80))
@@ -783,6 +854,16 @@ async def arrest(ctx, member:discord.Member=None, *, reason=None):
 
   await ctx.reply(file = discord.File('arrest.png'), mention_author=False)
 
+  os.remove('arrest.png')
+  os.system('touch arrest.png')
+
+@help.command()
+async def deathnote(ctx):
+  embed=discord.Embed(title="Death Note", description="Creates an ASCII image based on a user's PFP or a image attached to the command message.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#ascii <user>`** to use a user's PFP, **`#ascii`** to use your PFP or a image attachment on the command", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  await ctx.send(embed=embed)
+
 @client.command(pass_context=True)
 async def deathnote(ctx, member:discord.Member=None):
   if member == None:
@@ -803,6 +884,9 @@ async def deathnote(ctx, member:discord.Member=None):
   wanted.save('deathNote.jpg')
 
   await ctx.reply(file = discord.File('deathNote.jpg'), mention_author=False)
+
+  os.remove('deathNote.png')
+  os.system('deathNote.png')
 
 @client.command(aliases=['lead','Lead','Leaderboard','lb','ul'])
 async def leaderboard(ctx, number=3):
@@ -838,7 +922,7 @@ async def leaderboard(ctx, number=3):
   rankDisplay += '```'
   embed.add_field(name = '--------------------------', value=f'{rankDisplay}', inline=False)
 
-  embed.set_author(name="The ※ Rank System ※")
+  embed.set_author(name=f"The ※ Bank Leaderboard for {ctx.guild.name} ※")
   embed.set_thumbnail(url="https://images.vexels.com/media/users/3/135932/isolated/preview/5873339dddecea4a26d7366462d0eec6-checklist-file-icon-by-vexels.png")
   embed.set_footer(text="Comet Economy Alert")
   await ctx.send(embed=embed)
@@ -1611,7 +1695,7 @@ async def devnote(ctx):
     'Dev Note #5: Comet Music Player supports text search.',
     'Dev Note #6: Hangman on an embed was hell.',
     'Dev Note #7: Comet was originally made for one server, but the creator decided to make it open source and readily available.',
-    'Dev Note #8: The first warning system for the bot sucked because no matter where you went the warnings given in one place trasferred to another and the full potential of the warning system could only have been seen in one server. 2.0.0 Aldebaran fixes that.',
+    'Dev Note #8: The first warning system for the bot sucked because no matter where you went the warnings given in one place trasferred to another and the full potential of the warning system could only have been seen in one server. 2.0.0 Aldebaran fixed that.',
     'Dev Note #9: #tts originally played a tts message in text channels. It was changed to a voice channel TTS because people exploited it.',
     'Dev Note #10: #tts has multi-language support. This means that the bot can read text in Mandarin, English, Spanish, Armenian, Russian, etc.',
     'Dev Note #11: The bot has a wikipedia search that is inaccurate because of the API scrambling up the search term.',
@@ -1631,37 +1715,11 @@ async def bad(ctx, *, option):
     'https://tenor.com/view/lego-batman-just-saying-ihate-this-place-gif-7809561']
   await ctx.send(f'{random.choice(badGifs)}')
 
-@client.command(description="Returns all commands available")
-async def help(ctx, pg=1):
-  embedCommands = 0
-  embed=discord.Embed(title=f"List of all commands: Page {pg}", color=0x34363b)
-  embed.set_author(name="Help Center")
-  embed.set_thumbnail(url="https://images.vexels.com/media/users/3/153750/isolated/preview/1fb0b5422a7584ed0df14dfacdc68c64-internet-settings-colored-stroke-icon-by-vexels.png")
-  embed.set_footer(text="Comet Alert")
-
-  if pg == 2:
-    embedCommands = 19
-  if pg == 3:
-    embedCommands = 37
-  if pg == 4:
-    embedCommands = 55
-  if pg == 5:
-    embedCommands = 69
-
-  for command in client.commands:
-    if embedCommands <= 18:
-      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
-      embedCommands += 1
-    elif embedCommands <= 36:
-      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
-      embedCommands += 1
-    elif embedCommands <= 54:
-      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
-      embedCommands += 1
-    else:
-      embed.add_field(name=f'{command} | {command.aliases}', value=command.help, inline=True)
-      embedCommands += 1
-  
+@help.command(aliases=['weather'])
+async def weatherReport(ctx):
+  embed=discord.Embed(title="Weather", description="Tells the weather. NOTE: It's unstable due to the OpenWeatherMap API acting up at times.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#weather`** then prompts for a city name", inline=True)
+  embed.add_field(name="Aliases:", value="weatherReport, weather", inline=True)
   await ctx.send(embed=embed)
 
 @client.command(aliases=['weather','heavy weather'])
@@ -1827,14 +1885,28 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     if messageToRetrieve == 3:
-      embed = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}', color=0x25d9f8)
+      embed = discord.Embed(title=f"{snipeMessageAuthor3[channel.id]}", description=f'{snipeMessage3[channel.id]}', color=0x2f3136)
       embed.set_author(name=f"Snipe Page 3: {channel.name}")
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+    if messageToRetrieve == 4:
+      embed = discord.Embed(title=f"{snipeMessageAuthor4[channel.id]}", description=f'{snipeMessage4[channel.id]}', color=0x2f3136)
+      embed.set_author(name=f"Snipe Page 4: {channel.name}")
+      embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+      embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+    if  messageToRetrieve == 5:
+      embed = discord.Embed(title=f"{snipeMessageAuthor5[channel.id]}", description=f'{snipeMessage5[channel.id]}', color=0x2f3136)
+      embed.set_author(name=f"Snipe Page 5: {channel.name}")
+      embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+      embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+    
+
     mg = await ctx.send(embed=embed, components=[[
       Button(style = ButtonStyle.red, label = "1"),
       Button(style = ButtonStyle.blue, label = "2"),
       Button(style = ButtonStyle.green, label = "3"),
+      Button(style = ButtonStyle.blue, label = "4"),
+      Button(style = ButtonStyle.red, label = "5")
     ]])
 
     while True:
@@ -1863,10 +1935,22 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
           embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
           embed2.set_footer(text=f"Sniper: {buttonCheck.user.name}#{buttonCheck.user.discriminator}", icon_url=buttonCheck.user.avatar_url)
           await mg.edit(embed=embed2)
+        if buttonCheck.component.label == '4':
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor4[channel.id]}", description=f'{snipeMessage4[channel.id]}', color=0x2f3136)
+          embed2.set_author(name=f"Snipe Page 4: {channel.name}")
+          embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user.name}#{buttonCheck.user.discriminator}", icon_url=buttonCheck.user.avatar_url)
+          await mg.edit(embed=embed2)
+        if buttonCheck.component.label == '5':
+          embed2 = discord.Embed(title=f"{snipeMessageAuthor5[channel.id]}", description=f'{snipeMessage5[channel.id]}', color=0x2f3136)
+          embed2.set_author(name=f"Snipe Page 5: {channel.name}")
+          embed2.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
+          embed2.set_footer(text=f"Sniper: {buttonCheck.user.name}#{buttonCheck.user.discriminator}", icon_url=buttonCheck.user.avatar_url)
+          await mg.edit(embed=embed2)
       except:
         pass
   except:
-    embed=discord.Embed(title=" ", color=0x34363b)
+    embed=discord.Embed(title=" ", color=0x2f3136)
     embed.set_author(name=f"𝙉𝙤 𝙀𝙣𝙩𝙧𝙞𝙚𝙨 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author.name}")
     await ctx.send(embed=embed)
 
@@ -2149,15 +2233,22 @@ async def hangman(ctx):
     f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225||----------||\u2225\n\u2225\n\u2225\n++++++++++++++++',
     f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225||----------||\u2225\n\u2225||---------||/\\ \n\u2225\n++++++++++++++++']
   
+  words = ['captain','Comet', 'Emo', 'Luna', 'Bellatrix','fortnite']
   getWordList = urllib.request.urlopen("https://www.mit.edu/~ecprice/wordlist.10000")
   prepWordList = getWordList.read()
-  words = prepWordList.splitlines()
-
-  prepareWord = str(random.choice(words))
-  while '\'' in prepareWord:
-    prepareWord = prepareWord.replace('\'', '')
+  onlineWordList = prepWordList.splitlines()
+  counter = 0
+  for i in onlineWordList:
+    translatedWord = ''
+    i = str(i)
+    i = i.replace('b', '', 1)
+    i = i.replace('\'','')
+    onlineWordList[counter] = i
+    counter += 1
   
-  prepareWord = prepareWord.replace('b','')
+  words.extend(onlineWordList)
+
+  prepareWord = random.choice(words)
 
   word = list(prepareWord)
   hangmanEmbed = discord.Embed(description=hangmanPoses[tries], color=0x34363b)
@@ -2174,8 +2265,12 @@ async def hangman(ctx):
       return message.author == ctx.author and message.channel == ctx.channel
     
     try:
-      await ctx.send(embed=hangmanEmbed)
-      await ctx.send(f"Put your guess before 15 seconds pass by.\n``The word is: {' '.join(hiddenWord)}``")
+      if '_' not in hiddenWord:
+        await ctx.send(f'**YOU WON**. The word was indeed **__`{prepareWord}`__**')
+        wonHangman = True
+        break
+      
+      await ctx.send(content=f"Put your guess before 15 seconds pass by.\n``The word is: {' '.join(hiddenWord)}``",embed=hangmanEmbed)
       grabUserInput = await client.wait_for('message', check=check, timeout=15)
       guess = grabUserInput.content
 
@@ -2183,7 +2278,7 @@ async def hangman(ctx):
       await ctx.send('**PLEEASE** if you\'re going to play **__FUCKING HANGMAN__** respond to it quickly :neutral_face:')
       guess = None
       tries = 0
-      return hangman
+      return
     
     if guess in word:
       hangmanEmbed = discord.Embed(color=0x4dff82,description=hangmanPoses[tries])
@@ -2205,10 +2300,6 @@ async def hangman(ctx):
         await ctx.send(f'**You lost**. Try again.\nThe word was **__{prepareWord}__**')
         tries = 0
         return hangman
-
-    if all("_" == char for char in word):
-      await ctx.send(f'**YOU WON**. The word was indeed **__`{prepareWord}`__**')
-      wonHangman = True
 
 @client.command(aliases=['zalgo','cursedtext'], help='Z̵̤ͫ A̋ͨ͝ L̬ͣ͡ G͊ͤ͜ Ö͕́̀')
 @commands.cooldown(1, 10, commands.BucketType.guild)
@@ -2551,6 +2642,10 @@ async def tts(ctx, *, text=None):
     # We have nothing to speak
     await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
     return
+
+  if len(text) > 1200:
+    text = text[:1200:]
+  
   async with ctx.typing():
     embed=discord.Embed(title="Comet TTS Options", description="Click one of the buttons in this message to choose a language. You have 5 seconds before it defaults to english.",color=0x2f3136)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
