@@ -14,9 +14,13 @@ Discord: Warlex#7860
 '''
 
 import os
+
 try:
-  os.system('pip3 uninstall -y googletrans')
-  os.system('pip3 install googletrans==3.1.0a0')
+  checkVer = os.popen('python -c "import googletrans; print(googletrans.__version__)"').read().replace('\n','')
+
+  if checkVer != '3.1.0-alpha':
+    os.system('pip3 uninstall -y googletrans')
+    os.system('pip3 install googletrans==3.1.0a0')
 except:
   os.system('pip3 install googletrans==3.1.0a0')
 
@@ -33,7 +37,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord.utils import find
 from discord import FFmpegPCMAudio
-from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
+from discord_components import DiscordComponents, Button, ButtonStyle, Select, SelectOption, InteractionType
 from dontDie import dontDieOnMe
 from googletrans import Translator
 from gtts import gTTS
@@ -43,12 +47,15 @@ import math
 import numpy as np
 from numpy import *
 from PIL import Image, ImageFont, ImageDraw, ImageOps
+from pytz import timezone
+import pytz
 from io import BytesIO
 import random
 from random import randint
 import randfacts
 import string
 import sympy as sp
+from sympy import Symbol, N
 import ffmpeg
 import unicodedata
 import urllib
@@ -110,7 +117,7 @@ def startupMsg():
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
   - - - - - - - - - - - - - - - - - - - - - -
-  Version **3** Bellatrix Beta 1 ready to use!
+  Version **3** Bellatrix Beta 2 ready to use!
   '''
 
   pass
@@ -238,13 +245,13 @@ async def on_message(message):
   # Neo Blacklist Code
   checkBannedWords = ""
   with open("slurs.json", "r") as slurs: slurPrepare = json.load(slurs)
-
-  if str(message.guild.id) in slurPrepare: uselessVariable = 1
-  else: slurPrepare[str(message.guild.id)] = []
-  
-  checkBannedWords = slurPrepare[str(message.guild.id)]
-    
-  with open('slurs.json','w') as f: json.dump(slurPrepare, f)
+  try:
+    if str(message.guild.id) in slurPrepare: pass
+    else: slurPrepare[str(message.guild.id)] = []
+    checkBannedWords = slurPrepare[str(message.guild.id)]
+    with open('slurs.json','w') as f: json.dump(slurPrepare, f)
+  except:
+    pass
 
   content = str(unicodedata.normalize('NFKD', str(message.content)).encode('ascii', 'ignore'))
   httpsResult = content.startswith('https')
@@ -272,22 +279,25 @@ async def on_message(message):
   
   content = content.split()
   for i in checkBannedWords:
-    if (message.author.bot): return
+    if (message.author.bot):
+      return
     elif i in content:
       await message.delete()
       intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
-      break
+      return
   
   for x in checkBannedWords:
     def check(m): return m.author == message.author
     
     checkThePhrase = ''.join(intuitiveBlacklist[message.guild.id][message.author.id]['message'])
-    if (message.author.bot): return
+    if (message.author.bot):
+      return
     elif x in checkThePhrase:
       amountToDelete = int(len(x))
       await message.channel.purge(limit=amountToDelete, check=check)
       intuitiveBlacklist[message.guild.id][message.author.id]['message'] = []
       await message.channel.send('***Message deleted due to a blacklisted word/phrase being detected***', delete_after=10)
+      return
 
   # End of Neo Blacklist code
   
@@ -419,7 +429,11 @@ async def on_message_delete(message):
   regularSnipeAuthor[message.channel.id] = message.author
   regularSnipeMessage[message.channel.id] = message.content
   try:
-    regularSnipeImage[message.channel.id] = await message.attachments[-1].to_file()
+    if message.channel.id not in regularSnipeAuthor:
+      regularSnipeImage[message.channel.id] = {}
+      regularSnipeImage[message.channel.id][message.author.id] = await message.attachments[-1].to_file()
+    else:
+      regularSnipeImage[message.channel.id][message.author.id] = await message.attachments[-1].to_file()
   except:
     pass
   
@@ -451,7 +465,7 @@ async def on_message_delete(message):
   del regularSnipeAuthor[message.channel.id]
   
   try:
-    del regularSnipeImage[message.channel.id]
+    del regularSnipeImage[message.channel.id][message.author.id]
   except:
     pass
 
@@ -490,19 +504,226 @@ async def on_ready():
 
 @client.group(invoke_without_command=True)
 async def help(ctx):
-  embed=discord.Embed(title="List of all Comet Commands", description="/////////////////////////////////////////////////////////////////////////////////////////", color=0x2f3136)
+  embed=discord.Embed(title="List of all Comet Commands", description="///////////////////////////////////////////////////////////////////", color=0x2f3136)
   embed.add_field(name="Moderation:", value="warn, unwarn, infractions, clear", inline=True)
   embed.add_field(name="Snipes:", value="ssnipe, snipe, edit", inline=True)
   embed.add_field(name="Image Commands:", value="pride, emo, wanted", inline=True)
-  embed.add_field(name="Games:", value="tictactoe, place, hangman", inline=True)
+  embed.add_field(name="Games:", value="tictactoe, hangman", inline=True)
   embed.add_field(name="Economy:", value="beg, shop, buy, use, inv, shoot, phone", inline=True)
-  embed.add_field(name="Voice Channel / Music:", value="tts, play, skip, pause, stop, queue, ql, leave", inline=True)
+  embed.add_field(name="Voice Channel / Music:", value="tts, play, leave", inline=True)
+  embed.add_field(name="EMERGENCY:", value="crisis", inline=True)
   
+  await ctx.send(embed=embed)
+
+@help.command(aliases=['SOS'])
+async def crisis(ctx):
+  embed=discord.Embed(title="Comet Safety Crisis Center", description="This command can help an individual find the help they need IRL. This can go from anything from suicide prevention to knowing what to do if ICE knocks at your door. If the command is maliciously misused, the person misusing it can be banned from using Comet in its entirety. Only works in DMs to keep any emergency conversations private and secure.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#crisis>`**", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  await ctx.send(embed=embed)
+
+phoneNum = os.getenv('sendPhoneNum')
+@client.command(aliases=['SOS'])
+@commands.dm_only()
+async def sos(ctx):
+  embed = embed=discord.Embed(title="Comet SAFETY CRISIS CENTER", description="Please select your language in the next 20 Seconds | Por favor seleccione su idioma en los próximos 20 segundos", color=0x2f3136)
+  msg = await ctx.send(embed=embed, components=[[
+      Button(style = ButtonStyle.red, label = "English | Ingles"),
+      Button(style = ButtonStyle.blue, label = "Spanish | Español")
+    ]]
+  )
+
+  try:
+    buttonCheck = await client.wait_for("button_click", timeout=20, check=lambda a: a.user == ctx.author)
+
+    if buttonCheck.component.label == 'Spanish | Español':
+      lang = 'Spanish'
+    elif buttonCheck.component.label == 'English | Ingles':
+      lang = 'English'
+  except asyncio.TimeoutError:
+    await ctx.send('Defaulted to English.')
+    lang = 'English'
+
+  await msg.delete()
+
+  if lang == 'English':
+    embed=discord.Embed(title="Comet HEALTH AND MENTAL CRISIS CENTER", description="Thank you for using the Comet Health and Mental Crisis Center. I as a Hispanic LGBTQ+ member, mental and physical health is important to me, especially someone else's health if they are experiencing a crisis that could lead to life-threatening situations, which is why I designed this command to get people the help they need.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
+    embed.add_field(name="Sincerely,", value="**`Emmanuel Castillo (eta_c4rinae#7810)`**\nPS.: **`Note that if the situation is serious, I may have to intervene, but before I do that I must get your consent to do so.`**", inline=True)
+    embed.add_field(name="You are NEVER ALONE", value="I can help.", inline=True)
+
+    await ctx.send(embed=embed,
+      components = [
+          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicidal Thoughts"), SelectOption(label="Sexual Assault/Abuse", value="Report SA and other sexual offenses"), SelectOption(label="Domestic Abuse", value="Report Physical Abuse"), SelectOption(label="Need Shelter", value="In case you are in need of shelter"), SelectOption(label="Need Food", value="Find food banks"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door")
+          ]
+        )
+      ]
+    )
+  else:
+    embed=discord.Embed(title="Centro de CRISIS DE VIDA Comet", description="Gracias por utilizar el Centro de CRISIS DE VIDA Comet. Yo como un Latino y miembro de la LGBTQ+, la salud mental y fisica es importante para mi, especialmente la salud de alguien si ellos estan teniendo una crisis puede resultar o esta resultando en situaciones que amenazan la vida de tal persona. Por eso diseñe este comando.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPor favor tome tiempo en mirar las optiones que estan ofrecidas en el menu. Muchas de estas opciones tienen recursos para reportar crimenes sexuales y violentos.", color=0x2f3136)
+    embed.add_field(name="Sinceramente,", value="**`Emmanuel Castillo (eta_c4rinae#7810)`**\nPS: **`Note que si su situacion es seria, yo talves necesite intervenir, pero antes de que pueda hacer eso necesito su consentimiento para hacerlo.`**", inline=True)
+    embed.add_field(name="Nunca estas solo.", value="Creo que puedo ayudar.", inline=True)
+
+    await ctx.send(embed=embed,
+      components = [
+          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso/Asalto Sexual", value="Abuso/Asalto Sexual"), SelectOption(label="Abuso Fisico o Domestico", value="Abuso Fisico o Domestico"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar")
+          ]
+        )
+      ]
+    )
+  
+  while True:
+    selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+    if lang == 'English':
+      await selectionDone.respond(content='{} chosen'.format(selectionDone.component[0].value))
+    else:
+      await selectionDone.respond(content='{} escogido.'.format(selectionDone.component[0].value))
+
+    if selectionDone.component[0].label == 'LGBTQ+':
+      if lang == 'English':
+        embed=discord.Embed(title="Getting Help for LGBTQ+ Individuals", description="Being an open LGBTQ+ individual is hard, especially in hostile environments that oppress us. For many of us, it's not even an option to come out because we are afraid of being harmed. However, one should seek out help when they are facing the possibility of harm due to one's sexual orientation and/or gender indentity. Thankfully, charities like the Trevor Project exist, whose goal is to help out our community. For this reason, Comet will provide resources to connect with the Trevor Project as it's one of the few good choices for LGBTQ+ indivuals facing crises. Below are the contacts for the Trevor Project\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo", color=0x2f3136)
+        embed.add_field(name="TrevorLifeline:", value="**`1-866-488-7386`** or **`1-866-4-U-TREVOR`**", inline=False)
+        embed.add_field(name="TrevorChat:", value="**`thetrevorproject.org/get-help-now/`** and then click on **`TrevorChat`**", inline=False)
+        embed.add_field(name="TrevorText:", value="Text **`START`** to the phone number **`678-678`**", inline=False)
+        embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`**.", inline=False)
+        embed.add_field(name='If outside the US:', value='Click (here)[http://suicide.org/international-suicide-hotlines.html] to find your country\'s hotline since the Trevor Project is US-only unfortunately.')
+        embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
+        embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 30 seconds to confirm before it defaults to **no**.", inline=False)
+      else:
+        embed=discord.Embed(title="Buscando Ayuda Para Integrantes de la LGBTQ+", description="Siendo un miembro de la LGBTQ+ es dificil, especialmente in ambientes hostiles cuales los oprimen. Para muchos, no hay posibilidad de poder expresarnos debido al miedo que los lastimen. Por suerte, hay organizaciones como el Trevor Project, cuya meta es ayudar nuestra comunidad. Por esta razon, Comet tiene recursos para contactarse con el Trevor Project si esta en los Estados Unidos. Abajo de este parafo estan tales contactos.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project.", color=0x2f3136)
+        embed.add_field(name="TrevorLifeline:", value="**`1-866-488-7386`** o **`1-866-4-U-TREVOR`**", inline=False)
+        embed.add_field(name="TrevorChat:", value="**`thetrevorproject.org/get-help-now/`** y haga click en **`TrevorChat`**", inline=False)
+        embed.add_field(name="TrevorText:", value="Texte **`START`** al numero **`678-678`**", inline=False)
+        embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
+        embed.add_field(name='Si estad afuera de los Estados Unidos:', value=' Haga click (aqui)[http://suicide.org/international-suicide-hotlines.html] para buscar la linea de suicidio de su pais.')
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
+        embed.add_field(name="Ultima Pregunta:", value="Si la situacion es grave o necesita hablar con alguien, daria **`SU`** permiso para ser contactado por el desarollador de Comet. Presione **Si** o **No** en los proximos 30 segundos para confirmar antes que se vaya a la respuesta predeterminada de **no**.", inline=False)
+      await ctx.send(embed=embed, components=[[
+        Button(style = ButtonStyle.red, label = "No"),
+        Button(style = ButtonStyle.green, label = "Si | Yes")
+        ]]
+      )
+
+      try:
+        lgbtButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
+
+        if lgbtButtonCheck.component.label == 'Si | Yes':
+          devSummon = client.get_user(588931051103977494)
+          if lang == 'Spanish':
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            embed=discord.Embed(title="Señal de Auxilio Mandada", description=f"La señal de auxilio ha sido mandada al desarrolador. Espere entre 10-20 minutos dependiendo de que hora del dia sea en PST en los Estados Unidos. Pronto va a recibir un mensaje de {devSummon}.", color=0x2f3136)
+            embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro.", value='Sinceramente,\nComet y el Equipo de desarrollo', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="Señal de Auxilio", description=f"Una señal de auxilio ha sido mandada arededor de las {timeSent.strftime(dateFormat)} PST. Aqui estan los detalles:", color=0x2f3136)
+            sosEmbed.add_field(name="Tipo de señal", value='Crisis LGBTQ+', inline=True)
+            sosEmbed.add_field(name="Persona Afectada:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Hora:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Nivel De Urgencia:", value=f'Nivel 1-3. Tengan cuidado debida a que la situacion puede escalarse', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          elif lang == 'English':
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            embed=discord.Embed(title="SOS Signal Sent", description=f"The Developer has been pinged. Wait in between 10-20 minutes depending on what time it is in US PST. You should get a message from {devSummon}.", color=0x2f3136)
+            embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in.", value='Sincerely,\nComet and the Dev Team', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="SOS Signal", description=f"A SOS signal was sent at around {timeSent.strftime(dateFormat)} PST. Here are the details:", color=0x2f3136)
+            sosEmbed.add_field(name="Type:", value='LGBTQ+ Crisis', inline=True)
+            sosEmbed.add_field(name="Person Who Sent The Signal:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Time:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Urgency Level:", value=f'Level 1-3. Proceed with caution.', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          
+      except asyncio.TimeoutError:
+        pass
+    if selectionDone.component[0].label == 'Suicide' or selectionDone.component[0].label == 'Suicidio':
+      if lang == 'English':
+        embed=discord.Embed(title="Getting Help To Prevent Suicide", description="Suicide is a awful thing to think about. These thoughts are usually products of mental disorders (PTSD, Depression, etc.) and/or a hostile social enviroment (bullying, harrassment). Members of racial, ethnic, gender, and sexual minorities suffer the most from society's harrasment, which drives some of their members to take their own lives. Even when the chances look slim, there is someone that cares about you and there is always a reason to continue living (not counting a job), even if society wants to hate you and rive you to suicide. For this reason, we the Comet Dev team want to help out people with suicidal thoughts and prevent them from harming themselves, no matter where they are and what is their motive. That is why we created the Comet**__Lifeline__** to help out.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo\n\nPS: Comet**Lifeline** works in the PST U.S.A. Timezone", color=0x2f3136)
+        embed.add_field(name="US National Suicide Hotline:", value="**`800-273-8255`**", inline=False)
+        embed.add_field(name="Trevor Project For LGBTQ+ Members:", value="thetrevorproject.org/get-help-now/", inline=False)
+        embed.add_field(name="Suicide Hotlines in Each State and Their Counties:", value="http://suicide.org/suicide-hotlines.html", inline=False)
+        embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** in the event of a mental breakdown or severe mental crisis.", inline=False)
+        embed.add_field(name='If outside the US:', value='Go to http://suicide.org/international-suicide-hotlines.html to find your country\'s hotline.')
+        embed.add_field(name="If you are seeking help for a person:", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please. Since you trying to help a suicidal person, FIND THEM BEFORE THEY TAKE THEIR OWN LIFE OR DEAL ANY HARM TO THEMSELVES. Look for therapy options and help them in their recovery.", inline=False)
+        embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 300 seconds to confirm before it defaults to **no**. Please, if you are about to take your own life, ** we beg you to choose yes** because we want to help you out even if the circumstances are serious and you don't see hope in continuing to live. YOU are a human being that deserves love and compassion and the help you need. No one can change that.", inline=False)
+      elif lang == 'Spanish':
+        embed=discord.Embed(title="Buscando Ayuda Para Prevenir Suicidio", description="Suicidio: un producto de factores como los desordenes mentales y ambientes hostiles. Si eres un miembro de una minoria, la hostilidad de una sociedad puede empujarte al borde de quitarte tu vida. Aunque sientas que no hay una razon porque vivir o una persona cual le importes, siempre hay y habra una razon y persona que te quiuera. Por eso, el equipo de desarrollo de Comet creo esta comando  de recursos y el Comet**Lifeline**, una forma de comunicarse con gente en Discord para ayudar. Espero que encuentre la ayuda que necesite.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Comet**Lifeline** trabaja bajo el horario PST de los Estados Unidos", color=0x2f3136)
+        embed.add_field(name="US National Suicide Hotline:", value="**`800-273-8255`**", inline=False)
+        embed.add_field(name="Trevor Project Para Miembros de la LGBTQ+:", value="thetrevorproject.org/get-help-now/", inline=False)
+        embed.add_field(name="Lineas de Vida Para Cada Estado de los Estados Unidos de America y sus Condados:", value="http://suicide.org/suicide-hotlines.html", inline=False)
+        embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** en caso de una crisis mental y/o fisica severa.", inline=False)
+        embed.add_field(name='Si estad afuera de los Estados Unidos:', value='Vaya a http://suicide.org/international-suicide-hotlines.html para buscar la linea de suicidio de su pais.')
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA. Para mejorar las posibilidades de que la persona sobreviva, VAYA A BUSCAR A LA PERSONA IMEDIATAMENTE ANTES QUE TOMEN SU PROPIA VIDA O SE HAGAN DAÑO. Un minuto puede hacer la diferencia entre la vida y la muerte. Mientras llega a su destinacion, busce terapia para la persona y ayudelos en su viaje de recuperacion.", inline=False)
+        embed.add_field(name="Ultima Pregunta:", value="Si la situacion es grave o necesita hablar con alguien, daria **`SU`** permiso para ser contactado por el desarollador de Comet. Presione **Si** o **No** en los proximos 300 segundos para confirmar antes que se vaya a la respuesta predeterminada de **no**. Si usted esta considerando suicidarse, **por favor** presione **Si**. No importa cuanto sienta que lo que haga para agarrar ayuda es en vano, siempre hay alguien quien lo puede ayudar. Por favor, no se quede sin hablar porque usted merece amor, compasion, y la ayuda que va necesitar.", inline=False)
+      await ctx.send(embed=embed, components=[[
+        Button(style = ButtonStyle.red, label = "No"),
+        Button(style = ButtonStyle.green, label = "Si | Yes")
+        ]]
+      )
+
+      try:
+        lgbtButtonCheck = await client.wait_for("button_click", timeout=20, check=lambda a: a.user == ctx.author)
+
+        if lgbtButtonCheck.component.label == 'Si | Yes':
+          devSummon = client.get_user(588931051103977494)
+          if lang == 'Spanish':
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            embed=discord.Embed(title="Señal de Auxilio Mandada", description=f"La señal de auxilio ha sido mandada al desarrolador. Espere entre 10-20 minutos dependiendo de que hora del dia sea en PST en los Estados Unidos. Pronto va a recibir un mensaje de {devSummon}. Desde que su señal es debido a circumstancias relationada con suicidio, su señal esta siendo prioritizada.", color=0x2f3136)
+            embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro, relajese, y no se mate. Usted es una persona a cual los importa ayudar.", value='Sinceramente,\nComet y el Equipo de Desarrollo', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="Señal de Auxilio <NIVEL URGENTE>", description=f"Una señal de auxilio ha sido mandada arededor de las {timeSent.strftime(dateFormat)} PST. Aqui estan los detalles:", color=0x2f3136)
+            sosEmbed.add_field(name="Tipo de señal", value='SUICIDIO (POSIBIDAD DE PERDIDA DE VIDA)', inline=True)
+            sosEmbed.add_field(name="Persona Afectada:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Hora:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Nivel De Urgencia:", value=f'Nivel 1. Actue Rapido', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          elif lang == 'English':
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            embed=discord.Embed(title="SOS Signal Sent", description=f"The Developer has been pinged. Wait in between 10-20 minutes depending on what time it is in US PST. You should get a message from {devSummon}. Due to the seriousness of the situation, your signal will be placed as part of our-top priority list to answer.", color=0x2f3136)
+            embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in, relax, and please don't kill yourself. We care about you.", value='Sincerely,\nComet and the Dev Team', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="SOS Signal <HIGH URGENCY>", description=f"A SOS signal was sent at around {timeSent.strftime(dateFormat)} PST. Here are the details:", color=0x2f3136)
+            sosEmbed.add_field(name="Type:", value='Suicide (RISK OF LOSS OF LIFE. ACT FAST.)', inline=True)
+            sosEmbed.add_field(name="Person Who Sent The Signal:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Time:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Urgency Level:", value=f'LEVEL 1. NO TIME TO WASTE.', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          
+      except asyncio.TimeoutError:
+        pass
+
+@help.command()
+async def reverse(ctx):
+  embed=discord.Embed(title="Emo Image Generator", description="Reverses a string. That's it.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#reverse <text>`**", inline=True)
+  embed.add_field(name="Aliases:", value="rev", inline=True)
   await ctx.send(embed=embed)
 
 @client.command(aliases = ['rev'])
 async def reverse(ctx, *, msg): await ctx.reply(msg[::-1])
 
+@help.command()
+async def rank(ctx):
+  embed=discord.Embed(title="Comet Rank System", description="Check your position in a server's Comet level system. Displays how much XP you have, your current level, rank, and how much XP you need to level up.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#rank <user> <max list entries>`**", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  embed.add_field(name="<user>", value="Only accepts a member of the same discord channel. If left blank it makes the command default to the command author.", inline=False)
+  embed.add_field(name="<max list entries>", value="To use <user> has to be stated. This changes how many users are shown in the rank list. Maximun length is the length of the server user levels list. Default is 5.", inline=False)
+  await ctx.send(embed=embed)
+  
 @client.command(pass_context=True)
 async def rank(ctx, member: discord.Member=None, show=5):
   serverName = ctx.guild
@@ -519,7 +740,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
       rankList.append(valueToAppend)
     except:
       x = 1
-  print(rankList)
+  
   rankList.sort(reverse=True, key=lambda rank: rank[2])
   rankList.sort(reverse=True, key=lambda rank: rank[1])
   if show > len(rankList):
@@ -553,72 +774,61 @@ async def rank(ctx, member: discord.Member=None, show=5):
   embed.set_footer(text=f"▧ Rank for {member} ▧")
   await ctx.reply(embed=embed, mention_author=False)
 
-@client.command(pass_context=True)
-async def levels(ctx, number=5):
-  serverName = ctx.guild.name
-  with open('levels.json','r') as f:
-    users = json.load(f)
-  await openLevelUser(ctx.author, serverName)
-  levelList = []
-
-  levelChecker = f'{serverName} Level'
-
-  for user in ctx.guild.members:
-    print('hello')
-  
-  levelList = sorted(levelList, reverse=True)
-
-  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Now Showing Top {number} Users in {serverName} ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x34363b)
-  index = 1
-  for amt in level:
-    id_ = level[amt]
-    member = client.get_user(id_)
-    name = member.name
-    embed.add_field(name = f'{index}. {name}', value=f'{amt}', inline=False)
-    if index == number:
-      break
-    else:
-      index += 1
-
-  embed.set_author(name="The ※ U S E R  L I S T ※")
-  embed.set_thumbnail(url="https://images.vexels.com/media/users/3/135932/isolated/preview/5873339dddecea4a26d7366462d0eec6-checklist-file-icon-by-vexels.png")
-  embed.set_footer(text="Comet Economy Alert")
-  await ctx.send(embed=embed)
-
 @client.command(aliases=['Solve'])
 async def solve(ctx, v1: int=0, v2: int=0, v3: int=0, v4: int=0, v5: int=0, v6: int=0, v7: int=0):
+  await openBankAccount(ctx.author)
+  user = ctx.author
+  phoneCount = 0
+  with open('bank.json','r') as f:
+    users = json.load(f)
+  calcCounter = 0
+  
+  for item in users[str(user.id)]['Inventory']:
+    if item['Item'] == 'calculator' and item['Amount'] > 0:
+      x = sp.Symbol('x')
+      y = v1+v2*x+v3*x**2+v4*x**3+v5*x**4+v6*x**5+v7*x**6
+      solve = f'{v1} + {v2}X + {v3}X^2 + {v4}X^3 + {v5}X^4 + {v6}X^5 + {v7}x^6'
+      x = sp.solve(y)
+      try:
+        embed=discord.Embed(title=f"***Here are the solutions for __{solve}__***", description='***NOTE: Ignore the brackets. Those are because of the text color formatting***', color=0x2f3136)
 
-  x = sp.Symbol('x')
-  y = v1+v2*x+v3*x**2+v4*x**3+v5*x**4+v6*x**5+v7*x**6
-  solve = f'{v1} + {v2}X + {v3}X^2 + {v4}X^3 + {v5}X^4 + {v6}X^5 + {v7}x^6'
-  x = sp.solve(y)
-  try:
-    embed=discord.Embed(title=f"***Here are the solutions for __{solve}__***", description='***NOTE: Ignore the brackets. Those are because of the text color formatting***', color=0x2f3136)
+        counter = 1
+        if v4 == 0 and v5 == 0 and v6 == 0 and v7 == 0:
+          for entry in x:
+            entry = str(entry)
+            if '**' in entry:
+              entry = entry.replace('**', '^')
+            if 'I' in entry:
+              entry = entry.replace('I', 'i')
+            thingToShow = f"```ini\n[ {entry} ]\n```"
+            embed.add_field(name = f'Solution #{counter}:', value=thingToShow, inline=False)
+            counter += 1
+        else:
+          translatedEntries = [str(N(solution)) for solution in x]
+          for entry in translatedEntries:
+            if '**' in entry:
+              entry = entry.replace('**', '^')
+            if 'I' in entry:
+              entry = entry.replace('I', 'i')
+            thingToShow = f"```ini\n[ {entry} ]\n```"
+            embed.add_field(name = f'Solution #{counter}:', value=thingToShow, inline=False)
+            counter += 1
+        await ctx.send(embed=embed)
+      except:
+        return await ctx.send('***ERROR: Unknown entries***')
+    calcCounter += 1
 
-    counter = 1
-    for entry in x:
-      entry = str(entry)
-      if '**' in entry:
-        entry = entry.replace('**', '^')
-      if 'I' in entry:
-        entry = entry.replace('I', 'i')
-      thingToShow = f"```ini\n[ {entry} ]\n```"
-      print
-      embed.add_field(name = f'Solution #{counter}:', value=thingToShow, inline=False)
-      counter += 1
-  except:
-    await ctx.send('***ERROR: Unknown entries***')
-    return
-  embed.set_author(name="Comet Calculator")
-  await ctx.send(embed=embed)
+  if calcCounter == 0:
+    for i in range(1):
+      await ctx.send('You dont have a calculator. Purchase one.')
 
 # START OF THE ECONOMY SECTION
 shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics. Using them will give you a special surprise.'},
-  {'name':'Comet Emotion Engine','price':10,'description':'The emotion engine ***Comet*** has. Gives a multiplier of 2*`amount you use`. Doesn\'t stack with other multipliers'},
-  {'name':'Gun','price':1000,'description':'Used to shoot.'},
-  {'name':'Laptop','price':500,'description':'Use it to surf the Web'},
+  {'name':'Comet Emotion Engine','price':10,'description':'The emotion engine ***Comet*** has. Gives a multiplier of 2*`amount you use`. Overrides other multipliers'},
+  {'name':'Gun','price':1000,'description':'Used to shoot. Unlocks #shoot,'},
+  {'name':'Calculator','price':500,'description':'Use it to solve stuff. Unlocks #calc, #solve'},
   {'name':'Phone','price':500,'description':'The Castillo Phone 2XS Pro MAX. Use #phone to be able to scam people and do other things.'},
-  {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed. Do #use <amount> padlock to use it.'},
+  {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
 
 @help.command()
@@ -888,7 +1098,15 @@ async def deathnote(ctx, member:discord.Member=None):
   os.remove('deathNote.png')
   os.system('deathNote.png')
 
-@client.command(aliases=['lead','Lead','Leaderboard','lb','ul'])
+@help.command()
+async def leaderboard(ctx):
+  embed=discord.Embed(title="Comet Economy Rank", description="Displays the top rich people in a server", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#leaderboard <length of list>`**", inline=True)
+  embed.add_field(name="Aliases:", value="lead, Lead, Leaderboard, lb", inline=True)
+  embed.add_field(name="<length of list>", value="Takes in a number. Changes the amount of names showing up on the board. Maximum amount depends on how many active Comet Economy users there are in the server. Default is 3.", inline=False)
+  await ctx.send(embed=embed)
+
+@client.command(aliases=['lead','Lead','Leaderboard','lb'])
 async def leaderboard(ctx, number=3):
   with open('bank.json','r') as f:
     users = json.load(f)
@@ -901,11 +1119,11 @@ async def leaderboard(ctx, number=3):
       thingToAppend = [user.name, totalAmount]
       total.append(thingToAppend)
     except:
-      uselessVariable = 1
+      pass
 
   total.sort(reverse=True, key=lambda totalThing: totalThing[1])
 
-  embed=discord.Embed(title=f"‣‣‣‣‣‣‣‣‣‣‣ Top {number} Users of {ctx.guild.name} ‣‣‣‣‣‣‣‣‣‣‣‣", color=0x0502c5)
+  embed=discord.Embed(title=f" Top {number} Rich People of {ctx.guild.name}", color=0x2f3136)
 
   index = 1
   if number > len(total):
@@ -922,63 +1140,115 @@ async def leaderboard(ctx, number=3):
   rankDisplay += '```'
   embed.add_field(name = '--------------------------', value=f'{rankDisplay}', inline=False)
 
-  embed.set_author(name=f"The ※ Bank Leaderboard for {ctx.guild.name} ※")
   embed.set_thumbnail(url="https://images.vexels.com/media/users/3/135932/isolated/preview/5873339dddecea4a26d7366462d0eec6-checklist-file-icon-by-vexels.png")
-  embed.set_footer(text="Comet Economy Alert")
   await ctx.send(embed=embed)
 
-@client.command(aliases=['lock'])
-async def use(ctx, amount=1, *, itemName=None):
+@client.group(invoke_without_command=True)
+@commands.cooldown(1, 10, commands.BucketType.user)
+async def use(ctx):
+  embed=discord.Embed(title="Comet Item Use Center", color=0x2f3136)
+  embed.add_field(name="Use Rule 1:", value="If an Item's name is multiple letters long, you do **`#use name_of_item`**.", inline=False)
+  embed.add_field(name="Use Rule 2:", value="Item names have to BE lowercase. No exceptions.", inline=True)
+  embed.add_field(name="Use Rule 3:", value="Some items can kill you so beware :slight_smile:.", inline=True)
+  embed.add_field(name="Use Rule 4:", value="To use more than one item, put the desired muber after the item name. Example: **`#use feet_pic 5`** would use 5 feet pics.", inline=False)
+  
+  await ctx.send(embed=embed)
+
+@use.error
+async def item_not_found(ctx, error):
+  await ctx.send('The item you tried to use doesn\'t exist or was mistyped. Try again.\n**NOTE**: **`If the item name is multiple words (ex: Comet emotion engine), you would need to replace the spaces in between with an \_.`**')
+
+@use.command()
+async def feet_pic(ctx, amount=1):
   with open('bank.json','r') as f:
     users = json.load(f)
   user = ctx.author
 
   bal = await updateBank(user)
 
-  res = await useThis(ctx.author, itemName, amount)
+  res = await useThis(ctx.author, 'feet pic', amount)
 
   if not res[0]:
-    if res[1] == 1:
-      await ctx.reply('Item doesn\'t exist.', mention_author=False)
-      return
     if res[1] == 2:
-      await ctx.reply(f'You don\'t have {amount} {itemName}.', mention_author=False)
+      await ctx.reply(f'You don\'t have {amount} padlocks.', mention_author=False)
       return
     if res[1] == 3:
-      await ctx.reply(f'You don\'t own {itemName}.', mention_author=False)
+      await ctx.reply(f'You don\'t own a padlock.', mention_author=False)
+
+  dies = bool(random.getrandbits(1))
+  if dies:
+    await updateBank(ctx.author, 1, 'Deaths')
+
+    responses=['The photographer sees you had a feet pic of hers and snaps your neck. You die :man_facepalming:',
+      'You saw the feet pic and liked it. Due to this, the image combusts on fire, burning you to a crisp in an instant.',
+      'When you saw the feet pic it became sentient and stabbed you. You died.']
+    await ctx.reply(f'{random.choice(responses)}', mention_author=False)
+  else:
+    responses=['You saw the picture and nothing happened.',
+      'You saw the feet pic and liked it. The photographer of the feet pics looks at you in disgust. :sick:',
+      'The feet pic desintegrated. You were unable to see its contents.']
+    await ctx.reply(f'{random.choice(responses)}', mention_author=False)
+
+@use.command()
+async def padlock(ctx, amount=1):
+  with open('bank.json','r') as f:
+    users = json.load(f)
+  user = ctx.author
+
+  bal = await updateBank(user)
+
+  res = await useThis(ctx.author, 'padlock', amount)
+
+  if not res[0]:
+    if res[1] == 2:
+      await ctx.reply(f'You don\'t have {amount} padlocks.', mention_author=False)
+      return
+    if res[1] == 3:
+      await ctx.reply(f'You don\'t own a padlock.', mention_author=False)
   
-  if itemName == 'padlock':
-    await updateBank(ctx.author, amount, 'Active Padlocks')
+  await updateBank(ctx.author, amount, 'Active Padlocks')
  
-    print(bal[2])
-    await ctx.reply(f'You have used {amount} padlocks.', mention_author=False)
-  if itemName == 'Comet emotion engine':
-    if bal[3] > 0:
-      await updateBank(ctx.author, -1*bal[3], 'Coin Multiplier')
+  if amount > 1:
+    random_responses = [f'You have used {amount} padlocks. I see you\'re playing it safe.', f'Activating {amount} padlocks to protect you. This makes me have a question: who robs from the same user more than once after they fail..']
+    await ctx.reply(random.choice(random_responses), mention_author=False)
+  else:
+    random_responses = [f'Succesfully used a single padlock. I would definitely recommend you to use two or more considering how chaotic this place is.', f'Activating {amount} padlock. This should keep you safe.', 'You\'re good to go with the one padlock you used.']
+    await ctx.reply(random.choice(random_responses), mention_author=False)
 
-    await updateBank(ctx.author, 2*amount, 'Coin Multiplier')
- 
-    print(bal[2])
-    await ctx.reply(f'You have used {amount} {itemName}s. Your Chem Coin (⌬) multiplier is now at {2*amount} when you beg for the next 5 minutes.', mention_author=False)
-    await asyncio.sleep(300)
-    await ctx.reply('Your multiplier ran out.', mention_author=False)
+@use.command()
+async def comet_emotion_engine(ctx, amount=1):
+  with open('bank.json','r') as f:
+    users = json.load(f)
+  user = ctx.author
+
+  bal = await updateBank(user)
+
+  res = await useThis(ctx.author, 'Comet emotion engine', amount)
+
+  if not res[0]:
+    if res[1] == 2:
+      await ctx.reply(f'You don\'t have {amount} Comet emotion engines.', mention_author=False)
+      return
+    if res[1] == 3:
+      await ctx.reply(f'You don\'t own a Comet emotion engine.', mention_author=False)
+  
+  if bal[3] > 0:
     await updateBank(ctx.author, -1*bal[3], 'Coin Multiplier')
-  if itemName == 'feet pic':
-    dies = bool(random.getrandbits(1))
-    if dies:
-      await updateBank(ctx.author, 1, 'Deaths')
-
-      responses=['The photographer sees you had a feet pic of hers and snaps your neck. You die :man_facepalming:',
-        'You saw the feet pic and liked it. Due to this, the image combusts on fire, burning you to a crisp in an instant.',
-        'When you saw the feet pic it became sentient and stabbed you. You died.']
-      await ctx.reply(f'{random.choice(responses)}', mention_author=False)
-    else:
-      await updateBank(ctx.author, 1, 'Deaths')
-
-      responses=['You saw the picture and nothing happened.',
-        'You saw the feet pic and liked it. The photographer of the feet pics looks at you in disgust. :sick:',
-        'The feet pic desintegrated. You were unable to see its contents.']
-      await ctx.reply(f'{random.choice(responses)}', mention_author=False)
+    await updateBank(ctx.author, 2*amount, 'Coin Multiplier')
+  else:
+    await updateBank(ctx.author, 2*amount, 'Coin Multiplier')
+  
+  if amount > 1:
+    random_responses = [f'You have used {amount} Comet emotion engine. That multiplier will definitely help your broke ass. Beware that this multiplier goes away after 3 minutes.', f'{amount} Comet emotion engines are used to help boost the amount of coins you get from begging and other coin-gaining activities. This expires in 3 minutes']
+    await ctx.reply(random.choice(random_responses), mention_author=False)
+  else:
+    random_responses = [f'Succesfully used a single Comet emotion engine. Time to not be broke for 3 minutes.', f'The Comet emotion enginen you used up will now take effect for 3 minutes.']
+    await ctx.reply(random.choice(random_responses), mention_author=False)
+  
+  await asyncio.sleep(180)
+  bal = await updateBank(user)
+  await updateBank(ctx.author, -1*bal[3], 'Coin Multiplier')
+  await ctx.reply('Comet Emotion Engine multiplier ran out.')
 
 @client.command(aliases=['gun'])
 async def shoot(ctx, member:discord.Member):
@@ -993,6 +1263,7 @@ async def shoot(ctx, member:discord.Member):
       if shootPass == True:
         victimDies = bool(random.getrandbits(1))
         if victimDies == True:
+          await updateBank(member, 1, 'Deaths')
           responses = [f'You shot {member.mention} and they die from it.',
             f'You basically turn {member.mention} to swiss cheese with all the rounds you used. Now I feel bad for them.',
             f'You fatally shot {member.nick}. \nhttps://tenor.com/view/machine-gun-stationary-gun-rocket-gun-trevante-rhodes-the-predator-gif-11846844',
@@ -1006,6 +1277,7 @@ async def shoot(ctx, member:discord.Member):
       elif shootPass == False:
         shooterDies = bool(random.getrandbits(1))
         if shooterDies == True:
+          await updateBank(ctx.author, 1, 'Deaths')
           responses = [f'You shot {member.mention}, but the bullet missed them and richocheted towards you causing your death.',
             'Your eyesight is so bad you accidentanly shot yourself and died. Sucks to be you.',
             f'{member.mention} parried the bullet towards you and ended hitting you in the brain, causing your death.',
@@ -1024,11 +1296,114 @@ async def shoot(ctx, member:discord.Member):
     for x in range(1):
       await ctx.send('You don\'t have a gun.')
 
+@client.command()
+async def laptop(ctx):
+  await openBankAccount(ctx.author)
+  user = ctx.author
+  laptops = 0
+  with open('bank.json','r') as f: users = json.load(f)
+  
+  for item in users[str(user.id)]['Inventory']:
+    if item['Item'] == 'laptop' and item['Amount'] > 0:
+      embed=discord.Embed(title="Laptop Options", description=f"Hey {user.mention}, click one of the buttons to do an action before the phone's battery runs out in 20 seconds.", color=0x00ffee)
+      embed.set_thumbnail(url="https://images.vexels.com/media/users/3/128754/isolated/preview/d7966cba43a9c647bb596a02c6756f3f-smart-phone-icon-by-vexels.png")
+      embed.set_footer(text="Castillo Phone")
+      embed1 = await ctx.send(embed=embed,
+      components = [
+        [
+          Button(style = ButtonStyle.red, label = "Scam"),
+          Button(style = ButtonStyle.blue, label = "TTS on Voice Channel"),
+          Button(style = ButtonStyle.green, label = "DM a User")
+        ]
+      ])
+    
+      def check(buttonCheck):
+        return buttonCheck.channel == ctx.channel
+
+      try:
+        buttonCheck = await client.wait_for("button_click", timeout=20, check=check)
+
+        if buttonCheck.component.label == 'Scam':
+          await ctx.send('Ping the user you want to scam.')
+          try:
+            def check(m):
+              return m.author == ctx.author
+
+            msg = await client.wait_for('message', timeout=20, check=check)
+            try:
+              prepare1 = msg.content.replace('<@!', '')
+              prepare2 = prepare1.replace('>', '')
+              finalPrepare = int(prepare2)
+            except:
+              prepare3 = prepare2.replace('<@', '')
+              finalPrepare = int(prepare3)
+
+            userToScam = client.get_user(finalPrepare)
+            print(userToScam)
+
+            await ctx.invoke(client.get_command('rob'), member=userToScam, scam=True, phoneRobber=ctx.author)
+          except asyncio.TimeoutError:
+            await ctx.send('The phone\'s battery ran out.')
+        elif buttonCheck.component.label == 'TTS on Voice Channel':
+          await ctx.reply('Input the text you want ***Comet*** to say.', mention_author=False)
+          try:
+            def check(m):
+              return m.author == ctx.author
+
+            msg = await client.wait_for('message', timeout=20, check=check)
+
+            await ctx.invoke(client.get_command('tts'), text=msg.content)
+
+          except asyncio.TimeoutError:
+            await ctx.send('The phone\'s battery ran out.')
+        elif buttonCheck.component.label == 'DM a User':
+          await ctx.reply('Ping the user you want to send the message to (Don\'t worry I\'ll delete the ping).', mention_author=False)
+          try:
+            def check(m):
+              return m.author == ctx.author
+
+            msg = await client.wait_for('message', timeout=20, check=check)
+
+            try:
+              prepare1 = msg.content.replace('<@!', '')
+              prepare2 = prepare1.replace('>', '')
+              finalPrepare = int(prepare2)
+            except:
+              prepare3 = prepare2.replace('<@', '')
+              finalPrepare = int(prepare3)
+            userToDM = client.get_user(finalPrepare)
+
+            await msg.delete()
+
+            await ctx.reply('Now type what you want to send to the user.', mention_author=False)
+
+            try:
+              def check(m):
+                return m.author == ctx.author
+
+              msgText = await client.wait_for('message', timeout=20, check=check)
+              await userToDM.send(f'New DM from a user in **`{ctx.guild.name}`**\n**__{ctx.author.id}__**: {msgText.content}')
+
+            except asyncio.TimeoutError:
+              await ctx.send('Your Mobile data ran out. Thank the 5 GB Haley-Mobile Data Plan.')
+
+          except asyncio.TimeoutError:
+            await ctx.send('The phone\'s battery ran out.')
+      
+      except asyncio.TimeoutError:
+        await ctx.reply('exited the Phone', mention_author=False)
+      
+      laptops += 1
+
+  if laptops == 0:
+    for x in range(1):
+      await ctx.send('You don\'t have a phone.')
+
 @client.command(aliases=['CastiPhone'])
 async def phone(ctx):
   await openBankAccount(ctx.author)
   user = ctx.author
-  gunCount = 0
+  phoneCount = 0
   with open('bank.json','r') as f:
     users = json.load(f)
   
@@ -1082,7 +1457,6 @@ async def phone(ctx):
             msg = await client.wait_for('message', timeout=20, check=check)
 
             await ctx.invoke(client.get_command('tts'), text=msg.content)
-            await ctx.invoke(client.get_command('leave'))
 
           except asyncio.TimeoutError:
             await ctx.send('The phone\'s battery ran out.')
@@ -1123,12 +1497,12 @@ async def phone(ctx):
       except asyncio.TimeoutError:
         await ctx.reply('exited the Phone', mention_author=False)
       
-      gunCount += 1
-      print(gunCount)
+      phoneCount += 1
+      print(phoneCount)
 
-  if gunCount == 0:
+  if phoneCount == 0:
     for x in range(1):
-      await ctx.send('You don\'t have a gun.')
+      await ctx.send('You don\'t have a phone.')
 
 @client.command(aliases=['fck'])
 async def fuck(ctx, *, member:discord.Member):
@@ -1678,13 +2052,8 @@ async def updateBank(user, change=0, mode='Wallet'):
   return bal
 
 # END OF THE ECONOMY SECTION
-
-@client.command(pass_context=True)
-@commands.cooldown(1, 10, commands.BucketType.user)
-async def spam(ctx):
-  randomSpamImages=['https://tenor.com/view/spammer-no-spamming-dora-gif-19107257',
-    'https://media.tenor.co/videos/aca9f2dd590c64cdae67682493439e7f/mp4']
-  await ctx.send(f'{random.choice(randomSpamImages)}')
+@help.command()
+async def devnote(ctx): pass
 
 @client.command(aliases=['dn'],pass_context=True)
 async def devnote(ctx):
@@ -1901,8 +2270,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     
 
-    mg = await ctx.send(embed=embed, components=[[
-      Button(style = ButtonStyle.red, label = "1"),
+    mg = await ctx.send(embed=embed, components=[[Button(style = ButtonStyle.red, label = "1"),
       Button(style = ButtonStyle.blue, label = "2"),
       Button(style = ButtonStyle.green, label = "3"),
       Button(style = ButtonStyle.blue, label = "4"),
@@ -1964,7 +2332,7 @@ async def snipe(ctx):
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
 
     try:
-      embed.set_image(url=f"attachment://{regularSnipeImage[channel.id].filename}")
+      embed.set_image(url=f"attachment://{regularSnipeImage[channel.id][regularSnipeAuthor[channel.id].id].filename}")
     except: pass
 
     embed.set_author(name=f"Snipe: {channel.name}")
@@ -1974,7 +2342,7 @@ async def snipe(ctx):
       await ctx.send(embed=embed)
   except:
     embed=discord.Embed(title=" ", color=0x2f3136)
-    embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
+    embed.set_author(name=f"No Snipeable Messages, {ctx.author}")
     await ctx.send(embed=embed)
 
 # Hello command
@@ -2223,17 +2591,18 @@ async def hangman(ctx):
   tries = 0
   guess = None
   wonHangman = False
-  hiddenWord=[]
+  hiddenWord = []
   
-  randomEmojis=[':smiley:',':cry:',':rofl:',':cold_face:',':neutral_face:',':grimacing:']
-  hangmanPoses = ['==========\n\u2225||        ||\u2225\n\u2225||        ||\u2225\n\u2225\n\u2225\n\u2225\n\u2225\n++++++++++++++++',
-    f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225\n\u2225\n\u2225',
-    f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||\u2225\n\u2225\n\u2225\n++++++++++++++++',
-    f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225\n\u2225\n\u2225\n++++++++++++++++',
-    f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225||----------||\u2225\n\u2225\n\u2225\n++++++++++++++++',
-    f'==========\n\u2225||--------||\u2225\n\u2225||--------||\u2225\n\u2225||--------||{random.choice(randomEmojis)}\n\u2225||--------||--|--\n\u2225||----------||\u2225\n\u2225||---------||/\\ \n\u2225\n++++++++++++++++']
+  randomEmojis = [':smiley:',':cry:',':rofl:',':cold_face:',':neutral_face:',':grimacing:']
+  randomTimes = [':sun_with_face:  .  .  :cloud:  .  :cloud:  .  .', ':white_sun_cloud: :cloud: :cloud: :cloud: :cloud: :cloud: :cloud:', ':white_sun_small_cloud:  :cloud:  :cloud:  :cloud: :cloud:', '☄||--||☆||--||☆||-----||:full_moon:', ':crescent_moon:||---||☆||------||☆||----||☆||---||', ':full_moon:||-------||:cloud:']
+  hangmanPoses = [f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥\n∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||--|--\n∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||--|--\n∥||----------||∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||--|--\n∥||----------||∥\n∥||---------||/\\ \n∥\n▦▦▦▦▦▦▦▦▦▦▦']
   
-  words = ['captain','Comet', 'Emo', 'Luna', 'Bellatrix','fortnite']
+  words = ['Comet', 'emo', 'Luna', 'Bellatrix', 'Aldebaran']
   getWordList = urllib.request.urlopen("https://www.mit.edu/~ecprice/wordlist.10000")
   prepWordList = getWordList.read()
   onlineWordList = prepWordList.splitlines()
@@ -2249,6 +2618,7 @@ async def hangman(ctx):
   words.extend(onlineWordList)
 
   prepareWord = random.choice(words)
+  prepareWord = prepareWord.lower()
 
   word = list(prepareWord)
   hangmanEmbed = discord.Embed(description=hangmanPoses[tries], color=0x34363b)
@@ -2275,7 +2645,7 @@ async def hangman(ctx):
       guess = grabUserInput.content
 
     except asyncio.TimeoutError:
-      await ctx.send('**PLEEASE** if you\'re going to play **__FUCKING HANGMAN__** respond to it quickly :neutral_face:')
+      await ctx.send('**__Hangman round ended due to inactivity__**')
       guess = None
       tries = 0
       return
@@ -2283,8 +2653,7 @@ async def hangman(ctx):
     if guess in word:
       hangmanEmbed = discord.Embed(color=0x4dff82,description=hangmanPoses[tries])
       hangmanEmbed.set_author(name='You guessed a letter correctly 😁', icon_url=ctx.author.avatar_url)
-      for i in range( len(word) ):
-        print(i)
+      for i in range(len(word)):
         character = word[i]
         if character == guess:
           hiddenWord[i] = word[i]
@@ -2299,7 +2668,7 @@ async def hangman(ctx):
       if tries > 5:
         await ctx.send(f'**You lost**. Try again.\nThe word was **__{prepareWord}__**')
         tries = 0
-        return hangman
+        return
 
 @client.command(aliases=['zalgo','cursedtext'], help='Z̵̤ͫ A̋ͨ͝ L̬ͣ͡ G͊ͤ͜ Ö͕́̀')
 @commands.cooldown(1, 10, commands.BucketType.guild)
@@ -2594,7 +2963,7 @@ async def skip(ctx):
 @client.command(aliases=['topic','topis','stopic','Topic','stoc'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def questions(ctx):
-  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters?', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!', 'The G-Man provides a Xen sample. What do you do?', 'Mention the person with the least friends.', 'I\’m not like other girls!']
+  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters? /j', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!', 'The G-Man provides a Xen sample. What do you do?', 'Mention the person with the least friends.', 'I\’m not like other girls!']
   await ctx.channel.send(f'{random.choice(randomquestions)}')
 
 @client.command(aliases=['gareb', 'garen',])
@@ -2617,7 +2986,7 @@ async def userinfo(ctx, *, user: discord.Member=None):
       user = ctx.author
     date_format = "%a, %d %b %Y %I:%M %p"
     print(user.joined_at.strftime(date_format))
-    embed = discord.Embed(color=0xdfa3ff, description=user.mention)
+    embed = discord.Embed(color=0x2f3136, description=user.mention)
     embed.set_author(name=str(user), icon_url=user.avatar_url)
     embed.set_thumbnail(url=user.avatar_url)
     embed.add_field(name="Joined", value=user.joined_at.strftime(date_format))
@@ -2625,8 +2994,8 @@ async def userinfo(ctx, *, user: discord.Member=None):
     embed.add_field(name="Join position", value=str(members.index(user)+1))
     embed.add_field(name="Registered", value=user.created_at.strftime(date_format))
     if len(user.roles) > 1:
-        role_string = ' '.join([r.mention for r in user.roles][1:])
-        embed.add_field(name="Roles [{}]".format(len(user.roles)-1), value=role_string, inline=False)
+      role_string = ' '.join([r.mention for r in user.roles][1:])
+      embed.add_field(name="Roles [{}]".format(len(user.roles)-1), value=role_string, inline=False)
     perm_string = ', '.join([str(p[0]).replace("_", " ").title() for p in user.guild_permissions if p[1]])
     embed.add_field(name="Guild permissions", value=perm_string, inline=False)
     embed.set_footer(text='ID: ' + str(user.id))
@@ -2634,6 +3003,7 @@ async def userinfo(ctx, *, user: discord.Member=None):
 
 @client.command(aliases=['say'], help='TTS Command')
 async def tts(ctx, *, text=None):
+  checkVer = os.popen('python -c "import googletrans; print(googletrans.__version__)"').read().replace('\n','')
   # USE GOOGLETRANS V 3.1.0a0
   # To install it use pip3 install googletrans==3.1.0a0
   # Poetry doesn't have 3.1.0a0 if you use Replit
@@ -2642,6 +3012,13 @@ async def tts(ctx, *, text=None):
     # We have nothing to speak
     await ctx.send(f"Hey {ctx.author.mention}, I need to know what to say please.")
     return
+
+  if checkVer != '3.1.0-alpha':
+    async with ctx.typing():
+      await ctx.send('WARNING: Comet is regenerating the tts package that it needs to continue. Please wait.')
+      os.system('pip3 uninstall -y googletrans')
+      os.system('pip3 install googletrans==3.1.0a0')
+      await ctx.send('TTS Package regenerated. Now proceeding with #tts.')
 
   if len(text) > 1200:
     text = text[:1200:]
@@ -2858,29 +3235,170 @@ async def setup(ctx, *, setupOption: str='warning'):
     
     await ctx.send('𝙒𝙚𝙡𝙘𝙤𝙢𝙚 𝙩𝙤 𝙩𝙝𝙚 𝘾𝙊𝙈𝙀𝙏 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 𝙎𝙚𝙩𝙪𝙥. 𝙔𝙊𝙐 𝙈𝙐𝙎𝙏 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙚 𝘼𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚 𝙣𝙖𝙢𝙚 𝙙𝙪𝙚 𝙩𝙤 𝙩𝙝𝙚 𝙛𝙖𝙘𝙩 𝙩𝙝𝙖𝙩 𝘾𝙤𝙢𝙚𝙩 𝙥𝙞𝙣𝙜𝙨 𝙩𝙝𝙚 𝙧𝙤𝙡𝙚 𝙬𝙝𝙚𝙣 𝙖 𝙪𝙨𝙚𝙧 𝙝𝙖𝙨 𝙜𝙖𝙩𝙝𝙚𝙧𝙚𝙙 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙞𝙣𝙜𝙨.\n\n𝙄𝙛 𝙮𝙤𝙪 𝙖𝙧𝙚 𝙤𝙣𝙡𝙮 𝙜𝙤𝙞𝙣𝙜 𝙩𝙤 𝙗𝙚 𝙪𝙨𝙞𝙣𝙜 𝙤𝙣𝙚 𝙧𝙤𝙡𝙚, 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙖𝙩 𝙧𝙤𝙡𝙚 𝙖𝙨 𝙢𝙖𝙣𝙮 𝙩𝙞𝙢𝙚𝙨 𝙖𝙨 𝙞𝙩\'𝙨 𝙣𝙚𝙘𝙚𝙨𝙨𝙖𝙧𝙮 𝙬𝙝𝙚𝙣 𝙮𝙤𝙪 𝙜𝙚𝙩 𝙖𝙨𝙠𝙚𝙙 𝙩𝙤 𝙞𝙣𝙥𝙪𝙩 𝙖 𝙧𝙤𝙡𝙚. 𝙏𝙝𝙚 𝙨𝙖𝙢𝙚 𝙖𝙥𝙥𝙡𝙞𝙚𝙨 𝙛𝙤𝙧 𝙩𝙝𝙚 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙.\n𝘼𝙡𝙨𝙤 𝙣𝙤𝙩𝙚 𝙩𝙝𝙖𝙩 𝙞𝙛 𝙮𝙤𝙪 𝙬𝙖𝙣𝙩 𝙤𝙣𝙚 𝙧𝙤𝙡𝙚 𝙩𝙤 𝙝𝙖𝙫𝙚 𝙖 𝙝𝙞𝙜𝙝𝙚𝙧 𝙬𝙖𝙧𝙣 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙 𝙩𝙝𝙖𝙣 𝙖𝙣𝙤𝙩𝙝𝙚𝙧, 𝙮𝙤𝙪 𝙣𝙚𝙚𝙙 𝙩𝙤 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙖𝙩 𝙧𝙤𝙡𝙚 𝙁𝙄𝙍𝙎𝙏 𝙩𝙤 𝙥𝙧𝙚𝙫𝙚𝙣𝙩 𝙞𝙨𝙨𝙪𝙚𝙨. 𝙏𝙝𝙞𝙨 𝙙𝙤𝙚𝙨 𝙣𝙤𝙩 𝙖𝙥𝙥𝙡𝙮 𝙩𝙤 𝙩𝙝𝙚 𝙖𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚.')
 
-    await ctx.reply('⋙ 𝙏𝙮𝙥𝙚 𝙩𝙝𝙚 𝙖𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚 𝙖𝙣𝙙 𝙩𝙮𝙥𝙚 𝙩𝙝𝙚 𝙬𝙖𝙧𝙣𝙞𝙣𝙜𝙨 𝙛𝙤𝙧 𝙩𝙝𝙖𝙩 𝙧𝙤𝙡𝙚.⋘')
+    print()
+    
+    if len(ctx.guild.roles) >= 100:
+      roles = [i for i in ctx.guild.roles[:25]]
+      rolesPT2 = [i for i in ctx.guild.roles[25:50]]
+      rolesPT3 = [i for i in ctx.guild.roles[50:75]]
+      rolesPT4 = [i for i in ctx.guild.roles[75:100]]
+      rolesPT5 = [i for i in ctx.guild.roles[100:125]]
+    elif len(ctx.guild.roles) >= 75:
+      roles = [i for i in ctx.guild.roles[:25]]
+      rolesPT2 = [i for i in ctx.guild.roles[25:50]]
+      rolesPT3 = [i for i in ctx.guild.roles[50:75]]
+      rolesPT4 = [i for i in ctx.guild.roles[75:100]]
+    elif len(ctx.guild.roles) >= 50:
+      roles = [i for i in ctx.guild.roles[:25]]
+      rolesPT2 = [i for i in ctx.guild.roles[25:50]]
+      rolesPT3 = [i for i in ctx.guild.roles[50:75]]
+    elif len(ctx.guild.roles) >= 25:
+      roles = [i for i in ctx.guild.roles[:25]]
+      rolesPT2 = [i for i in ctx.guild.roles[25:50]]
+    else:
+      roles = [i for i in ctx.guild.roles[:25]]
+
     try:
-      purpose = await client.wait_for("message", check=check, timeout=30)
-      await purpose.add_reaction('✅')
-      adminRole = purpose.content
+      if len(ctx.guild.roles) >= 100:
+        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 5", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 75:
+        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 50:
+        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 25:
+        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      else:
+        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
+          ]
+        )
+    except:
+      return await ctx.send('Duplicate roles detected. Delete the duplicates and try again.')
+
+    try:
+      purpose = await client.wait_for("select_option" or "message", check=lambda e: e.user == ctx.author)
+      try:
+        adminRole = purpose.component[0].value
+        await purpose.respond(content='Admin role is now set to {}.'.format(purpose.component[0].value))
+      except:
+        adminRole = purpose.content
+        print(f'Admin Role set to {adminRole}')
     except asyncio.TimeoutError:
       await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
       return
     
-    await ctx.reply('⋙ 𝙉𝙤𝙬 𝙩𝙮𝙥𝙚 𝙩𝙝𝙚 𝙛𝙞𝙧𝙨𝙩 𝙧𝙤𝙡𝙚 𝙮𝙤𝙪 𝙬𝙖𝙣𝙩 𝙩𝙤 𝙖𝙙𝙙 𝙖 𝙨𝙥𝙚𝙘𝙞𝙖𝙡 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙘𝙤𝙪𝙣𝙩 𝙛𝙤𝙧. ⋘')
     try:
-      purpose = await client.wait_for("message", check=check, timeout=30)
-      await purpose.add_reaction('✅')
-      role1 = purpose.content
+      if len(ctx.guild.roles) >= 100:
+        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 5", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 75:
+        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 50:
+        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 25:
+        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      else:
+        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
+          ]
+        )
+    except:
+      return await ctx.send('Duplicate roles detected. Delete the duplicates and try again.')
+
+    try:
+      purpose =  await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+      role1 = purpose.component[0].value
+      await purpose.respond(content='Role 1 is now set to {}.'.format(purpose.component[0].value))
     except asyncio.TimeoutError:
       await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
       return
     
-    await ctx.reply('⋙ 𝙉𝙤𝙬 𝙩𝙮𝙥𝙚 𝙩𝙝𝙚 𝙨𝙚𝙘𝙤𝙣𝙙 𝙧𝙤𝙡𝙚 𝙮𝙤𝙪 𝙬𝙖𝙣𝙩 𝙩𝙤 𝙖𝙙𝙙 𝙖 𝙨𝙥𝙚𝙘𝙞𝙖𝙡 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙘𝙤𝙪𝙣𝙩 𝙛𝙤𝙧. ⋘\n⋙  ⋘')
     try:
-      purpose = await client.wait_for("message", check=check, timeout=30)
-      await purpose.add_reaction('✅')
-      role2 = purpose.content
+      if len(ctx.guild.roles) >= 100:
+        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 5", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 75:
+        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 50:
+        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 25:
+        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      else:
+        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
+          ]
+        )
+    except:
+      return await ctx.send('Duplicate roles detected. Delete the duplicates and try again.')
+    
+    try:
+      purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+      role2 = purpose.component[0].value
+      await purpose.respond(content='Role 2 is now set to {}.'.format(purpose.component[0].value))
     except asyncio.TimeoutError:
       await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
       return
@@ -2906,7 +3424,7 @@ async def setup(ctx, *, setupOption: str='warning'):
     with open('setup.json', 'w') as s:
       json.dump(serverSetup, s)
     
-    await ctx.reply(f'𝙎𝙚𝙩𝙪𝙥 𝙛𝙤𝙧 {ctx.guild.name} 𝙝𝙖𝙨 𝙗𝙚𝙚𝙣 𝙘𝙤𝙢𝙥𝙡𝙚𝙩𝙚𝙙. 𝙏𝙝𝙚 𝙖𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚 𝙞𝙨 ***{serverSetup[str(ctx.guild.id)]["Admin Role"]}*** 𝙬𝙞𝙩𝙝 𝙖 ***{serverSetup[str(ctx.guild.id)]["Admin Role Warns"]}*** 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙, 𝙩𝙝𝙚 𝙛𝙞𝙧𝙨𝙩 𝙧𝙤𝙡𝙚 𝙞𝙨 {serverSetup[str(ctx.guild.id)]["Role 1"]} 𝙬𝙞𝙩𝙝 𝙖 ***{serverSetup[str(ctx.guild.id)]["Role 1 Warns"]}*** 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙, 𝙖𝙣𝙙 𝙛𝙞𝙣𝙖𝙡𝙡𝙮 𝙧𝙤𝙡𝙚 𝙩𝙬𝙤 𝙞𝙨 {serverSetup[str(ctx.guild.id)]["Role 2 Warns"]} 𝙬𝙞𝙩𝙝 𝙖 ***{serverSetup[str(ctx.guild.id)]["Role 2 Warns"]}*** 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙. 𝙏𝙝𝙖𝙣𝙠 𝙮𝙤𝙪 𝙛𝙤𝙧 𝙪𝙨𝙞𝙣𝙜 𝙘𝙤𝙢𝙚𝙩 𝙖𝙨 𝙛𝙤𝙧 𝙮𝙤𝙪𝙧 𝙢𝙤𝙙𝙚𝙧𝙖𝙩𝙞𝙤𝙣 𝙣𝙚𝙚𝙙𝙨!')
+    await ctx.reply(f'Setup for {ctx.guild.name} has been completed. The admin role is ***{serverSetup[str(ctx.guild.id)]["Admin Role"]}*** with a ***{serverSetup[str(ctx.guild.id)]["Admin Role Warns"]}*** warning threshold, the first role is {serverSetup[str(ctx.guild.id)]["Role 1"]} with a ***{serverSetup[str(ctx.guild.id)]["Role 1 Warns"]}*** warning threshold, and finally role two is {serverSetup[str(ctx.guild.id)]["Role 2"]} with a ***{serverSetup[str(ctx.guild.id)]["Role 2 Warns"]}*** warning threshold. Thank you for using comet as for your moderation needs!')
   
 
 @client.command(aliases=['Warn'])
@@ -3034,26 +3552,6 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
   embed.add_field(name="User:", value=member.mention, inline=True)
   embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
   await ctx.reply(embed=embed)
-
-def wikipediaSummary(arg):
-  result = wikipedia.summary(arg, sentences=6, chars=1000, auto_suggest=True, redirect=True)
-  return result
-
-@client.command(pass_context=True)
-async def wikisearch(ctx, *, search):
-  try:
-    result = wikipediaSummary(search)
-    title = wikipedia.suggest(search)
-  except wikipedia.exceptions.DisambiguationError:
-    await ctx.reply('𝙎𝙚𝙖𝙧𝙘𝙝 𝙧𝙚𝙨𝙪𝙡𝙩𝙨 𝙞𝙣 𝙢𝙪𝙡𝙩𝙞𝙥𝙡𝙚 𝙧𝙚𝙨𝙪𝙡𝙩𝙨. 𝙏𝙧𝙮 𝙗𝙚𝙞𝙣𝙜 𝙢𝙤𝙧𝙚 𝙨𝙥𝙚𝙘𝙞𝙛𝙞𝙘...')
-    return
-  except wikipedia.exceptions.PageError:
-    await ctx.reply('𝙎𝙚𝙖𝙧𝙘𝙝 𝙧𝙚𝙨𝙪𝙡𝙩 𝙣𝙤𝙩 𝙛𝙤𝙪𝙣𝙙. 𝙏𝙧𝙮 𝙬𝙧𝙞𝙩𝙞𝙣𝙜 𝙞𝙩 𝙙𝙞𝙛𝙛𝙚𝙧𝙚𝙣𝙩𝙡𝙮...')
-    return
-  embed=discord.Embed(title=title, description=result, color=0xc884e1)
-  embed.set_author(name="⚝ 𝙒𝙞𝙠𝙞𝙥𝙚𝙙𝙞𝙖 𝙎𝙚𝙖𝙧𝙘𝙝 ⚝")
-  embed.set_footer(text="⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙⋙")
-  await ctx.send(embed=embed)
 
 # All the error handles
 @client.event

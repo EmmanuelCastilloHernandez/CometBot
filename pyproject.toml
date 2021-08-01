@@ -27,6 +27,7 @@ mutagen = "^1.45.1"
 audioread = "^2.1.9"
 wikipedia = "^1.4.0"
 sympy = "^1.8"
+pytz = "^2021.1"
 
 [tool.poetry.dev-dependencies]
 
