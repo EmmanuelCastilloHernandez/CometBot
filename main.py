@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import discord
 from discord.ext import commands
+from discord.ext.commands import has_permissions, MissingPermissions
 from discord.utils import get
 from discord.utils import find
 from discord import FFmpegPCMAudio
@@ -107,6 +108,7 @@ views = 0
 likes = 0
 length = 0
 queuedMusic = None
+randomButtonColors = [ButtonStyle.blue, ButtonStyle.green, ButtonStyle.red]
 
 def startupMsg():
   '''
@@ -171,7 +173,7 @@ async def on_guild_join(guild):
   
   general = find(lambda x: 'general'.encode('utf-8') in unicodedata.normalize('NFKD', x.name).encode('ascii', 'ignore'),  guild.text_channels)
   if general and general.permissions_for(guild.me).send_messages:
-    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\nThank you for choosing Comet 2.0.0.", color=0x34363b)
+    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\n\nThank you for choosing Comet 2.0.0.", color=0x34363b)
     embed.set_author(name=f"Hello, {guild.name}")
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
     embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
@@ -422,6 +424,8 @@ async def on_message_delete(message):
   global snipeMessage5
   global snipeMessageAuthor5
   global snipeCounter
+  if message.channel.id not in regularSnipeAuthor:
+    regularSnipeImage[message.channel.id] = {}
 
   if message.guild.id not in snipeCounter:
     snipeCounter[message.guild.id] = 1
@@ -429,11 +433,7 @@ async def on_message_delete(message):
   regularSnipeAuthor[message.channel.id] = message.author
   regularSnipeMessage[message.channel.id] = message.content
   try:
-    if message.channel.id not in regularSnipeAuthor:
-      regularSnipeImage[message.channel.id] = {}
-      regularSnipeImage[message.channel.id][message.author.id] = await message.attachments[-1].to_file()
-    else:
-      regularSnipeImage[message.channel.id][message.author.id] = await message.attachments[-1].to_file()
+    regularSnipeImage[message.channel.id][message.author.id] = await message.attachments[-1].to_file()
   except:
     pass
   
@@ -483,24 +483,38 @@ async def on_message_delete(message):
 
 @client.event
 async def on_ready():
+  global randomButtonColors
   DiscordComponents(client)
-  channel = client.get_channel(839960483398549514)
-  with open('serverCount.json','r+') as f:
-    serverCount = json.load(f)
+
+  sendMsgTo = []
+  with open('setup.json', 'r') as settings: serverMsg = json.load(settings)
+
+  for server in client.guilds:
+    try:
+      sendMsgTo.append(int(serverMsg[str(server.id)]["Notification Channel"]))
+    except:
+      pass
+  
+
+  with open('serverCount.json','r+') as f: serverCount = json.load(f)
 
   serverCount["server count"] = len(client.guilds)
   servers = serverCount["server count"]
 
-  with open('serverCount.json','w') as f:
-    serverCount = json.dump(serverCount, f)
+  with open('serverCount.json','w') as f: serverCount = json.dump(serverCount, f)
+
   await client.change_presence(activity = discord.Streaming(name = f'☄️ {servers} Stars in the Sky ☄️', url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
   print(startupMsg.__doc__)
-  await channel.send(startupMsg.__doc__, components = [
-    [
-      Button(style = ButtonStyle.blue, label = f"Servers with Comet: {servers}", disabled = True),
-      Button(style = ButtonStyle.green, label = "Creator: Emmanuel Castillo", disabled = True)
-    ]
-  ])
+
+  for i in sendMsgTo:
+    channel = client.get_channel(i)
+
+    await channel.send(startupMsg.__doc__, components = [
+      [
+        Button(style = random.choice(randomButtonColors), label = f"Servers with Comet: {servers}", disabled = True),
+        Button(style = random.choice(randomButtonColors), label = "Creator: Emmanuel Castillo", disabled = True)
+      ]
+    ])
 
 @client.group(invoke_without_command=True)
 async def help(ctx):
@@ -1530,7 +1544,8 @@ async def fuck(ctx, *, member:discord.Member):
       
       responses = [f'{ctx.author.mention} stop it. Stop this now and apologize to {member.mention} for tring to fuck them.',
         'You\'re down bad.',
-        ':sick: WTF is wrong with you.']
+        ':sick: WTF is wrong with you.',
+        f"You fucked {member.mention} in a car for hours. Næstaè."]
       await ctx.reply(f'{random.choice(responses)}', mention_author=False)
 
       fckCardCount += 1
@@ -2071,19 +2086,6 @@ async def devnote(ctx):
     'Dev Note #12: T̵h̶e̸ ̵b̵l̷a̶c̵k̵l̵i̷s̴t̵ ̸i̵s̵ ̷w̸a̶t̵c̶h̶i̵n̷g̵ ̷y̴o̴u̶ ̷:̷)̵']
   await ctx.send(f'{random.choice(randomDevNotes)}')
 
-@client.command(pass_context=True)
-@commands.cooldown(1, 10, commands.BucketType.user)
-async def bad(ctx, *, option):
-  print(option)
-  badGifs=['https://tenor.com/view/mods-mods-bad-dancing-eggserver-gif-17255736',
-    'https://tenor.com/view/mods-are-asleep-mods-sleeping-post-chicken-mods-sleep-gif-21077535',
-    'https://tenor.com/view/leave-server-server-discord-server-ihate-this-server-this-server-sucks-gif-20569666',
-    'https://tenor.com/view/this-server-sucks-this-server-sucks-server-sucks-gif-20441118',
-    'https://tenor.com/view/this-sucks-gif-18258057',
-    'https://tenor.com/view/hate-gif-9315550',
-    'https://tenor.com/view/lego-batman-just-saying-ihate-this-place-gif-7809561']
-  await ctx.send(f'{random.choice(badGifs)}')
-
 @help.command(aliases=['weather'])
 async def weatherReport(ctx):
   embed=discord.Embed(title="Weather", description="Tells the weather. NOTE: It's unstable due to the OpenWeatherMap API acting up at times.", color=0x2f3136)
@@ -2238,6 +2240,7 @@ async def removeWord(ctx, *, wordToRemove):
 #Snipe commands
 @client.command(aliases=['ssnipe','snipe+'],help='A super snipe command for snitches')
 async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
+  global randomButtonColors
   channel = ctx.channel
 
   try:
@@ -2269,13 +2272,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
       embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
       embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     
-
-    mg = await ctx.send(embed=embed, components=[[Button(style = ButtonStyle.red, label = "1"),
-      Button(style = ButtonStyle.blue, label = "2"),
-      Button(style = ButtonStyle.green, label = "3"),
-      Button(style = ButtonStyle.blue, label = "4"),
-      Button(style = ButtonStyle.red, label = "5")
-    ]])
+    mg = await ctx.send(embed=embed, components=[[Button(style = random.choice(randomButtonColors), label = f'{i}') for i in range(1, 6)]])
 
     while True:
       def check(buttonCheck):
@@ -2322,7 +2319,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
     embed.set_author(name=f"𝙉𝙤 𝙀𝙣𝙩𝙧𝙞𝙚𝙨 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author.name}")
     await ctx.send(embed=embed)
 
-@client.command(aliases=['retrieve','snitch','Snipe'], pass_context=True)
+@client.command(aliases=['retrieve','snitch','Snipe','sniep','snipw'], pass_context=True)
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def snipe(ctx):
   channel = ctx.channel
@@ -2333,17 +2330,19 @@ async def snipe(ctx):
 
     try:
       embed.set_image(url=f"attachment://{regularSnipeImage[channel.id][regularSnipeAuthor[channel.id].id].filename}")
-    except: pass
+    except:
+      pass
 
     embed.set_author(name=f"Snipe: {channel.name}")
     try:
-      await ctx.send(file=regularSnipeImage[channel.id], embed=embed)
+      await ctx.send(file=regularSnipeImage[channel.id][regularSnipeAuthor[channel.id].id], embed=embed)
     except:
       await ctx.send(embed=embed)
   except:
     embed=discord.Embed(title=" ", color=0x2f3136)
+    embed.set_image(url="attachment://loadingBar.gif")
     embed.set_author(name=f"No Snipeable Messages, {ctx.author}")
-    await ctx.send(embed=embed)
+    await ctx.send(embed=embed, file=discord.File('loadingBar.gif'))
 
 # Hello command
 # First command in Comet
@@ -2980,27 +2979,6 @@ async def eman(ctx):
     'https://tenor.com/view/discord-emanuel-emmanuel-baseball-champ-gif-20154485']
   await ctx.channel.send(f'{random.choice(randomEman)}')
 
-@client.command(aliases=['user-info'],pass_context=True)
-async def userinfo(ctx, *, user: discord.Member=None):
-    if user == None:
-      user = ctx.author
-    date_format = "%a, %d %b %Y %I:%M %p"
-    print(user.joined_at.strftime(date_format))
-    embed = discord.Embed(color=0x2f3136, description=user.mention)
-    embed.set_author(name=str(user), icon_url=user.avatar_url)
-    embed.set_thumbnail(url=user.avatar_url)
-    embed.add_field(name="Joined", value=user.joined_at.strftime(date_format))
-    members = sorted(ctx.guild.members, key=lambda m: m.joined_at)
-    embed.add_field(name="Join position", value=str(members.index(user)+1))
-    embed.add_field(name="Registered", value=user.created_at.strftime(date_format))
-    if len(user.roles) > 1:
-      role_string = ' '.join([r.mention for r in user.roles][1:])
-      embed.add_field(name="Roles [{}]".format(len(user.roles)-1), value=role_string, inline=False)
-    perm_string = ', '.join([str(p[0]).replace("_", " ").title() for p in user.guild_permissions if p[1]])
-    embed.add_field(name="Guild permissions", value=perm_string, inline=False)
-    embed.set_footer(text='ID: ' + str(user.id))
-    return await ctx.send(embed=embed)
-
 @client.command(aliases=['say'], help='TTS Command')
 async def tts(ctx, *, text=None):
   checkVer = os.popen('python -c "import googletrans; print(googletrans.__version__)"').read().replace('\n','')
@@ -3189,13 +3167,14 @@ async def openSetupAccount(server):
     return False
   else:
     setting[str(server.id)] = {}
+    setting[str(server.id)]["Owner/Higher-Admin Role"] = ''
     setting[str(server.id)]["Admin Role"] = ''
     setting[str(server.id)]["Role 1"] = ''
     setting[str(server.id)]["Role 2"] = ''
     setting[str(server.id)]["Role 1 Warns"] = 3
     setting[str(server.id)]["Role 2 Warns"] = 6
     setting[str(server.id)]["Admin Role Warns"] = 3
-    setting[str(server.id)]["Receive Bot Notifications"] = 'False'
+    setting[str(server.id)]["Warn Threshold Scenario"] = 'None'
     setting[str(server.id)]["Notification Channel"] = 0
 
   with open('setup.json','w') as setup:
@@ -3205,37 +3184,92 @@ async def openSetupAccount(server):
 @client.command(aliases=['sU','Setup'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 @commands.has_permissions(administrator=True)
-async def setup(ctx, *, setupOption: str='warning'):
+async def setup(ctx, *, setupOption: str=None):
   await openSetupAccount(ctx.guild)
   if setupOption == 'notif' or setupOption == 'notification' or setupOption == 'n':
-    await ctx.reply('𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐭𝐡𝐞 𝐂𝐨𝐦𝐞𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧 𝐒𝐞𝐭𝐮𝐩. 𝐓𝐡𝐢𝐬 𝐢𝐬 𝐮𝐬𝐞𝐝 𝐭𝐨 𝐬𝐞𝐭 𝐮𝐩 𝐛𝐨𝐭 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐢𝐧 𝐚 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐨𝐟 𝐭𝐡𝐢𝐬 𝐬𝐞𝐫𝐯𝐞𝐫. 𝐌𝐚𝐤𝐞 𝐬𝐮𝐫𝐞 𝐭𝐨 𝐡𝐚𝐯𝐞 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐈𝐃 𝐨𝐟 𝐭𝐡𝐞 𝐜𝐡𝐚𝐧𝐧𝐞𝐥 𝐲𝐨𝐮 𝐚𝐫𝐞 𝐠𝐨𝐢𝐧𝐠 𝐭𝐨 𝐮𝐬𝐞 𝐟𝐨𝐫 𝐛𝐨𝐭 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐨𝐧 𝐡𝐚𝐧𝐝 𝐭𝐨 𝐦𝐚𝐤𝐞 𝐭𝐡𝐢𝐬 𝐩𝐫𝐨𝐜𝐞𝐬𝐬 𝐟𝐚𝐬𝐭𝐞𝐫.')
+    if len(ctx.guild.channels) >= 100:
+      channels = [i for i in ctx.guild.channels[:25]]
+      channelsPT2 = [i for i in ctx.guild.channels[25:50]]
+      channelsPT3 = [i for i in ctx.guild.channels[50:75]]
+      channelsPT4 = [i for i in ctx.guild.channels[75:100]]
+      channelsPT5 = [i for i in ctx.guild.channels[100:125]]
+    elif len(ctx.guild.channels) >= 75:
+      channels = [i for i in ctx.guild.channels[:25]]
+      channelsPT2 = [i for i in ctx.guild.channels[25:50]]
+      channelsPT3 = [i for i in ctx.guild.channels[50:75]]
+      channelsPT4 = [i for i in ctx.guild.channels[75:100]]
+    elif len(ctx.guild.channels) >= 50:
+      channels = [i for i in ctx.guild.channels[:25]]
+      channelsPT2 = [i for i in ctx.guild.channels[25:50]]
+      channelsPT3 = [i for i in ctx.guild.channels[50:75]]
+    elif len(ctx.guild.channels) >= 25:
+      channels = [i for i in ctx.guild.channels[:25]]
+      channelsPT2 = [i for i in ctx.guild.channels[25:50]]
+    else:
+      channels = [i for i in ctx.guild.channels[:25]]
 
-    await ctx.reply('𝐄𝐧𝐭𝐞𝐫 𝐭𝐡𝐞 𝐈𝐃 𝐨𝐟 𝐭𝐡𝐞 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 𝐰𝐞𝐫𝐞 𝐂𝐨𝐦𝐞𝐭 𝐰𝐢𝐥𝐥 𝐬𝐞𝐧𝐝 𝐧𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐭𝐨:')
     try:
-      purpose = await client.wait_for("message", check=check, timeout=30)
-      await purpose.add_reaction('✅')
-      adminRole = purpose.content
+      if len(ctx.guild.channels) >= 100:
+        channelPrompt = await ctx.reply('Welcome to the Comet Notification Setup. This is used to set up bot notifications in a channel of this server. Make sure to have the channel you are going to use for bot notifications on hand to make this process faster.\n\n⋙ Choose the channel from the list of text channels provided ⋘', components=[
+          [Select(placeholder="Channels", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channels])], 
+          [Select(placeholder="Channels PT 2", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT2])],
+          [Select(placeholder="Channels PT 3", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT3])],
+          [Select(placeholder="Channels PT 4", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT4])],
+          [Select(placeholder="Channels PT 5", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT5])]
+          ]
+        )
+      elif len(ctx.guild.channels) >= 75:
+        channelPrompt = await ctx.reply('Welcome to the Comet Notification Setup. This is used to set up bot notifications in a channel of this server. Make sure to have the channel you are going to use for bot notifications on hand to make this process faster.\n\n⋙ Choose the channel from the list of text channels provided ⋘', components=[
+          [Select(placeholder="Channels", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channels])], 
+          [Select(placeholder="Channels PT 2", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT2])],
+          [Select(placeholder="Channels PT 3", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT3])],
+          [Select(placeholder="Channels PT 4", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT4])]
+          ]
+        )
+      elif len(ctx.guild.channels) >= 50:
+        channelPrompt = await ctx.reply('Welcome to the Comet Notification Setup. This is used to set up bot notifications in a channel of this server. Make sure to have the channel you are going to use for bot notifications on hand to make this process faster.\n\n⋙ Choose the channel from the list of text channels provided ⋘', components=[
+          [Select(placeholder="Channels", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channels])], 
+          [Select(placeholder="Channels PT 2", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT2])],
+          [Select(placeholder="Channels PT 3", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channelsPT3])]
+          ]
+        )
+      elif len(ctx.guild.channels) >= 25:
+        channelPrompt = await ctx.reply('Welcome to the Comet Notification Setup. This is used to set up bot notifications in a channel of this server. Make sure to have the channel you are going to use for bot notifications on hand to make this process faster.\n\n⋙ Choose the channel from the list of text channels provided ⋘', components=[
+          [Select(placeholder="Channels", options=[SelectOption(label=f"{channel.name[:24:]}", value=f"{channel.id}") for channel in channels])], 
+          [Select(placeholder="Channels PT 2", options=[SelectOption(label=f"{channel.name[:24:]}", value=f"{channel.id}") for channel in channelsPT2])]
+          ]
+        )
+      else:
+        channelPrompt = await ctx.reply('Welcome to the Comet Notification Setup. This is used to set up bot notifications in a channel of this server. Make sure to have the channel you are going to use for bot notifications on hand to make this process faster.\n\n⋙ Choose the channel from the list of text channels provided ⋘', components=[
+          [Select(placeholder="Channels", options=[SelectOption(label=f"{channel.name[:24]}", value=f"{channel.id}") for channel in channels])]
+          ]
+        )
+    except:
+      return await ctx.send('ERROR: Channel Layout is causing issues. Now stopping setup.')
+
+    try:
+      purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+      channelSelected = purpose.component[0].value
+      await purpose.respond(content=f'Notification channel is now set to __{purpose.component[0].label}__ with a channel ID of __{purpose.component[0].value}__.')
+      await channelPrompt.delete()
     except asyncio.TimeoutError:
-      await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
+      await ctx.send("Setup timed out. No changes were saved.")
       return
-    pass
+    
+    with open('setup.json', 'r') as settings: serverSetup = json.load(settings)
+    
+    serverSetup[str(ctx.guild.id)]["Notification Channel"] = int(channelSelected)
+
+    with open('setup.json', 'w') as s: json.dump(serverSetup, s)
+    
   if setupOption == 'warning':
+    higherAdminRole = ''
     adminRole = ''
     role1 = ''
     role2 = ''
     adminWarn = 3
     role1Warn = 3
     role2Warn = 6
-    
-    with open('setup.json', 'r') as settings:
-      serverSetup = json.load(settings)
-    
-    def check(purpose):
-      return purpose.author == ctx.author and purpose.channel == ctx.channel
-    
-    await ctx.send('𝙒𝙚𝙡𝙘𝙤𝙢𝙚 𝙩𝙤 𝙩𝙝𝙚 𝘾𝙊𝙈𝙀𝙏 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 𝙎𝙚𝙩𝙪𝙥. 𝙔𝙊𝙐 𝙈𝙐𝙎𝙏 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙚 𝘼𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚 𝙣𝙖𝙢𝙚 𝙙𝙪𝙚 𝙩𝙤 𝙩𝙝𝙚 𝙛𝙖𝙘𝙩 𝙩𝙝𝙖𝙩 𝘾𝙤𝙢𝙚𝙩 𝙥𝙞𝙣𝙜𝙨 𝙩𝙝𝙚 𝙧𝙤𝙡𝙚 𝙬𝙝𝙚𝙣 𝙖 𝙪𝙨𝙚𝙧 𝙝𝙖𝙨 𝙜𝙖𝙩𝙝𝙚𝙧𝙚𝙙 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙞𝙣𝙜𝙨.\n\n𝙄𝙛 𝙮𝙤𝙪 𝙖𝙧𝙚 𝙤𝙣𝙡𝙮 𝙜𝙤𝙞𝙣𝙜 𝙩𝙤 𝙗𝙚 𝙪𝙨𝙞𝙣𝙜 𝙤𝙣𝙚 𝙧𝙤𝙡𝙚, 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙖𝙩 𝙧𝙤𝙡𝙚 𝙖𝙨 𝙢𝙖𝙣𝙮 𝙩𝙞𝙢𝙚𝙨 𝙖𝙨 𝙞𝙩\'𝙨 𝙣𝙚𝙘𝙚𝙨𝙨𝙖𝙧𝙮 𝙬𝙝𝙚𝙣 𝙮𝙤𝙪 𝙜𝙚𝙩 𝙖𝙨𝙠𝙚𝙙 𝙩𝙤 𝙞𝙣𝙥𝙪𝙩 𝙖 𝙧𝙤𝙡𝙚. 𝙏𝙝𝙚 𝙨𝙖𝙢𝙚 𝙖𝙥𝙥𝙡𝙞𝙚𝙨 𝙛𝙤𝙧 𝙩𝙝𝙚 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙.\n𝘼𝙡𝙨𝙤 𝙣𝙤𝙩𝙚 𝙩𝙝𝙖𝙩 𝙞𝙛 𝙮𝙤𝙪 𝙬𝙖𝙣𝙩 𝙤𝙣𝙚 𝙧𝙤𝙡𝙚 𝙩𝙤 𝙝𝙖𝙫𝙚 𝙖 𝙝𝙞𝙜𝙝𝙚𝙧 𝙬𝙖𝙧𝙣 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙 𝙩𝙝𝙖𝙣 𝙖𝙣𝙤𝙩𝙝𝙚𝙧, 𝙮𝙤𝙪 𝙣𝙚𝙚𝙙 𝙩𝙤 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙖𝙩 𝙧𝙤𝙡𝙚 𝙁𝙄𝙍𝙎𝙏 𝙩𝙤 𝙥𝙧𝙚𝙫𝙚𝙣𝙩 𝙞𝙨𝙨𝙪𝙚𝙨. 𝙏𝙝𝙞𝙨 𝙙𝙤𝙚𝙨 𝙣𝙤𝙩 𝙖𝙥𝙥𝙡𝙮 𝙩𝙤 𝙩𝙝𝙚 𝙖𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚.')
-
-    print()
     
     if len(ctx.guild.roles) >= 100:
       roles = [i for i in ctx.guild.roles[:25]]
@@ -3260,37 +3294,89 @@ async def setup(ctx, *, setupOption: str='warning'):
 
     try:
       if len(ctx.guild.roles) >= 100:
-        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+        higherAdminPrompt = await ctx.reply('Welcome to the Comet Warning System Setup. YOU MUST input the Admin role name due to the fact that Comet pings the role when a user has gathered enough warnings.\n\nIf you are only going to be using one role, input that role as many times as it\'s necessary when you get asked to input a role. The same applies for the warning threshold.\nAlso note that if you want one role to have a higher warn threshold than another, you need to input that role FIRST to prevent issues. This does not apply to the admin role.\n\n⋙ Choose the owner/higher-up admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
-          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
-          [Select(placeholder="Roles PT 5", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT4])],
+          [Select(placeholder="Roles PT 5", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT5])]
           ]
         )
       elif len(ctx.guild.roles) >= 75:
-        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+        higherAdminPrompt = await ctx.reply('Welcome to the Comet Warning System Setup. YOU MUST input the Admin role name due to the fact that Comet pings the role when a user has gathered enough warnings.\n\nIf you are only going to be using one role, input that role as many times as it\'s necessary when you get asked to input a role. The same applies for the warning threshold.\nAlso note that if you want one role to have a higher warn threshold than another, you need to input that role FIRST to prevent issues. This does not apply to the admin role.\n\n⋙ Choose the owner/higher-up admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
-          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT4])]
           ]
         )
       elif len(ctx.guild.roles) >= 50:
-        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+        higherAdminPrompt = await ctx.reply('Welcome to the Comet Warning System Setup. YOU MUST input the Admin role name due to the fact that Comet pings the role when a user has gathered enough warnings.\n\nIf you are only going to be using one role, input that role as many times as it\'s necessary when you get asked to input a role. The same applies for the warning threshold.\nAlso note that if you want one role to have a higher warn threshold than another, you need to input that role FIRST to prevent issues. This does not apply to the admin role.\n\n⋙ Choose the owner/higher-up admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
           ]
         )
       elif len(ctx.guild.roles) >= 25:
-        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+        higherAdminPrompt = await ctx.reply('Welcome to the Comet Warning System Setup. YOU MUST input the Admin role name due to the fact that Comet pings the role when a user has gathered enough warnings.\n\nIf you are only going to be using one role, input that role as many times as it\'s necessary when you get asked to input a role. The same applies for the warning threshold.\nAlso note that if you want one role to have a higher warn threshold than another, you need to input that role FIRST to prevent issues. This does not apply to the admin role.\n\n⋙ Choose the owner/higher-up admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
           ]
         )
       else:
-        await ctx.reply('⋙ Choose the admin role from the list of roles or type it out⋘', components=[
+        higherAdminPrompt = await ctx.reply('Welcome to the Comet Warning System Setup. YOU MUST input the Admin role name due to the fact that Comet pings the role when a user has gathered enough warnings.\n\nIf you are only going to be using one role, input that role as many times as it\'s necessary when you get asked to input a role. The same applies for the warning threshold.\nAlso note that if you want one role to have a higher warn threshold than another, you need to input that role FIRST to prevent issues. This does not apply to the admin role.\n\n⋙ Choose the owner/higher-up admin role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
+          ]
+        )
+    except:
+      return await ctx.send('Duplicate roles detected. Delete the duplicates and try again.')
+
+    try:
+      purpose = await client.wait_for("select_option" or "message", check=lambda e: e.user == ctx.author)
+      try:
+        higherAdminRole = purpose.component[0].value
+        await purpose.respond(content='Owner/Higher Admin role is now set to {}.'.format(purpose.component[0].value))
+        await higherAdminPrompt.delete()
+      except:
+        adminRole = purpose.content
+        print(f'Admin Role set to {adminRole}')
+    except asyncio.TimeoutError:
+      await ctx.send("Setup timed out. No changes were saved.")
+      return
+
+    try:
+      if len(ctx.guild.roles) >= 100:
+        adminPrompt = await ctx.reply('⋙ Choose the lower-admin/mod role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT4])],
+          [Select(placeholder="Roles PT 5", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT5])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 75:
+        adminPrompt = await ctx.reply('⋙ Choose the lower-admin/mod role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
+          [Select(placeholder="Roles PT 4", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT4])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 50:
+        adminPrompt = await ctx.reply('⋙ Choose the lower-admin/mod role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
+          [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
+          ]
+        )
+      elif len(ctx.guild.roles) >= 25:
+        adminPrompt = await ctx.reply('⋙ Choose the lower-admin/mod role from the list of roles ⋘', components=[
+          [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
+          [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
+          ]
+        )
+      else:
+        adminPrompt = await ctx.reply('⋙ Choose the lower-admin/mod role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
           ]
         )
@@ -3302,6 +3388,7 @@ async def setup(ctx, *, setupOption: str='warning'):
       try:
         adminRole = purpose.component[0].value
         await purpose.respond(content='Admin role is now set to {}.'.format(purpose.component[0].value))
+        await adminPrompt.delete()
       except:
         adminRole = purpose.content
         print(f'Admin Role set to {adminRole}')
@@ -3311,7 +3398,7 @@ async def setup(ctx, *, setupOption: str='warning'):
     
     try:
       if len(ctx.guild.roles) >= 100:
-        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+        firstRolePrompt = await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
@@ -3320,7 +3407,7 @@ async def setup(ctx, *, setupOption: str='warning'):
           ]
         )
       elif len(ctx.guild.roles) >= 75:
-        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+        firstRolePrompt = await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
@@ -3328,20 +3415,20 @@ async def setup(ctx, *, setupOption: str='warning'):
           ]
         )
       elif len(ctx.guild.roles) >= 50:
-        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+        firstRolePrompt = await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
           ]
         )
       elif len(ctx.guild.roles) >= 25:
-        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+        firstRolePrompt = await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
           ]
         )
       else:
-        await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
+        firstRolePrompt = await ctx.reply('⋙ Choose the first non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
           ]
         )
@@ -3352,13 +3439,14 @@ async def setup(ctx, *, setupOption: str='warning'):
       purpose =  await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
       role1 = purpose.component[0].value
       await purpose.respond(content='Role 1 is now set to {}.'.format(purpose.component[0].value))
+      await firstRolePrompt.delete()
     except asyncio.TimeoutError:
-      await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
+      await ctx.send("Setup timed out. No changes were saved.")
       return
     
     try:
       if len(ctx.guild.roles) >= 100:
-        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+        secondRolePrompt = await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
@@ -3367,7 +3455,7 @@ async def setup(ctx, *, setupOption: str='warning'):
           ]
         )
       elif len(ctx.guild.roles) >= 75:
-        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+        secondRolePrompt = await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])],
@@ -3375,20 +3463,20 @@ async def setup(ctx, *, setupOption: str='warning'):
           ]
         )
       elif len(ctx.guild.roles) >= 50:
-        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+        secondRolePrompt = await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])],
           [Select(placeholder="Roles PT 3", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT3])]
           ]
         )
       elif len(ctx.guild.roles) >= 25:
-        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+        secondRolePrompt = await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])], 
           [Select(placeholder="Roles PT 2", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in rolesPT2])]
           ]
         )
       else:
-        await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
+        secondRolePrompt = await ctx.reply('⋙ Choose the second non-admin role from the list of roles ⋘', components=[
           [Select(placeholder="Roles", options=[SelectOption(label=f"{role.name[:24]}", value=f"{role.name}") for role in roles])]
           ]
         )
@@ -3399,33 +3487,79 @@ async def setup(ctx, *, setupOption: str='warning'):
       purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
       role2 = purpose.component[0].value
       await purpose.respond(content='Role 2 is now set to {}.'.format(purpose.component[0].value))
+      await secondRolePrompt.delete()
     except asyncio.TimeoutError:
-      await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
+      await ctx.send("Setup timed out. No changes were saved.")
       return
     
-    await ctx.reply('⋙ 𝙁𝙞𝙣𝙖𝙡𝙡𝙮 𝙞𝙣𝙥𝙪𝙩 𝙩𝙝𝙚 𝙬𝙖𝙧𝙣𝙞𝙣𝙜 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙𝙨 𝙛𝙤𝙧 𝙖𝙡𝙡 𝙩𝙝𝙧𝙚𝙚 𝙧𝙤𝙡𝙚𝙨. 𝘿𝙤 𝙞𝙩 𝙞𝙣 𝙩𝙝𝙚 𝙛𝙤𝙡𝙡𝙤𝙬𝙞𝙣𝙜 𝙛𝙤𝙧𝙢𝙖𝙩 (𝙬/𝙤 𝙩𝙝𝙚 𝙥𝙖𝙧𝙚𝙣𝙩𝙝𝙚𝙨𝙚𝙨 𝙤𝙗𝙫𝙞𝙤𝙪𝙨𝙡𝙮): (𝙖𝙙𝙢𝙞𝙣 𝙧𝙤𝙡𝙚\'𝙨 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙) (𝙧𝙤𝙡𝙚 1\'𝙨 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙) (𝙧𝙤𝙡𝙚 2\'𝙨 𝙩𝙝𝙧𝙚𝙨𝙝𝙤𝙡𝙙) ⋘')
+    thresholdPrompt = await ctx.reply('⋙ Finally choose the warning thresholds for all three roles from their respective dropdown menus. Do it in the following order: Admin Role first, then the First Role, then finally the Second Role. ⋘', components=[
+      [Select(placeholder="Admin Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])], 
+      [Select(placeholder="Role 1 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])],
+      [Select(placeholder="Role 2 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])]
+      ]
+    )
     try:
-      purpose = await client.wait_for("message", check=check, timeout=30)
-      await purpose.add_reaction('✅')
-      prepareThresholds = purpose.content.split()
-      adminWarn = int(prepareThresholds[0])
-      role1Warn = int(prepareThresholds[1])
-      role2Warn = int(prepareThresholds[2])
+      for i in range(3):
+        purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+        if i == 0:
+          adminWarn = int(purpose.component[0].value)
+          await purpose.respond(content='Admin threshold is now set to {}.'.format(purpose.component[0].value))
+          await thresholdPrompt.edit('⋙ Finally choose the warning thresholds for all three roles from their respective dropdown menus. Do it in the following order: Admin Role first, then the First Role, then finally the Second Role. ⋘', components=[
+            [Select(placeholder="Role 1 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])],
+            [Select(placeholder="Role 2 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])]
+            ]
+          )
+        elif i == 1:
+          role1Warn = int(purpose.component[0].value)
+          await purpose.respond(content='Role 1 threshold is now set to {}.'.format(purpose.component[0].value))
+          await thresholdPrompt.edit('⋙ Finally choose the warning thresholds for all three roles from their respective dropdown menus. Do it in the following order: Admin Role first, then the First Role, then finally the Second Role. ⋘', components=[
+            [Select(placeholder="Role 2 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])]
+            ]
+          )
+        elif i == 2:
+          role2Warn = int(purpose.component[0].value)
+          await purpose.respond(content='Role 2 threshold is now set to {}.'.format(purpose.component[0].value))
+          await thresholdPrompt.delete()
     except asyncio.TimeoutError:
-      await ctx.send("𝙎𝙚𝙩𝙪𝙥 𝙩𝙞𝙢𝙚𝙙 𝙤𝙪𝙩. 𝙉𝙤 𝙘𝙝𝙖𝙣𝙜𝙚𝙨 𝙬𝙚𝙧𝙚 𝙨𝙖𝙫𝙚𝙙.")
+      await ctx.send("Setup timed out. No changes were saved.")
       return
 
+    try:
+      actionPrompt = await ctx.reply('Comet has many options on what to do when a user reaches the warn threshold. Here are some of the options:\n \* Ban: Bans the user\n \* Kick: Kicks the user\n \* Ping: Pings the mods when the threshold is hit.\n\n⋙ Choose what to do when someone hits the warning threshold from the dropdown provided⋘', components=[
+        [Select(placeholder="What to do?", options=[SelectOption(label=f"{i}", value=f"{i}") for i in ['kick','ban','ping']])]
+        ]
+      )
+    except:
+      await ctx.send("Setup timed out. No changes were saved.")
+      return
+    
+    try:
+      purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+      thresholdAction = purpose.component[0].value
+      await purpose.respond(content='Comet is now set to {} when a user reaches the threshold.'.format(purpose.component[0].value))
+      await actionPrompt.delete()
+    except asyncio.TimeoutError:
+      await ctx.send("Setup timed out. No changes were saved.")
+      return
+
+    with open('setup.json', 'r') as settings: serverSetup = json.load(settings)
+    serverSetup[str(ctx.guild.id)]["Owner/Higher-Admin Role"] = higherAdminRole
     serverSetup[str(ctx.guild.id)]["Role 1"] = role1
     serverSetup[str(ctx.guild.id)]["Role 2"] = role2
     serverSetup[str(ctx.guild.id)]["Admin Role"] = adminRole
     serverSetup[str(ctx.guild.id)]["Role 1 Warns"] = role1Warn
     serverSetup[str(ctx.guild.id)]["Role 2 Warns"] = role2Warn
     serverSetup[str(ctx.guild.id)]["Admin Role Warns"] = adminWarn
-    with open('setup.json', 'w') as s:
-      json.dump(serverSetup, s)
+    serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] = thresholdAction
+    with open('setup.json', 'w') as s: json.dump(serverSetup, s)
     
-    await ctx.reply(f'Setup for {ctx.guild.name} has been completed. The admin role is ***{serverSetup[str(ctx.guild.id)]["Admin Role"]}*** with a ***{serverSetup[str(ctx.guild.id)]["Admin Role Warns"]}*** warning threshold, the first role is {serverSetup[str(ctx.guild.id)]["Role 1"]} with a ***{serverSetup[str(ctx.guild.id)]["Role 1 Warns"]}*** warning threshold, and finally role two is {serverSetup[str(ctx.guild.id)]["Role 2"]} with a ***{serverSetup[str(ctx.guild.id)]["Role 2 Warns"]}*** warning threshold. Thank you for using comet as for your moderation needs!')
-  
+    embed=discord.Embed(description=f'Setup for **`{ctx.guild.name}`** has been completed. The higher-admin/owner role is {serverSetup[str(ctx.guild.id)]["Owner/Higher-Admin Role"]}, the admin role is **`{serverSetup[str(ctx.guild.id)]["Admin Role"]}`** with a **`{serverSetup[str(ctx.guild.id)]["Admin Role Warns"]}`** warning threshold, the first role is **`{serverSetup[str(ctx.guild.id)]["Role 1"]}`** with a **`{serverSetup[str(ctx.guild.id)]["Role 1 Warns"]}`** warning threshold, and finally role two is **`{serverSetup[str(ctx.guild.id)]["Role 2"]}`** with a **`{serverSetup[str(ctx.guild.id)]["Role 2 Warns"]}`** warning threshold.\n\nOnce a user reaches their respective threshold, Comet will do the following action: {serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"]}\n\nThank you for using Comet for your moderation needs!', color=0x2f3136)
+    await ctx.reply(embed=embed)
+  else:
+    embed=discord.Embed(title="Settings", color=0x2f3136)
+    embed.add_field(name="notification:", value="Configure Comet Notifications", inline=True)
+    embed.add_field(name="warning:", value="Configure Comet's warning system.", inline=True)
+    await ctx.send(embed=embed)
 
 @client.command(aliases=['Warn'])
 @commands.cooldown(1, 5, commands.BucketType.user)
@@ -3439,9 +3573,8 @@ async def warn(ctx, member: discord.Member, *, reason=None):
   await openWarnUser(member, ctx.guild)
   
   if member.id == ctx.author.id:
-    embed=discord.Embed(title="⛧ 𝙔𝙤𝙪 𝙘𝙖𝙣'𝙩 𝙪𝙨𝙚 𝙞𝙩 𝙤𝙣 𝙮𝙤𝙪𝙧𝙨𝙚𝙡𝙛 ⛧", color=0xff1414)
-    embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
-    await ctx.send(embed=embed)
+    embed=discord.Embed(Title=f'⛧ Can\'t use it on yourself bestie ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
     return
   
   with open('warns.json', 'r') as warnings:
@@ -3458,6 +3591,7 @@ async def warn(ctx, member: discord.Member, *, reason=None):
   timesWarned = int(warns[str(ctx.guild.id)][str(member.id)]["Warning Count"])
 
   if str(ctx.guild.id) in serverSetup:
+    higherAdminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Owner/Higher-Admin Role"])
     adminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Admin Role"])
     role1 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 1"])
     role2 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 2"])
@@ -3467,24 +3601,65 @@ async def warn(ctx, member: discord.Member, *, reason=None):
 
     for role in member.roles:
       if role == adminRole and timesWarned > adminWarn:
-        await ctx.send(f'𝙎𝙤𝙧𝙧𝙮 𝙩𝙤 𝙗𝙤𝙩𝙝𝙚𝙧 𝙮𝙤𝙪 {adminRole.mention}, 𝙗𝙪𝙩 𝙖 𝙢𝙚𝙢𝙗𝙚𝙧 ***({member.mention})*** 𝙝𝙖𝙨 𝙜𝙖𝙩𝙝𝙚𝙧𝙚𝙙 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙨 𝙩𝙤 𝙜𝙚𝙩 𝙩𝙝𝙚𝙞𝙧 𝙢𝙤𝙙𝙚𝙧𝙖𝙩𝙤𝙧/𝙖𝙙𝙢𝙞𝙣 𝙨𝙩𝙖𝙩𝙪𝙨 𝙧𝙚𝙢𝙤𝙫𝙚𝙙. 𝙋𝙡𝙚𝙖𝙨𝙚 𝙙𝙞𝙨𝙘𝙪𝙨𝙨 𝙩𝙝𝙞𝙨 𝙩𝙤 𝙛𝙞𝙜𝙪𝙧𝙚 𝙤𝙪𝙩 𝙬𝙝𝙖𝙩 𝙩𝙤 𝙙𝙤.')
+        embed=discord.Embed(title=f'⛧ A Mod Has Crossed the Warn Threshold ⛧', description=' ', color=0x2f3136)
+        embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+        await ctx.send(content=f'{higherAdminRole.mention}', embed=embed)
         break
-      if role == role1 and timesWarned > role1Warn:
-        await ctx.send(f'𝙎𝙤𝙧𝙧𝙮 𝙩𝙤 𝙗𝙤𝙩𝙝𝙚𝙧 𝙮𝙤𝙪  {adminRole.mention}, 𝙗𝙪𝙩 𝙖 𝙢𝙚𝙢𝙗𝙚𝙧 ({member.mention}) 𝙝𝙖𝙨 𝙚𝙣𝙤𝙪𝙜𝙝 𝙬𝙖𝙧𝙣𝙨 𝙩𝙤 𝙜𝙚𝙩 𝙠𝙞𝙘𝙠𝙚𝙙/𝙗𝙖𝙣𝙣𝙚𝙙 𝙛𝙧𝙤𝙢 {ctx.guild.name}.')
+      elif role == role1 and timesWarned > role1Warn:
+        if serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] == 'ping':
+          embed=discord.Embed(title=f'⛧ A User Has Crossed the Warn Threshold ⛧', description=' ', color=0x2f3136)
+          embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+          await ctx.send(content=f'{adminRole.mention}', embed=embed)
+        elif serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] == 'kick':
+          embed=discord.Embed(title=f'⛧ A User Has Been Kicked From {ctx.guild.name} ⛧', description=' ', color=0x2f3136)
+          embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+          embed.add_field(name='Reason:', value='Comet Warn Threshold Crossed', inline=True)
+
+          await ctx.send(embed=embed)
+          await member.kick(reason='Comet Warn Threshold Crossed')
+          await member.send(f'You got kicked from {ctx.guild.name} for thr following reason:\nComet Warn Threshold Crossed')
+        elif serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] == 'ban':
+          embed=discord.Embed(title=f'⛧ A User Has Been Banned From {ctx.guild.name} ⛧', description=' ', color=0x2f3136)
+          embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+          embed.add_field(name='Reason:', value='Comet Warn Threshold Crossed', inline=True)
+
+          await ctx.send(embed=embed)
+          await member.ban(reason='Comet Warn Threshold Crossed')
+          await member.send(f'You are now banned from {ctx.guild.name} for thr following reason:\nComet Warn Threshold Crossed')
+        
         break
       if role == role2 and timesWarned > role2Warn:
-        await ctx.send(f'Sorry to bother you {adminRole.mention}, but a member ({member.mention}) has enough warns to get kicked/banned from {ctx.guild.name}.')
+        if serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] == 'ping':
+          embed=discord.Embed(title=f'⛧ A User Has Crossed the Warn Threshold ⛧', description=' ', color=0x2f3136)
+          embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+          await ctx.send(content=f'{adminRole.mention}', embed=embed)
+        elif serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] == 'kick':
+          embed=discord.Embed(title=f'⛧ A User Has Been Kicked From {ctx.guild.name} ⛧', description=' ', color=0x2f3136)
+          embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+          embed.add_field(name='Reason:', value='Comet Warn Threshold Crossed', inline=True)
+
+          await ctx.send(embed=embed)
+          await member.kick(reason='Comet Warn Threshold Crossed')
+          await member.send(f'You got kicked from {ctx.guild.name} for thr following reason:\nComet Warn Threshold Crossed')
+        elif serverSetup[str(ctx.guild.id)]["Warn Threshold Scenario"] == 'ban':
+          embed=discord.Embed(title=f'⛧ A User Has Been Banned From {ctx.guild.name} ⛧', description=' ', color=0x2f3136)
+          embed.add_field(name='User:', value=f'{member.mention}', inline=True)
+          embed.add_field(name='Reason:', value='Comet Warn Threshold Crossed', inline=True)
+
+          await ctx.send(embed=embed)
+          await member.ban(reason='Comet Warn Threshold Crossed')
+          await member.send(f'You are now banned from {ctx.guild.name} for thr following reason:\nComet Warn Threshold Crossed')
+        
         break
   else:
-    await ctx.reply('⚝ __𝙒𝘼𝙍𝙉𝙄𝙉𝙂__ ⚝: 𝙋𝙡𝙚𝙖𝙨𝙚 𝙘𝙤𝙢𝙥𝙡𝙚𝙩𝙚 𝙩𝙝𝙚 𝙒𝘼𝙍𝙉𝙄𝙉𝙂 𝙎𝙔𝙎𝙏𝙀𝙈 𝙎𝙚𝙩𝙪𝙥 𝙖𝙨 𝙨𝙤𝙤𝙣 𝙖𝙨 𝙥𝙤𝙨𝙨𝙞𝙗𝙡𝙚! 𝙔𝙤𝙪 𝙘𝙖𝙣 𝙙𝙤 𝙩𝙝𝙞𝙨 𝙗𝙮 𝙧𝙪𝙣𝙣𝙞𝙣𝙜 `#𝙨𝙚𝙩𝙪𝙥`.')
+    await ctx.reply('Warning system has yet to be configured. Configure it by using `#setup warning`.')
   
-  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description="/ / / / / / / / / / / **__Warned__** / / / / / / / / / / / / / / /", color=0x009dff)
-  embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+  embed=discord.Embed(description="/ / / / / / / / / / / **__WARNED__** / / / / / / / / / / / / / / /", color=0x2f3136)
+  embed.set_author(name=f"☾ {ctx.guild.name} ☽",)
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Warned User:", value=member.mention, inline=True)
   embed.add_field(name="Moderator:", value=ctx.author.mention, inline=True)
   embed.add_field(name="Reason:", value=reason, inline=False)
-  embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
   await ctx.reply(embed=embed)
   await member.send(embed=embed)
 
@@ -3557,6 +3732,7 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
 @client.event
 async def on_command_error(ctx, error):
   if isinstance(error, commands.CommandOnCooldown):
+    await ctx.message.delete()
     msg = 'Please wait another **{:.2f}** before using the command again.'.format(error.retry_after)
     embed=discord.Embed(title="Command On Cooldown", description=msg, color=0x2723fb)
     embed.set_thumbnail(url="https://static.wikia.nocookie.net/plantsvszombies/images/c/c7/Time_Traveler2.png/revision/latest?cb=20200317010014")
@@ -3564,7 +3740,7 @@ async def on_command_error(ctx, error):
     await ctx.send(embed=embed, delete_after=10)
     return
   if isinstance(error, commands.MissingPermissions):
-    ctx.channel.delete()
+    await ctx.message.delete()
     embed=discord.Embed(title="Permission Denied", description="You don't have the permissions to run the command.", color=0xff0000)
     embed.set_author(name="STOP", icon_url="https://images.vexels.com/media/users/3/193117/isolated/preview/391dc07c463639a67dcb5d471d068bff-stop-covid-badge-by-vexels.png")
     embed.set_thumbnail(url="https://images.vexels.com/media/users/3/136933/isolated/preview/12e4ab9fce4498ed36b9f1d162678300-stop-button-icon-by-vexels.png")
