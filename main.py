@@ -3550,7 +3550,7 @@ async def setup(ctx, *, setupOption: str=None):
 @client.command(aliases=['Warn'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 @commands.has_permissions(kick_members=True, administrator=True)
-async def warn(ctx, member: discord.Member=None, *, reason=None):
+async def warn(ctx, member: discord.Member=None, *, reason='No Reason Provided'):
   with open('setup.json', 'r') as settings:
     serverSetup = json.load(settings)
 
@@ -3656,11 +3656,11 @@ async def warn(ctx, member: discord.Member=None, *, reason=None):
   else:
     await ctx.reply('Warning system has yet to be configured. Configure it by using `#setup warning`.')
   
-  embed=discord.Embed(description=f"/ / / / {member} has been **__WARNED__** / / / /", color=0x2f3136)
+  embed=discord.Embed(description=f"{member.mention} has been **__WARNED__**", color=0x2f3136)
   embed.set_author(name=f"☾ {ctx.guild.name} ☽",)
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Moderator:", value=ctx.author.mention, inline=True)
-  embed.add_field(name="Reason:", value=reason, inline=False)
+  embed.add_field(name="Reason:", value=reason, inline=True)
   await ctx.reply(embed=embed)
   await member.send(embed=embed)
 
@@ -3673,7 +3673,7 @@ def substringInList(listToScan, substring):
 @client.command(aliases=['Unwarn','UnWarn'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 @commands.has_permissions(kick_members=True, administrator=True)
-async def unwarn(ctx, member: discord.Member=None, *, reason='None'):
+async def unwarn(ctx, member: discord.Member=None, *, reason='No Reason Provided'):
   with open('setup.json', 'r') as settings:
     serverSetup = json.load(settings)
 
@@ -3710,7 +3710,7 @@ async def unwarn(ctx, member: discord.Member=None, *, reason='None'):
   with open('warns.json','w') as warnings:
     json.dump(warns, warnings)
   
-  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"Removed 1 warning from {member.mention}.", color=0x009dff)
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"Removed 1 warning from {member.mention}.", color=0x2f3136)
   embed.set_thumbnail(url=member.avatar_url)
   embed.add_field(name="Moderator Responsible:", value=ctx.author.mention, inline=True)
 
@@ -3720,8 +3720,27 @@ async def unwarn(ctx, member: discord.Member=None, *, reason='None'):
 @client.command(aliases=['iw','Infractions','warnsFor'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def infractions(ctx, member: discord.Member=None, *, reason=None):
+  with open('setup.json', 'r') as settings:
+    serverSetup = json.load(settings)
+
+  if str(ctx.guild.id) not in serverSetup:
+    embed=discord.Embed(title=f'⛧ Setup hasn\'t been completed. Run `#setup warning` to be able to run this ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
+    return
+
+  adminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Admin Role"])
+  role1 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 1"])
+  role2 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 2"])
+
   if member == None:
     member = ctx.author
+  
+  if adminRole in member.roles:
+    warnsLeft = serverSetup[str(ctx.guild.id)]["Admin Role Warns"]
+  elif role1 in member.roles:
+    warnsLeft = serverSetup[str(ctx.guild.id)]["Role 1 Warns"]
+  elif role2 in member.roles:
+    warnsLeft = serverSetup[str(ctx.guild.id)]["Role 2 Warns"]
   
   await openWarnUser(member, ctx.guild)
   with open('warns.json', 'r') as warnings:
@@ -3735,7 +3754,7 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
     warnList += f'{warn} \n'
   warnList += '`**'
 
-  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"__Infractions for {member.mention}__\nTimes Warned: **__{warnCount}__**\n\nWarnings: \n{warnList}", color=0x009dff)
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"__Infractions for {member.mention}__\nTimes Warned: **__{warnCount}__**\nWarns Until Threshold is Hit: **__{int(warnsLeft) - int(warnCount)}__**\n\nWarnings: \n{warnList}", color=0x2f3136)
   embed.set_thumbnail(url=member.avatar_url)
   
   await ctx.reply(embed=embed)
