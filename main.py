@@ -2699,7 +2699,7 @@ async def edit(ctx):
     embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
     await ctx.send(embed=embed)
 
-def checkQueue1(id, server):
+def checkQueue(id, server):
   ID = id
   theGuild = server
   FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -2711,21 +2711,7 @@ def checkQueue1(id, server):
     del queueTitles[id][0]
     video, source, hours, mins, seconds = search(player)
 
-    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
-
-def checkQueue2(id, server):
-  ID = id
-  theGuild = server
-  FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-  
-  if queues[id] != []:
-    voiceChannel = discord.utils.get(client.voice_clients, guild=server)
-    player = queues[id][0]
-    del queues[id][0]
-    del queueTitles[id][0]
-    video, source, hours, mins, seconds = search(player)
-
-    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue2(ID, theGuild))
+    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild))
 
 @client.command(aliases=['r'])
 async def remove(ctx, entry: int=1):
@@ -2811,7 +2797,7 @@ async def play(ctx, *, url : str):
       server = ctx.message.guild
       player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-      voice.play(player, after=lambda e: checkQueue1(server.id, server))
+      voice.play(player, after=lambda e: checkQueue(server.id, server))
       voice.is_playing()
 
       players[server.id] = source
@@ -3564,19 +3550,39 @@ async def setup(ctx, *, setupOption: str=None):
 @client.command(aliases=['Warn'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 @commands.has_permissions(kick_members=True, administrator=True)
-async def warn(ctx, member: discord.Member, *, reason=None):
+async def warn(ctx, member: discord.Member=None, *, reason=None):
   with open('setup.json', 'r') as settings:
     serverSetup = json.load(settings)
+
+  if str(ctx.guild.id) not in serverSetup:
+    embed=discord.Embed(title=f'⛧ Setup hasn\'t been completed. Run `#setup warning` to be able to run this ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
+    return
   
+  higherAdminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Owner/Higher-Admin Role"])
+  adminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Admin Role"])
+  role1 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 1"])
+  role2 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 2"])
+
   if member == None:
     member = ctx.author
   await openWarnUser(member, ctx.guild)
   
   if member.id == ctx.author.id:
-    embed=discord.Embed(Title=f'⛧ Can\'t use it on yourself bestie ⛧', color=0x2f3136)
+    embed=discord.Embed(title=f'⛧ Can\'t use it on yourself bestie ⛧', color=0x2f3136)
     await ctx.send(embed=embed, delete_after=10)
     return
   
+  if higherAdminRole in member.roles:
+    embed=discord.Embed(title=f'⛧ You cant warn a higher-ranking mod ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
+    return
+  
+  if adminRole in member.roles and higherAdminRole not in ctx.author.roles:
+    embed=discord.Embed(title=f'⛧ You cant warn another mod. Only higher-ranking admins can ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
+    return
+
   with open('warns.json', 'r') as warnings:
     warns = json.load(warnings)
   
@@ -3591,10 +3597,6 @@ async def warn(ctx, member: discord.Member, *, reason=None):
   timesWarned = int(warns[str(ctx.guild.id)][str(member.id)]["Warning Count"])
 
   if str(ctx.guild.id) in serverSetup:
-    higherAdminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Owner/Higher-Admin Role"])
-    adminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Admin Role"])
-    role1 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 1"])
-    role2 = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Role 2"])
     adminWarn = serverSetup[str(ctx.guild.id)]["Admin Role Warns"]
     role1Warn = serverSetup[str(ctx.guild.id)]["Role 1 Warns"]
     role2Warn = serverSetup[str(ctx.guild.id)]["Role 2 Warns"]
@@ -3654,10 +3656,9 @@ async def warn(ctx, member: discord.Member, *, reason=None):
   else:
     await ctx.reply('Warning system has yet to be configured. Configure it by using `#setup warning`.')
   
-  embed=discord.Embed(description="/ / / / / / / / / / / **__WARNED__** / / / / / / / / / / / / / / /", color=0x2f3136)
+  embed=discord.Embed(description=f"/ / / / {member} has been **__WARNED__** / / / /", color=0x2f3136)
   embed.set_author(name=f"☾ {ctx.guild.name} ☽",)
   embed.set_thumbnail(url=member.avatar_url)
-  embed.add_field(name="Warned User:", value=member.mention, inline=True)
   embed.add_field(name="Moderator:", value=ctx.author.mention, inline=True)
   embed.add_field(name="Reason:", value=reason, inline=False)
   await ctx.reply(embed=embed)
@@ -3669,20 +3670,35 @@ def substringInList(listToScan, substring):
       return i
   return -1
 
-@client.command(aliases=['un','Unwarn','UnWarn'])
+@client.command(aliases=['Unwarn','UnWarn'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 @commands.has_permissions(kick_members=True, administrator=True)
-async def unwarn(ctx, member: discord.Member, *, reason='None'):
-  if member == None:
-    member = ctx.author
-  
-  if member.id == ctx.author.id:
-    embed=discord.Embed(title="⛧ 𝙔𝙤𝙪 𝙘𝙖𝙣'𝙩 𝙪𝙨𝙚 𝙞𝙩 𝙤𝙣 𝙮𝙤𝙪𝙧𝙨𝙚𝙡𝙛 ⛧", color=0xff1414)
-    embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
-    await ctx.send(embed=embed)
+async def unwarn(ctx, member: discord.Member=None, *, reason='None'):
+  with open('setup.json', 'r') as settings:
+    serverSetup = json.load(settings)
+
+  if str(ctx.guild.id) not in serverSetup:
+    embed=discord.Embed(title=f'⛧ Setup hasn\'t been completed. Run `#setup warning` to be able to run this ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
     return
   
+  higherAdminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Owner/Higher-Admin Role"])
+  adminRole = discord.utils.get(ctx.guild.roles, name=serverSetup[str(ctx.guild.id)]["Admin Role"])
+
+  if member == None:
+    member = ctx.author
   await openWarnUser(member, ctx.guild)
+  
+  if member.id == ctx.author.id:
+    embed=discord.Embed(title=f'⛧ Can\'t use it on yourself bestie ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
+    return
+  
+  if (adminRole in member.roles and higherAdminRole not in ctx.author.roles):
+    embed=discord.Embed(title=f'⛧ Only higher-ups and server owner can remove a mod\'s warnings ⛧', color=0x2f3136)
+    await ctx.send(embed=embed, delete_after=10)
+    return
+  
   with open('warns.json', 'r') as warnings:
     warns = json.load(warnings)
   
@@ -3694,12 +3710,10 @@ async def unwarn(ctx, member: discord.Member, *, reason='None'):
   with open('warns.json','w') as warnings:
     json.dump(warns, warnings)
   
-  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description="/ / / / / / / / / / **__Unwarned__** / / / / / / / / / / / / / / /", color=0x009dff)
-  embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"Removed 1 warning from {member.mention}.", color=0x009dff)
   embed.set_thumbnail(url=member.avatar_url)
-  embed.add_field(name="Unwarned User:", value=member.mention, inline=True)
-  embed.add_field(name="Moderator:", value=ctx.author.mention, inline=True)
-  embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
+  embed.add_field(name="Moderator Responsible:", value=ctx.author.mention, inline=True)
+
   await ctx.reply(embed=embed)
   await member.send(embed=embed)
 
@@ -3712,20 +3726,18 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
   await openWarnUser(member, ctx.guild)
   with open('warns.json', 'r') as warnings:
     warns = json.load(warnings)
-  warnList = '**``'
+  warnList = '**`'
   
   warnCount = warns[str(ctx.guild.id)][str(member.id)]["Warning Count"]
   warnings = warns[str(ctx.guild.id)][str(member.id)]["Reason"]
 
   for warn in warnings:
     warnList += f'{warn} \n'
-  warnList += '``**'
+  warnList += '`**'
 
-  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"/ / / / / / / / / / / / **__Infractions__** / / / / / / / / / / /\n𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝘾𝙤𝙪𝙣𝙩: *__{warnCount}__*\n\n▷ ▷ ▷ ▷ ▷ ▷ ▷ __𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙇𝙞𝙨𝙩__ ▷ ▷ ▷ ▷ ▷ ▷ ▷\n{warnList}", color=0x009dff)
-  embed.set_author(name="⛆ 𝘾𝙤𝙢𝙚𝙩 ⚝ 𝙒𝙖𝙧𝙣𝙞𝙣𝙜 𝙎𝙮𝙨𝙩𝙚𝙢 ⚝ ⛆")
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"__Infractions for {member.mention}__\nTimes Warned: **__{warnCount}__**\n\nWarnings: \n{warnList}", color=0x009dff)
   embed.set_thumbnail(url=member.avatar_url)
-  embed.add_field(name="User:", value=member.mention, inline=True)
-  embed.set_footer(text="☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄ ☄")
+  
   await ctx.reply(embed=embed)
 
 # All the error handles
