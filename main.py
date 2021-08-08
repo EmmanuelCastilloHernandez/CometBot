@@ -1068,9 +1068,9 @@ async def arrest(ctx, member:discord.Member=None, *, reason=None):
   font2 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", 13)
   font3 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", 18)
 
-  draw.text((30,240), f"{member.nick}", font=font1, fill=(23, 23, 80))
+  draw.text((30,240), f"{member.nick if member.nick != None else member.name}", font=font1, fill=(23, 23, 80))
   draw.text((371,83), f"{ctx.guild.name} Server", font=font2, fill=(23, 23, 80))
-  draw.text((244,452), f"{member.nick} ({member.name})", font=font2, fill=(23, 23, 80))
+  draw.text((244,452), f"{member.nick if member.nick != None else member} ({member.name})", font=font2, fill=(23, 23, 80))
   draw.text((627,175), f"{member.id}", font=font2, fill=(23, 23, 80))
   draw.text((79,780), f"{datetime.today().strftime('%d-%m-%Y')}", font=font2, fill=(23, 23, 80))
   draw.text((36,616), f"{reason}", font=font3, fill=(23, 23, 80))
@@ -1109,8 +1109,8 @@ async def deathnote(ctx, member:discord.Member=None):
 
   await ctx.reply(file = discord.File('deathNote.jpg'), mention_author=False)
 
-  os.remove('deathNote.png')
-  os.system('deathNote.png')
+  os.remove('deathNote.jpg')
+  os.system('touch deathNote.jpg')
 
 @help.command()
 async def leaderboard(ctx):
