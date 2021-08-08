@@ -119,7 +119,7 @@ def startupMsg():
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
   - - - - - - - - - - - - - - - - - - - - - -
-  Version **3** Bellatrix Beta 2 ready to use!
+  Version **3** Bellatrix Beta 3 ready to use!
   '''
 
   pass
@@ -209,7 +209,7 @@ async def on_member_join(member):
       embed.set_footer(text="Unapologetically, the Developer")
 
       await member.send(embed=embed)
-      await member.ban()
+      await member.ban(reason="Solicited Boob Pics from two girls")
       await channel.send(embed=embed)
 
 regEditMessageAuthor = {}
@@ -1137,8 +1137,6 @@ async def leaderboard(ctx, number=3):
 
   total.sort(reverse=True, key=lambda totalThing: totalThing[1])
 
-  embed=discord.Embed(title=f" Top {number} Rich People of {ctx.guild.name}", color=0x2f3136)
-
   index = 1
   if number > len(total):
     number = int(len(total))
@@ -1150,11 +1148,9 @@ async def leaderboard(ctx, number=3):
       rankDisplay += f'{index}. {entry[0]}:\nTotal Balance {entry[1]}\n'
       index += 1
       loopCount += 1
-
   rankDisplay += '```'
-  embed.add_field(name = '--------------------------', value=f'{rankDisplay}', inline=False)
 
-  embed.set_thumbnail(url="https://images.vexels.com/media/users/3/135932/isolated/preview/5873339dddecea4a26d7366462d0eec6-checklist-file-icon-by-vexels.png")
+  embed=discord.Embed(title=f" Top {number} Rich People of {ctx.guild.name}", description=f'{rankDisplay}', color=0x2f3136)
   await ctx.send(embed=embed)
 
 @client.group(invoke_without_command=True)
@@ -1280,13 +1276,18 @@ async def shoot(ctx, member:discord.Member):
           await updateBank(member, 1, 'Deaths')
           responses = [f'You shot {member.mention} and they die from it.',
             f'You basically turn {member.mention} to swiss cheese with all the rounds you used. Now I feel bad for them.',
+            f'You found {member.mention} near the edge of a cliff. Before you could shoot them, they jump off the cliff, thus causing their death\n\nNOTE: If you are feeling suicidal, please contact your local Suicide Hotline or use #crisis if you need someone to talk to (#crisis works in PST or PDT). You are not alone.',
             f'You fatally shot {member.nick}. \nhttps://tenor.com/view/machine-gun-stationary-gun-rocket-gun-trevante-rhodes-the-predator-gif-11846844',
-            f'What a mess. You shot {member.mention} to a pulp\nhttps://tenor.com/view/machine-gun-stationary-gun-rocket-gun-trevante-rhodes-the-predator-gif-11846844']
+            f'What a mess. You shot {member.mention} to a pulp\nhttps://tenor.com/view/machine-gun-stationary-gun-rocket-gun-trevante-rhodes-the-predator-gif-11846844',
+            f'{member.mention} was listening to Gotye. Just as they heard the phrase `YOUR HEART IS A MESS`, you fatally shot them in the chest, turning their heart into a literal mess. The last phrase they hear is `and you cant keep living like this`.',
+            f'You did a drive-by on {member.mention}. They die.']
           await ctx.reply(f'{random.choice(responses)}', mention_author=False)
         elif victimDies == False:
           responses = [f'WTF. {member.mention} was shot in the chest thrice, but they walked away like it was nothing.',
             f'You shot {member.mention}, but they somehow survive the shot despite the wound being in the neck.',
-            f'The shot landed in {member.mention}\'s head, but the thing is that ~~it~~ they managed to heal on time for it to not be lethal.']
+            f'The shot landed in {member.mention}\'s head, but the thing is that ~~it~~ they managed to heal on time for it to not be lethal.',
+            f'Despite landing several shots at {member.mention}, they survive. __{member.name if member.nick == None else member.nick}__ is a resiliant mf.',
+            f'You shot {member.mention}, but you forgot they can negate the damage by freezing the bullet in time. Thankfully, they didn\'t feel like changing the trajectory of the bullet back to you.']
           await ctx.reply(f'{random.choice(responses)}', mention_author=False)
       elif shootPass == False:
         shooterDies = bool(random.getrandbits(1))
@@ -1295,123 +1296,24 @@ async def shoot(ctx, member:discord.Member):
           responses = [f'You shot {member.mention}, but the bullet missed them and richocheted towards you causing your death.',
             'Your eyesight is so bad you accidentanly shot yourself and died. Sucks to be you.',
             f'{member.mention} parried the bullet towards you and ended hitting you in the brain, causing your death.',
-            f'The bullet ended up fireing, but it became sentient and fell in love with {member.mention}. As a result, the bullet changed course and hit you instead, causing your death.']
+            f'The bullet ended up fireing, but it became sentient and fell in love with {member.mention}. As a result, the bullet changed course and hit you instead, causing your death.',
+            f'You tried to do a drive-by on {member.mention}, but they had a bazooka ready. They blew up your car, causing your death.',
+            f'You tried shooting {member.mention}, but you forgot they can alter reality. They use this ability to erase you and the bullet from existence. You die.']
           await ctx.reply(f'{random.choice(responses)}', mention_author=False)
         if shooterDies == False:
           responses = ['The bullet ricocheted and hit you. You didn\'t die',
             f'You tried to shoot {member.mention}, but turns out you brought a bubble gun instead. They live.',
             f'The gun gets jammed. This unfortunately means that {member.mention} still lives.',
-            'The gun was listening to Gotye and disintegrated because it was emo. It\'s last words were `You\'re just somebody I used to know.` before turning to dust.']
+            'The gun was listening to Gotye and disintegrated because it was emo. It\'s last words were `You\'re just somebody I used to know.` before turning to dust.',
+            f'You find {member.mention} near the edge of a cliff, where they are getting ready to end it all. You drop your gun and try to talk to them out of it. It worked and you decided to take them to eat ice cream.',
+            f'You got second-thoughts about shooting {member.mention} because they are your best friend. You decide to hang out with them instead.\n\nNOTE: If you are feeling suicidal, please contact your local Suicide Hotline or use #crisis if you need someone to talk to (#crisis works in PST or PDT). Your life matters.']
           await ctx.reply(f'{random.choice(responses)}', mention_author=False)
       gunCount += 1
-      print(gunCount)
+      break
 
   if gunCount == 0:
     for x in range(1):
       await ctx.send('You don\'t have a gun.')
-
-@client.command()
-async def laptop(ctx):
-  await openBankAccount(ctx.author)
-  user = ctx.author
-  laptops = 0
-  with open('bank.json','r') as f: users = json.load(f)
-  
-  for item in users[str(user.id)]['Inventory']:
-    if item['Item'] == 'laptop' and item['Amount'] > 0:
-      embed=discord.Embed(title="Laptop Options", description=f"Hey {user.mention}, click one of the buttons to do an action before the phone's battery runs out in 20 seconds.", color=0x00ffee)
-      embed.set_thumbnail(url="https://images.vexels.com/media/users/3/128754/isolated/preview/d7966cba43a9c647bb596a02c6756f3f-smart-phone-icon-by-vexels.png")
-      embed.set_footer(text="Castillo Phone")
-      embed1 = await ctx.send(embed=embed,
-      components = [
-        [
-          Button(style = ButtonStyle.red, label = "Scam"),
-          Button(style = ButtonStyle.blue, label = "TTS on Voice Channel"),
-          Button(style = ButtonStyle.green, label = "DM a User")
-        ]
-      ])
-    
-      def check(buttonCheck):
-        return buttonCheck.channel == ctx.channel
-
-      try:
-        buttonCheck = await client.wait_for("button_click", timeout=20, check=check)
-
-        if buttonCheck.component.label == 'Scam':
-          await ctx.send('Ping the user you want to scam.')
-          try:
-            def check(m):
-              return m.author == ctx.author
-
-            msg = await client.wait_for('message', timeout=20, check=check)
-            try:
-              prepare1 = msg.content.replace('<@!', '')
-              prepare2 = prepare1.replace('>', '')
-              finalPrepare = int(prepare2)
-            except:
-              prepare3 = prepare2.replace('<@', '')
-              finalPrepare = int(prepare3)
-
-            userToScam = client.get_user(finalPrepare)
-            print(userToScam)
-
-            await ctx.invoke(client.get_command('rob'), member=userToScam, scam=True, phoneRobber=ctx.author)
-          except asyncio.TimeoutError:
-            await ctx.send('The phone\'s battery ran out.')
-        elif buttonCheck.component.label == 'TTS on Voice Channel':
-          await ctx.reply('Input the text you want ***Comet*** to say.', mention_author=False)
-          try:
-            def check(m):
-              return m.author == ctx.author
-
-            msg = await client.wait_for('message', timeout=20, check=check)
-
-            await ctx.invoke(client.get_command('tts'), text=msg.content)
-
-          except asyncio.TimeoutError:
-            await ctx.send('The phone\'s battery ran out.')
-        elif buttonCheck.component.label == 'DM a User':
-          await ctx.reply('Ping the user you want to send the message to (Don\'t worry I\'ll delete the ping).', mention_author=False)
-          try:
-            def check(m):
-              return m.author == ctx.author
-
-            msg = await client.wait_for('message', timeout=20, check=check)
-
-            try:
-              prepare1 = msg.content.replace('<@!', '')
-              prepare2 = prepare1.replace('>', '')
-              finalPrepare = int(prepare2)
-            except:
-              prepare3 = prepare2.replace('<@', '')
-              finalPrepare = int(prepare3)
-            userToDM = client.get_user(finalPrepare)
-
-            await msg.delete()
-
-            await ctx.reply('Now type what you want to send to the user.', mention_author=False)
-
-            try:
-              def check(m):
-                return m.author == ctx.author
-
-              msgText = await client.wait_for('message', timeout=20, check=check)
-              await userToDM.send(f'New DM from a user in **`{ctx.guild.name}`**\n**__{ctx.author.id}__**: {msgText.content}')
-
-            except asyncio.TimeoutError:
-              await ctx.send('Your Mobile data ran out. Thank the 5 GB Haley-Mobile Data Plan.')
-
-          except asyncio.TimeoutError:
-            await ctx.send('The phone\'s battery ran out.')
-      
-      except asyncio.TimeoutError:
-        await ctx.reply('exited the Phone', mention_author=False)
-      
-      laptops += 1
-
-  if laptops == 0:
-    for x in range(1):
-      await ctx.send('You don\'t have a phone.')
 
 @client.command(aliases=['CastiPhone'])
 async def phone(ctx):
@@ -2198,7 +2100,7 @@ async def addWord(ctx, *, wordToAdd):
   print(ctx.guild.id)
 
   if str(ctx.guild.id) in slurPrepare:
-    uselessVariable = 1
+    pass
   else:
     slurPrepare[ctx.guild.id] = []
   
@@ -2316,7 +2218,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
         pass
   except:
     embed=discord.Embed(title=" ", color=0x2f3136)
-    embed.set_author(name=f"𝙉𝙤 𝙀𝙣𝙩𝙧𝙞𝙚𝙨 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author.name}")
+    embed.set_author(name=f"No Snipeable Messages, {ctx.author}")
     await ctx.send(embed=embed)
 
 @client.command(aliases=['retrieve','snitch','Snipe','sniep','snipw'], pass_context=True)
@@ -2340,9 +2242,8 @@ async def snipe(ctx):
       await ctx.send(embed=embed)
   except:
     embed=discord.Embed(title=" ", color=0x2f3136)
-    embed.set_image(url="attachment://loadingBar.gif")
     embed.set_author(name=f"No Snipeable Messages, {ctx.author}")
-    await ctx.send(embed=embed, file=discord.File('loadingBar.gif'))
+    await ctx.send(embed=embed)
 
 # Hello command
 # First command in Comet
@@ -2367,7 +2268,7 @@ async def spanImages(ctx):
 @client.command(aliases=['wyr'])
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def wouldyourather(ctx):
-  wyrquestions = ['Would you rather have the ability to see 10 minutes into the future or 150 years into the future?','Would you rather have telekinesis (the ability to move things with your mind) or telepathy (the ability to read minds)?','Would you rather team up with Wonder Woman or Captain Marvel?','Would you rather find true love today or win the lottery next year?','Would you rather be in jail for five years or be in a coma for a decade?','Would you rather be chronically under-dressed or overdressed?','Would you rather have everyone you know be able to read your thoughts or for everyone you know to have access to your Internet history?','Would you rather lose your sight or your memories?','Would you rather have universal respect or unlimited power?','Would you rather give up air conditioning and heating for the rest of your life or give up the Internet for the rest of your life?','Would you rather swim in a pool full of Nutella or a pool full of maple syrup?','Would you rather labor under a hot sun or extreme cold?',' Would you rather stay in during a snow day or build a fort?','Would you rather have a personal maid or a personal chef?','you r a penis','Would you rather be 11 feet tall or nine inches tall?','Would you rather communicate only in emoji or never be able to text at all ever again?','Would you rather be royalty 1,000 years ago or an average person today?',' Would you rather lounge by the pool or on the beach?','Would you rather wear the same socks for a month or the same underwear for a week?','Would you rather cuddle a koala or pal around with a panda?','Would you rather always be 10 minutes late or always be 20 minutes early?','Would you rather spend a week in the forest or a night in a real haunted house?','Would you rather find a rat in your kitchen or a roach in your bed?','Would you rather have a pause or a rewind button in your life?','Would you rather smash dababy or steven','Would you rather drink from a toilet or pee in a litter box?','Would you rather be forced to live the same day over and over again for a full year, or take 3 years off the end of your life?','Would you rather get a paper cut every time you turn a page or bite your tongue every time you eat?','Would you rather oversleep every day for a week or not get any sleep at all for four days?','Would you rather die in 20 years with no regrets or live to 100 with a lot of regrets?','Would you rather get trapped in the middle of a food fight or a water balloon fight?']
+  wyrquestions = ['Would you rather have the ability to see 10 minutes into the future or 150 years into the future?','Would you rather have telekinesis (the ability to move things with your mind) or telepathy (the ability to read minds)?','Would you rather team up with Wonder Woman or Captain Marvel?','Would you rather find true love today or win the lottery next year?','Would you rather be in jail for five years or be in a coma for a decade?','Would you rather be chronically under-dressed or overdressed?','Would you rather have everyone you know be able to read your thoughts or for everyone you know to have access to your Internet history?','Would you rather lose your sight or your memories?','Would you rather have universal respect or unlimited power?','Would you rather give up air conditioning and heating for the rest of your life or give up the Internet for the rest of your life?','Would you rather swim in a pool full of Nutella or a pool full of maple syrup?','Would you rather labor under a hot sun or extreme cold?',' Would you rather stay in during a snow day or build a fort?','Would you rather have a personal maid or a personal chef?','you r a penis','Would you rather be 11 feet tall or nine inches tall?','Would you rather communicate only in emoji or never be able to text at all ever again?','Would you rather be royalty 1,000 years ago or an average person today?',' Would you rather lounge by the pool or on the beach?','Would you rather wear the same socks for a month or the same underwear for a week?','Would you rather cuddle a koala or pal around with a panda?','Would you rather always be 10 minutes late or always be 20 minutes early?','Would you rather spend a week in the forest or a night in a real haunted house?','Would you rather find a rat in your kitchen or a roach in your bed?','Would you rather have a pause or a rewind button in your life?','Would you rather smash dababy or drake','Would you rather drink from a toilet or pee in a litter box?','Would you rather be forced to live the same day over and over again for a full year, or take 3 years off the end of your life?','Would you rather get a paper cut every time you turn a page or bite your tongue every time you eat?','Would you rather oversleep every day for a week or not get any sleep at all for four days?','Would you rather die in 20 years with no regrets or live to 100 with a lot of regrets?','Would you rather get trapped in the middle of a food fight or a water balloon fight?']
   await ctx.channel.send(f'{random.choice(wyrquestions)}')
 
 #Random camera GIF code
@@ -2388,23 +2289,31 @@ async def _8ball(ctx, *, question):
     '¡Sin duda!',
     'Definitely yes. Don\'t worry about it!',
     'No. JK, you can rely on it with your life!',
-    'From the looks of it, yes!', 'From what I see, yes!',
+    'From the looks of it, yes!', 
+    'From what I see, yes!',
     'Probably',
     'Good chance it\'s yes...',
     'Yes :smiley:',
     'Signs are pointing to yes...',
+    'Obviously',
     'The reply I have is hazy af. Try again or ask a different question :|',
     'Too busy breaking my own code. Try saying that again :no_mouth:',
+    '▒▒R▒E▒▒▒S▒▒▒PON▒▒S▒E▒▒▒▒▒C▒LO▒▒▒▒U▒▒D▒Y▒▒▒',
     'I\'m not telling you that rn :no_mouth:',
     'I\'m too busy to predict rn. Try again l8r :rage:',
     'Concentrate porque ahorita se estas sonando como un troglodita...:rage:',
     'Don\'t try to count on this.',
+    'Probably not. Sorry.',
+    'Better chance of being struck by lighting than this being the case.',
     'I\'m telling you, it\'s a NO! :{',
     'Sources close to me have spoken. They say ***N O P E***',
     'Forecast is bad for this one...\u047e',
-    'I\'m very doubtful about this one...\u047c']
+    'I\'m very doubtful about this one...\u047c',
+    'Guaranteed NO!']
 
-  await ctx.send(f'The question was: {question}\n:8ball: My answer is: {random.choice(responses)}')
+  answerEmbed = discord.Embed(title=f'{random.choice(responses)}', color=0x2f3136)
+  answerEmbed.set_author(name=f'🎱 {question} 🎱')
+  await ctx.send(content=f'Asked by: {ctx.author}',embed=answerEmbed)
 
 @client.command(aliases=['delete', 'delet', 'clear','del'], help='Clear command obviously.')
 @commands.has_permissions(manage_messages=True)
@@ -2587,6 +2496,20 @@ async def place_error(ctx, error):
 @client.command(aliases=['Hangman', 'hangma'], help='hangman duh')
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def hangman(ctx):
+  setEmbed = discord.Embed(description=f'Comet allows for multiplayer Hangman (this allows people in the same text channel to play the game with you), but in order to activate it, the user needs to choose so.\n\n__{ctx.author.mention}, you have 15 seconds to choose.__', color=0x2f3136)
+  setEmbed.set_author(name='Make This Round Multiplayer?', icon_url=ctx.author.avatar_url)
+  setUp = await ctx.send(embed=setEmbed, components=[[Button(style = ButtonStyle.red, label = "Multiplayer"), Button(style = ButtonStyle.blue, label = "Single Player")]], delete_after=25)
+  
+  try:
+    multiOrSolo = await client.wait_for('button_click', check=lambda d: d.author == ctx.author and d.channel == ctx.channel, timeout=15)
+    await multiOrSolo.respond(embed=discord.Embed(description=f'Hangman now set to: {multiOrSolo.component.label}.', color=0x2f3136))
+    await setUp.edit(embed=discord.Embed(description=f'Hangman now set to: {multiOrSolo.component.label}.', color=0x2f3136))
+    mode = str(multiOrSolo.component.label)
+  except:
+    await setUp.edit(embed=discord.Embed(description=f'Hangman now set to: {multiOrSolo.component.label}.', color=0x2f3136))
+    mode = 'Single Player'
+  shouldEdit = False
+
   tries = 0
   guess = None
   wonHangman = False
@@ -2594,20 +2517,19 @@ async def hangman(ctx):
   
   randomEmojis = [':smiley:',':cry:',':rofl:',':cold_face:',':neutral_face:',':grimacing:']
   randomTimes = [':sun_with_face:  .  .  :cloud:  .  :cloud:  .  .', ':white_sun_cloud: :cloud: :cloud: :cloud: :cloud: :cloud: :cloud:', ':white_sun_small_cloud:  :cloud:  :cloud:  :cloud: :cloud:', '☄||--||☆||--||☆||-----||:full_moon:', ':crescent_moon:||---||☆||------||☆||----||☆||---||', ':full_moon:||-------||:cloud:']
-  hangmanPoses = [f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥\n∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
-    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
-    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
-    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||--|--\n∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
-    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||--|--\n∥||----------||∥\n∥\n∥\n▦▦▦▦▦▦▦▦▦▦▦',
-    f'{random.choice(randomTimes)}\n▣====⏛====▷\n∥||--------||∥\n∥||--------||∥\n∥||--------||{random.choice(randomEmojis)}\n∥||--------||--|--\n∥||----------||∥\n∥||---------||/\\ \n∥\n▦▦▦▦▦▦▦▦▦▦▦']
+  hangmanPoses = [f'{random.choice(randomTimes)}\n▣====⏛====▷\n▌||--------||∥\n▌||--------||∥\n▌\n▌\n▌\n▌\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n▌||--------||∥\n▌||--------||∥\n▌||--------||{random.choice(randomEmojis)}\n▌\n▌\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n▌||--------||∥\n▌||--------||∥\n▌||--------||{random.choice(randomEmojis)}\n▌||--------||∥\n▌\n▌\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n▌||--------||∥\n▌||--------||∥\n▌||--------||{random.choice(randomEmojis)}\n▌||--------||--|--\n▌\n▌\n▌\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n▌||--------||∥\n▌||--------||∥\n▌||--------||{random.choice(randomEmojis)}\n▌||--------||--|--\n▌||----------||∥\n▌\n▌\n▦▦▦▦▦▦▦▦▦▦▦',
+    f'{random.choice(randomTimes)}\n▣====⏛====▷\n▌||--------||∥\n▌||--------||∥\n▌||--------||{random.choice(randomEmojis)}\n▌||--------||--|--\n▌||----------||∥\n▌||---------||/\\ \n▌\n▦▦▦▦▦▦▦▦▦▦▦']
   
-  words = ['Comet', 'emo', 'Luna', 'Bellatrix', 'Aldebaran']
+  words = ['Comet', 'Luna', 'Bellatrix', 'Aldebaran']
   getWordList = urllib.request.urlopen("https://www.mit.edu/~ecprice/wordlist.10000")
   prepWordList = getWordList.read()
   onlineWordList = prepWordList.splitlines()
   counter = 0
   for i in onlineWordList:
-    translatedWord = ''
     i = str(i)
     i = i.replace('b', '', 1)
     i = i.replace('\'','')
@@ -2620,28 +2542,36 @@ async def hangman(ctx):
   prepareWord = prepareWord.lower()
 
   word = list(prepareWord)
-  hangmanEmbed = discord.Embed(description=hangmanPoses[tries], color=0x34363b)
-  hangmanEmbed.set_author(name='Hangman by E.C.H.', icon_url=ctx.author.avatar_url)
-  
+  hangmanEmbed = discord.Embed(description=hangmanPoses[tries], color=0x2f3136)
+  hangmanEmbed.set_author(name='Comet Hangman', icon_url=ctx.author.avatar_url)
+  shouldEdit = False
+
   for character in word:
     hiddenWord.append('_')
     print(hiddenWord)
   
   while not wonHangman:
-    print(word)
-
-    def check(message):
-      return message.author == ctx.author and message.channel == ctx.channel
-    
     try:
       if '_' not in hiddenWord:
-        await ctx.send(f'**YOU WON**. The word was indeed **__`{prepareWord}`__**')
+        triesLeft = 6 - tries
+        hangmanEmbed = discord.Embed(color=0x4dff82,description=hangmanPoses[tries])
+        hangmanEmbed.set_author(name='Hangman Round Over', icon_url=ctx.author.avatar_url)
+        await editEmbed.edit(content=f'**YOU WON**. The word was indeed **__`{prepareWord}`__**', embed=hangmanEmbed)
         wonHangman = True
         break
       
-      await ctx.send(content=f"Put your guess before 15 seconds pass by.\n``The word is: {' '.join(hiddenWord)}``",embed=hangmanEmbed)
-      grabUserInput = await client.wait_for('message', check=check, timeout=15)
-      guess = grabUserInput.content
+      if shouldEdit == False:
+        editEmbed = await ctx.send(content=f"Put your guess before 15 seconds pass by.\n``The word is: {' '.join(hiddenWord)}``", embed=hangmanEmbed)
+        shouldEdit = True
+      else:
+        await editEmbed.edit(content=f"Put your guess before 15 seconds pass by.\n``The word is: {' '.join(hiddenWord)}``", embed=hangmanEmbed)
+      
+      if mode == 'Multiplayer':
+        grabUserInput = await client.wait_for('message', check=lambda d: d.channel == ctx.channel, timeout=15)
+      elif mode == 'Single Player':
+        grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author and d.channel == ctx.channel, timeout=15)
+      
+      guess = grabUserInput.content.lower()
 
     except asyncio.TimeoutError:
       await ctx.send('**__Hangman round ended due to inactivity__**')
@@ -2650,22 +2580,28 @@ async def hangman(ctx):
       return
     
     if guess in word:
+      triesLeft = 6 - tries
+      await grabUserInput.delete()
       hangmanEmbed = discord.Embed(color=0x4dff82,description=hangmanPoses[tries])
       hangmanEmbed.set_author(name='You guessed a letter correctly 😁', icon_url=ctx.author.avatar_url)
+      hangmanEmbed.set_footer(text=f'You have {triesLeft} tries left')
       for i in range(len(word)):
         character = word[i]
         if character == guess:
           hiddenWord[i] = word[i]
           word[i] = "_"
     else:
+      await grabUserInput.delete()
       tries += 1
       triesLeft = 6 - tries
 
       if tries < 6:
-        hangmanEmbed = discord.Embed(color=0xff0033, description=hangmanPoses[tries])
+        hangmanEmbed = discord.Embed(color=0xff0033, title=f'__**`{guess}`** was not in the word__', description=hangmanPoses[tries])
         hangmanEmbed.set_author(name=f'Try that again. You got {triesLeft} tries left.', icon_url=ctx.author.avatar_url)
       if tries > 5:
-        await ctx.send(f'**You lost**. Try again.\nThe word was **__{prepareWord}__**')
+        hangmanEmbed = discord.Embed(color=0xff0033, title=f'__**`{guess}`** was not in the word__', description=hangmanPoses[tries-1])
+        hangmanEmbed.set_author(name=f'Hangman Round Over', icon_url=ctx.author.avatar_url)
+        await editEmbed.edit(content=f'**You lost**. Try again.\nThe word was **__{prepareWord}__**', embed=hangmanEmbed)
         tries = 0
         return
 
@@ -2695,8 +2631,8 @@ async def edit(ctx):
     embed.add_field(name="After:", value=f"{regAfterMessage[ctx.channel.id]}", inline=True)
     await ctx.send(embed=embed)
   except:
-    embed=discord.Embed(title=" ", color=0x0603bf)
-    embed.set_author(name=f"⚝ 𝙉𝙤 𝙀𝙣𝙩𝙧𝙮 𝙍𝙚𝙘𝙤𝙧𝙙𝙚𝙙, {ctx.author} ⚝")
+    embed=discord.Embed(title=" ", color=0x2f3136)
+    embed.set_author(name=f"No Snipeable Messages, {ctx.author}")
     await ctx.send(embed=embed)
 
 def checkQueue(id, server):
@@ -3741,6 +3677,8 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
     warnsLeft = serverSetup[str(ctx.guild.id)]["Role 1 Warns"]
   elif role2 in member.roles:
     warnsLeft = serverSetup[str(ctx.guild.id)]["Role 2 Warns"]
+  else:
+    warnsLeft = 'N/A'
   
   await openWarnUser(member, ctx.guild)
   with open('warns.json', 'r') as warnings:
@@ -3754,7 +3692,7 @@ async def infractions(ctx, member: discord.Member=None, *, reason=None):
     warnList += f'{warn} \n'
   warnList += '`**'
 
-  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"__Infractions for {member.mention}__\nTimes Warned: **__{warnCount}__**\nWarns Until Threshold is Hit: **__{int(warnsLeft) - int(warnCount)}__**\n\nWarnings: \n{warnList}", color=0x2f3136)
+  embed=discord.Embed(title=f"☾ {ctx.guild.name} ☽", description=f"__Infractions for {member.mention}__\nTimes Warned: **__{warnCount}__**\nWarns Until Threshold is Hit: **__{int(warnsLeft) - int(warnCount) if warnsLeft != 'N/A' else warnsLeft}__**\n\nWarnings: \n{warnList}", color=0x2f3136)
   embed.set_thumbnail(url=member.avatar_url)
   
   await ctx.reply(embed=embed)
