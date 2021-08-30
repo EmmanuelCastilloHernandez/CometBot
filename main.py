@@ -1,5 +1,10 @@
 ''' 
-Comet's code
+░█████╗░░█████╗░███╗░░░███╗███████╗████████╗
+██╔══██╗██╔══██╗████╗░████║██╔════╝╚══██╔══╝
+██║░░╚═╝██║░░██║██╔████╔██║█████╗░░░░░██║░░░
+██║░░██╗██║░░██║██║╚██╔╝██║██╔══╝░░░░░██║░░░
+╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
+░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
 This program was made by Emmanuel Castillo
 Student at NHHS in NH, CA, USA
 
@@ -21,7 +26,11 @@ try:
   if checkVer != '3.1.0-alpha':
     os.system('pip3 uninstall -y googletrans')
     os.system('pip3 install googletrans==3.1.0a0')
+    os.system('pip install google-api-python-client')
+    os.system('pip install git+https://github.com/abenassi/Google-Search-API')
 except:
+  os.system('pip install git+https://github.com/abenassi/Google-Search-API')
+  os.system('pip install google-api-python-client')
   os.system('pip3 install googletrans==3.1.0a0')
 
 os.system('pip install git+https://github.com/CodeWithSwastik/prsaw.git')
@@ -38,7 +47,7 @@ from discord.ext.commands import has_permissions, MissingPermissions
 from discord.utils import get
 from discord.utils import find
 from discord import FFmpegPCMAudio
-from discord_components import DiscordComponents, Button, ButtonStyle, Select, SelectOption, InteractionType
+from discord_components import DiscordComponents, Button, ButtonStyle, Select, SelectOption
 from dontDie import dontDieOnMe
 from googletrans import Translator
 from gtts import gTTS
@@ -54,7 +63,9 @@ from io import BytesIO
 import random
 from random import randint
 import randfacts
+import spotdl
 import string
+import smtplib, ssl
 import sympy as sp
 from sympy import Symbol, N
 import ffmpeg
@@ -108,7 +119,7 @@ views = 0
 likes = 0
 length = 0
 queuedMusic = None
-randomButtonColors = [ButtonStyle.blue, ButtonStyle.green, ButtonStyle.red]
+randomButtonColors = [ButtonStyle.blue, ButtonStyle.green, ButtonStyle.red] 
 
 def startupMsg():
   '''
@@ -119,7 +130,7 @@ def startupMsg():
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
   - - - - - - - - - - - - - - - - - - - - - -
-  Version **3** Bellatrix Beta 3 ready to use!
+  Version **3** Bellatrix Beta 5 ready to use!
   '''
 
   pass
@@ -159,6 +170,18 @@ intents.members = True
 intents.reactions = True
 client = commands.Bot(command_prefix=["#",'comet do ','COMET ', 'comet ', 'Comet '], intents=intents)
 client.remove_command('help')
+
+def getAUser(user):
+  try:
+    prepare1 = user.replace('<@!', '')
+    prepare2 = prepare1.replace('>', '')
+    finalPrepare = int(prepare2)
+  except:
+    prepare3 = prepare2.replace('<@', '')
+    finalPrepare = int(prepare3)
+  
+  userToDM = client.get_user(finalPrepare)
+  return userToDM
 
 @client.event
 async def on_guild_join(guild):
@@ -531,16 +554,15 @@ async def help(ctx):
 
 @help.command(aliases=['SOS'])
 async def crisis(ctx):
-  embed=discord.Embed(title="Comet Safety Crisis Center", description="This command can help an individual find the help they need IRL. This can go from anything from suicide prevention to knowing what to do if ICE knocks at your door. If the command is maliciously misused, the person misusing it can be banned from using Comet in its entirety. Only works in DMs to keep any emergency conversations private and secure.", color=0x2f3136)
+  embed=discord.Embed(title="CometCRISIS", description="This command can help an individual find the help they need IRL. This can go from anything from suicide prevention to knowing what to do if ICE knocks at your door. If the command is maliciously misused, the person misusing it can be banned from using Comet in its entirety. Only works in DMs to keep any emergency conversations private and secure.", color=0x2f3136)
   embed.add_field(name="Use:", value="**`#crisis>`**", inline=True)
   embed.add_field(name="Aliases:", value="**NONE**", inline=True)
   await ctx.send(embed=embed)
 
-phoneNum = os.getenv('sendPhoneNum')
-@client.command(aliases=['SOS'])
+@client.command(aliases=['SOS', 'sos'])
 @commands.dm_only()
-async def sos(ctx):
-  embed = embed=discord.Embed(title="Comet SAFETY CRISIS CENTER", description="Please select your language in the next 20 Seconds | Por favor seleccione su idioma en los próximos 20 segundos", color=0x2f3136)
+async def crisis(ctx):
+  embed = embed=discord.Embed(title="CometCRISIS CENTER", description="Please select your language in the next 20 Seconds | Por favor seleccione su idioma en los próximos 20 segundos", color=0x2f3136)
   msg = await ctx.send(embed=embed, components=[[
       Button(style = ButtonStyle.red, label = "English | Ingles"),
       Button(style = ButtonStyle.blue, label = "Spanish | Español")
@@ -561,25 +583,25 @@ async def sos(ctx):
   await msg.delete()
 
   if lang == 'English':
-    embed=discord.Embed(title="Comet HEALTH AND MENTAL CRISIS CENTER", description="Thank you for using the Comet Health and Mental Crisis Center. I as a Hispanic LGBTQ+ member, mental and physical health is important to me, especially someone else's health if they are experiencing a crisis that could lead to life-threatening situations, which is why I designed this command to get people the help they need.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
+    embed=discord.Embed(title="CometCRISIS CENTER", description="Thank you for using the Comet Health and Mental Crisis Center. As a Latino LGBTQ+ member, mental and physical health is important to me, especially someone else's health if they are experiencing a crisis that could lead to life-threatening situations, which is why I designed this command to get people the help they need.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
     embed.add_field(name="Sincerely,", value="**`Emmanuel Castillo (eta_c4rinae#7810)`**\nPS.: **`Note that if the situation is serious, I may have to intervene, but before I do that I must get your consent to do so.`**", inline=True)
     embed.add_field(name="You are NEVER ALONE", value="I can help.", inline=True)
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicidal Thoughts"), SelectOption(label="Sexual Assault/Abuse", value="Report SA and other sexual offenses"), SelectOption(label="Domestic Abuse", value="Report Physical Abuse"), SelectOption(label="Need Shelter", value="In case you are in need of shelter"), SelectOption(label="Need Food", value="Find food banks"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door")
+          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicide"), SelectOption(label="Abuse (Sexual or Domestic)", value="Abuse (Sexual or Domestic)"), SelectOption(label="Need Shelter", value="Need Shelter"), SelectOption(label="Need Food", value="Need Food"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door")
           ]
         )
       ]
     )
   else:
-    embed=discord.Embed(title="Centro de CRISIS DE VIDA Comet", description="Gracias por utilizar el Centro de CRISIS DE VIDA Comet. Yo como un Latino y miembro de la LGBTQ+, la salud mental y fisica es importante para mi, especialmente la salud de alguien si ellos estan teniendo una crisis puede resultar o esta resultando en situaciones que amenazan la vida de tal persona. Por eso diseñe este comando.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPor favor tome tiempo en mirar las optiones que estan ofrecidas en el menu. Muchas de estas opciones tienen recursos para reportar crimenes sexuales y violentos.", color=0x2f3136)
+    embed=discord.Embed(title="Centro CometCRISIS", description="Gracias por utilizar el Centro de CRISIS DE VIDA CometCRISIS. Yo como un Latino y miembro de la LGBTQ+, la salud mental y fisica es importante para mi, especialmente la salud de alguien si ellos estan teniendo una crisis puede resultar o esta resultando en situaciones que amenazan la vida de tal persona. Por eso diseñe este comando.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPor favor tome tiempo en mirar las optiones que estan ofrecidas en el menu. Muchas de estas opciones tienen recursos para reportar crimenes sexuales y violentos.", color=0x2f3136)
     embed.add_field(name="Sinceramente,", value="**`Emmanuel Castillo (eta_c4rinae#7810)`**\nPS: **`Note que si su situacion es seria, yo talves necesite intervenir, pero antes de que pueda hacer eso necesito su consentimiento para hacerlo.`**", inline=True)
-    embed.add_field(name="Nunca estas solo.", value="Creo que puedo ayudar.", inline=True)
+    embed.add_field(name="Nunca estas solo/a.", value="Hay ayuda disponible.", inline=True)
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso/Asalto Sexual", value="Abuso/Asalto Sexual"), SelectOption(label="Abuso Fisico o Domestico", value="Abuso Fisico o Domestico"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar")
+          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso (Sexual o Domestico)", value="Abuso (Sexual o Domestico)"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar")
           ]
         )
       ]
@@ -588,27 +610,23 @@ async def sos(ctx):
   while True:
     selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
     if lang == 'English':
-      await selectionDone.respond(content='{} chosen'.format(selectionDone.component[0].value))
+      await selectionDone.send(content='{} chosen'.format(selectionDone.values[0]))
     else:
-      await selectionDone.respond(content='{} escogido.'.format(selectionDone.component[0].value))
+      await selectionDone.send(content='{} escogido.'.format(selectionDone.values[0]))
 
-    if selectionDone.component[0].label == 'LGBTQ+':
+    if selectionDone.values[0] == 'LGBTQ+':
       if lang == 'English':
         embed=discord.Embed(title="Getting Help for LGBTQ+ Individuals", description="Being an open LGBTQ+ individual is hard, especially in hostile environments that oppress us. For many of us, it's not even an option to come out because we are afraid of being harmed. However, one should seek out help when they are facing the possibility of harm due to one's sexual orientation and/or gender indentity. Thankfully, charities like the Trevor Project exist, whose goal is to help out our community. For this reason, Comet will provide resources to connect with the Trevor Project as it's one of the few good choices for LGBTQ+ indivuals facing crises. Below are the contacts for the Trevor Project\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo", color=0x2f3136)
-        embed.add_field(name="TrevorLifeline:", value="**`1-866-488-7386`** or **`1-866-4-U-TREVOR`**", inline=False)
-        embed.add_field(name="TrevorChat:", value="**`thetrevorproject.org/get-help-now/`** and then click on **`TrevorChat`**", inline=False)
-        embed.add_field(name="TrevorText:", value="Text **`START`** to the phone number **`678-678`**", inline=False)
+        embed.add_field(name="Trevor Project:", value="Visit **thetrevorproject.org/get-help-now/**\nText **`START`** to the phone number **`678-678`**\nCall **`1-866-488-7386`** or **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`**.", inline=False)
-        embed.add_field(name='If outside the US:', value='Click (here)[http://suicide.org/international-suicide-hotlines.html] to find your country\'s hotline since the Trevor Project is US-only unfortunately.')
+        embed.add_field(name='If outside the US:', value='Click **http://suicide.org/international-suicide-hotlines.html** to find your country\'s hotline since the Trevor Project is US-only unfortunately.')
         embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
         embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 30 seconds to confirm before it defaults to **no**.", inline=False)
-      else:
+      elif lang == 'Spanish':
         embed=discord.Embed(title="Buscando Ayuda Para Integrantes de la LGBTQ+", description="Siendo un miembro de la LGBTQ+ es dificil, especialmente in ambientes hostiles cuales los oprimen. Para muchos, no hay posibilidad de poder expresarnos debido al miedo que los lastimen. Por suerte, hay organizaciones como el Trevor Project, cuya meta es ayudar nuestra comunidad. Por esta razon, Comet tiene recursos para contactarse con el Trevor Project si esta en los Estados Unidos. Abajo de este parafo estan tales contactos.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project.", color=0x2f3136)
-        embed.add_field(name="TrevorLifeline:", value="**`1-866-488-7386`** o **`1-866-4-U-TREVOR`**", inline=False)
-        embed.add_field(name="TrevorChat:", value="**`thetrevorproject.org/get-help-now/`** y haga click en **`TrevorChat`**", inline=False)
-        embed.add_field(name="TrevorText:", value="Texte **`START`** al numero **`678-678`**", inline=False)
+        embed.add_field(name="Trevor Project:", value="Visite **thetrevorproject.org/get-help-now/**\nTexte **`START`** a **`678-678`**\nLlame **`1-866-488-7386`** o **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
-        embed.add_field(name='Si estad afuera de los Estados Unidos:', value=' Haga click (aqui)[http://suicide.org/international-suicide-hotlines.html] para buscar la linea de suicidio de su pais.')
+        embed.add_field(name='Si esta afuera de los Estados Unidos:', value=' Haga click (aqui)[http://suicide.org/international-suicide-hotlines.html] para buscar la linea de suicidio de su pais.')
         embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
         embed.add_field(name="Ultima Pregunta:", value="Si la situacion es grave o necesita hablar con alguien, daria **`SU`** permiso para ser contactado por el desarollador de Comet. Presione **Si** o **No** en los proximos 30 segundos para confirmar antes que se vaya a la respuesta predeterminada de **no**.", inline=False)
       await ctx.send(embed=embed, components=[[
@@ -623,9 +641,33 @@ async def sos(ctx):
         if lgbtButtonCheck.component.label == 'Si | Yes':
           devSummon = client.get_user(588931051103977494)
           if lang == 'Spanish':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
             dateFormat='%m/%d/%Y %H:%M:%S'
             timeSent = datetime.now(tz=pytz.utc)
             timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            message = f"""\
+Subject: CometCRISIS: {ctx.author.name} A Las {timeSent.strftime(dateFormat)}
+
+Tiempo Mandado: {timeSent.strftime(dateFormat)} PST
+Persona: {ctx.author} alias {ctx.author.id}
+Nivel: 1 a 3
+Tipo: Crisis LGBT"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
 
             embed=discord.Embed(title="Señal de Auxilio Mandada", description=f"La señal de auxilio ha sido mandada al desarrolador. Espere entre 10-20 minutos dependiendo de que hora del dia sea en PST en los Estados Unidos. Pronto va a recibir un mensaje de {devSummon}.", color=0x2f3136)
             embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro.", value='Sinceramente,\nComet y el Equipo de desarrollo', inline=True)
@@ -638,10 +680,34 @@ async def sos(ctx):
             sosEmbed.add_field(name="Nivel De Urgencia:", value=f'Nivel 1-3. Tengan cuidado debida a que la situacion puede escalarse', inline=True)
             await devSummon.send(embed=sosEmbed)
           elif lang == 'English':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
             dateFormat='%m/%d/%Y %H:%M:%S'
             timeSent = datetime.now(tz=pytz.utc)
             timeSent = timeSent.astimezone(timezone('US/Pacific'))
 
+            message = f"""\
+Subject: CometCRISIS Signal fron {ctx.author.name} at {timeSent.strftime(dateFormat)}
+
+Time sent: {timeSent.strftime(dateFormat)} PST
+User: {ctx.author} AKA {ctx.author.id}
+Level: 1 a 3
+Type: {selectionDone.values[0]}"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+            
             embed=discord.Embed(title="SOS Signal Sent", description=f"The Developer has been pinged. Wait in between 10-20 minutes depending on what time it is in US PST. You should get a message from {devSummon}.", color=0x2f3136)
             embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in.", value='Sincerely,\nComet and the Dev Team', inline=True)
             await ctx.send(embed=embed)
@@ -655,24 +721,24 @@ async def sos(ctx):
           
       except asyncio.TimeoutError:
         pass
-    if selectionDone.component[0].label == 'Suicide' or selectionDone.component[0].label == 'Suicidio':
+    if selectionDone.values[0] == 'Suicide' or selectionDone.values[0] == 'Suicidio':
       if lang == 'English':
         embed=discord.Embed(title="Getting Help To Prevent Suicide", description="Suicide is a awful thing to think about. These thoughts are usually products of mental disorders (PTSD, Depression, etc.) and/or a hostile social enviroment (bullying, harrassment). Members of racial, ethnic, gender, and sexual minorities suffer the most from society's harrasment, which drives some of their members to take their own lives. Even when the chances look slim, there is someone that cares about you and there is always a reason to continue living (not counting a job), even if society wants to hate you and rive you to suicide. For this reason, we the Comet Dev team want to help out people with suicidal thoughts and prevent them from harming themselves, no matter where they are and what is their motive. That is why we created the Comet**__Lifeline__** to help out.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo\n\nPS: Comet**Lifeline** works in the PST U.S.A. Timezone", color=0x2f3136)
         embed.add_field(name="US National Suicide Hotline:", value="**`800-273-8255`**", inline=False)
-        embed.add_field(name="Trevor Project For LGBTQ+ Members:", value="thetrevorproject.org/get-help-now/", inline=False)
+        embed.add_field(name="Trevor Project For LGBTQ+ Members:", value="Visit **thetrevorproject.org/get-help-now/**\nText **`START`** to **`678-678`**\nCall **`1-866-488-7386`** or **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Suicide Hotlines in Each State and Their Counties:", value="http://suicide.org/suicide-hotlines.html", inline=False)
         embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** in the event of a mental breakdown or severe mental crisis.", inline=False)
         embed.add_field(name='If outside the US:', value='Go to http://suicide.org/international-suicide-hotlines.html to find your country\'s hotline.')
-        embed.add_field(name="If you are seeking help for a person:", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please. Since you trying to help a suicidal person, FIND THEM BEFORE THEY TAKE THEIR OWN LIFE OR DEAL ANY HARM TO THEMSELVES. Look for therapy options and help them in their recovery.", inline=False)
-        embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 300 seconds to confirm before it defaults to **no**. Please, if you are about to take your own life, ** we beg you to choose yes** because we want to help you out even if the circumstances are serious and you don't see hope in continuing to live. YOU are a human being that deserves love and compassion and the help you need. No one can change that.", inline=False)
+        embed.add_field(name="If you are seeking help for a person:", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please. If the person is on the verge of taking their own life, FIND THEM BEFORE THEY HARM THEMSELVES, but make sure to also give them some space so they feel safe. Look for therapy options and help them in their recovery.", inline=False)
+        embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 300 seconds to confirm before it defaults to **no**. Please, if you are about to take your own life, ** we beg you to choose the yes button** because we want to help you out even if the circumstances are serious and you don't see hope in continuing to live. YOU are a human being that deserves love and compassion and the help you need. No one can change that.", inline=False)
       elif lang == 'Spanish':
-        embed=discord.Embed(title="Buscando Ayuda Para Prevenir Suicidio", description="Suicidio: un producto de factores como los desordenes mentales y ambientes hostiles. Si eres un miembro de una minoria, la hostilidad de una sociedad puede empujarte al borde de quitarte tu vida. Aunque sientas que no hay una razon porque vivir o una persona cual le importes, siempre hay y habra una razon y persona que te quiuera. Por eso, el equipo de desarrollo de Comet creo esta comando  de recursos y el Comet**Lifeline**, una forma de comunicarse con gente en Discord para ayudar. Espero que encuentre la ayuda que necesite.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Comet**Lifeline** trabaja bajo el horario PST de los Estados Unidos", color=0x2f3136)
+        embed=discord.Embed(title="Buscando Ayuda Para Prevenir Suicidio", description="Suicidio: un producto de factores como los desordenes mentales y ambientes hostiles. Si eres un miembro de una minoria, la hostilidad de una sociedad puede empujarte al borde de quitarte tu vida. Aunque sientas que no hay una razon porque vivir o una persona cual le importes, siempre hay y habra una razon y persona que te quiuera. Por eso, el equipo de desarrollo de Comet creo esta comando  de recursos y el Comet**CRISIS**, una forma de comunicarse con gente en Discord para ayudar. Espero que encuentre la ayuda que necesite.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Comet**CRISIS** trabaja bajo el horario PST de los Estados Unidos", color=0x2f3136)
         embed.add_field(name="US National Suicide Hotline:", value="**`800-273-8255`**", inline=False)
-        embed.add_field(name="Trevor Project Para Miembros de la LGBTQ+:", value="thetrevorproject.org/get-help-now/", inline=False)
+        embed.add_field(name="Trevor Project Para Miembros de la LGBTQ+:", value="Visite **thetrevorproject.org/get-help-now/**\nTexte **`START`** a **`678-678`**\nLlame **`1-866-488-7386`** o **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Lineas de Vida Para Cada Estado de los Estados Unidos de America y sus Condados:", value="http://suicide.org/suicide-hotlines.html", inline=False)
         embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** en caso de una crisis mental y/o fisica severa.", inline=False)
         embed.add_field(name='Si estad afuera de los Estados Unidos:', value='Vaya a http://suicide.org/international-suicide-hotlines.html para buscar la linea de suicidio de su pais.')
-        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA. Para mejorar las posibilidades de que la persona sobreviva, VAYA A BUSCAR A LA PERSONA IMEDIATAMENTE ANTES QUE TOMEN SU PROPIA VIDA O SE HAGAN DAÑO. Un minuto puede hacer la diferencia entre la vida y la muerte. Mientras llega a su destinacion, busce terapia para la persona y ayudelos en su viaje de recuperacion.", inline=False)
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA. Para mejorar las posibilidades de que la persona sobreviva si es que se var a suicidarse, **VAYA A BUSCAR A LA PERSONA IMEDIATAMENTE ANTES QUE TOMEN SU PROPIA VIDA O SE HAGAN DAÑO**. Un minuto puede hacer la diferencia entre la vida y la muerte. Eso si, por favor denle espacio para que se sientan se sientan seguros. Mientras llega a su destinacion, busce terapia para la persona y ayudelos en su viaje de recuperacion.", inline=False)
         embed.add_field(name="Ultima Pregunta:", value="Si la situacion es grave o necesita hablar con alguien, daria **`SU`** permiso para ser contactado por el desarollador de Comet. Presione **Si** o **No** en los proximos 300 segundos para confirmar antes que se vaya a la respuesta predeterminada de **no**. Si usted esta considerando suicidarse, **por favor** presione **Si**. No importa cuanto sienta que lo que haga para agarrar ayuda es en vano, siempre hay alguien quien lo puede ayudar. Por favor, no se quede sin hablar porque usted merece amor, compasion, y la ayuda que va necesitar.", inline=False)
       await ctx.send(embed=embed, components=[[
         Button(style = ButtonStyle.red, label = "No"),
@@ -681,17 +747,41 @@ async def sos(ctx):
       )
 
       try:
-        lgbtButtonCheck = await client.wait_for("button_click", timeout=20, check=lambda a: a.user == ctx.author)
+        suicideButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
 
-        if lgbtButtonCheck.component.label == 'Si | Yes':
+        if suicideButtonCheck.component.label == 'Si | Yes':
           devSummon = client.get_user(588931051103977494)
           if lang == 'Spanish':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
             dateFormat='%m/%d/%Y %H:%M:%S'
             timeSent = datetime.now(tz=pytz.utc)
             timeSent = timeSent.astimezone(timezone('US/Pacific'))
 
+            message = f"""\
+Subject: URGENCIA: CometCRISIS Recibida de {ctx.author.name} A Las {timeSent.strftime(dateFormat)}
+
+Tiempo Mandado: {timeSent.strftime(dateFormat)} PST
+Persona: {ctx.author} alias {ctx.author.id}
+Nivel: 1 (RIESGO DE PERDIDA DE VIDA)
+Tipo: {selectionDone.values[0]}"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+
             embed=discord.Embed(title="Señal de Auxilio Mandada", description=f"La señal de auxilio ha sido mandada al desarrolador. Espere entre 10-20 minutos dependiendo de que hora del dia sea en PST en los Estados Unidos. Pronto va a recibir un mensaje de {devSummon}. Desde que su señal es debido a circumstancias relationada con suicidio, su señal esta siendo prioritizada.", color=0x2f3136)
-            embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro, relajese, y no se mate. Usted es una persona a cual los importa ayudar.", value='Sinceramente,\nComet y el Equipo de Desarrollo', inline=True)
+            embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro. Usted es una persona a cual los importa ayudar.", value='Sinceramente,\nComet y el Equipo de Desarrollo', inline=True)
             await ctx.send(embed=embed)
 
             sosEmbed = discord.Embed(title="Señal de Auxilio <NIVEL URGENTE>", description=f"Una señal de auxilio ha sido mandada arededor de las {timeSent.strftime(dateFormat)} PST. Aqui estan los detalles:", color=0x2f3136)
@@ -701,12 +791,36 @@ async def sos(ctx):
             sosEmbed.add_field(name="Nivel De Urgencia:", value=f'Nivel 1. Actue Rapido', inline=True)
             await devSummon.send(embed=sosEmbed)
           elif lang == 'English':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
             dateFormat='%m/%d/%Y %H:%M:%S'
             timeSent = datetime.now(tz=pytz.utc)
             timeSent = timeSent.astimezone(timezone('US/Pacific'))
 
+            message = f"""\
+Subject: URGENCT: CometCRISIS Signal from {ctx.author.name} at {timeSent.strftime(dateFormat)}
+
+Time sent: {timeSent.strftime(dateFormat)} PST
+User: {ctx.author} AKA {ctx.author.id}
+Level: 1 (RISK OF LOSS OF LIFE)
+Type: {selectionDone.values[0]}"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+
             embed=discord.Embed(title="SOS Signal Sent", description=f"The Developer has been pinged. Wait in between 10-20 minutes depending on what time it is in US PST. You should get a message from {devSummon}. Due to the seriousness of the situation, your signal will be placed as part of our-top priority list to answer.", color=0x2f3136)
-            embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in, relax, and please don't kill yourself. We care about you.", value='Sincerely,\nComet and the Dev Team', inline=True)
+            embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in. We care about you.", value='Sincerely,\nComet and the Dev Team', inline=True)
             await ctx.send(embed=embed)
 
             sosEmbed = discord.Embed(title="SOS Signal <HIGH URGENCY>", description=f"A SOS signal was sent at around {timeSent.strftime(dateFormat)} PST. Here are the details:", color=0x2f3136)
@@ -714,6 +828,118 @@ async def sos(ctx):
             sosEmbed.add_field(name="Person Who Sent The Signal:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
             sosEmbed.add_field(name="Time:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
             sosEmbed.add_field(name="Urgency Level:", value=f'LEVEL 1. NO TIME TO WASTE.', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          
+      except asyncio.TimeoutError:
+        pass
+    if selectionDone.values[0] == 'Abuse (Sexual or Domestic)' or selectionDone.values[0] == 'Abuso (Sexual o Domestico)':
+      if lang == 'English':
+        embed=discord.Embed(title="Abuse (Sexual or Domestic)", description="Speaking about abuse is a difficult thing to do due to the trauma that is a product of such events. Speaking up may not feel like it's the right thing to do, but by doing so you can help begin the process of getting justice and of healing. Provided below are links to the FBI, \"The Hotline\", the Trevor Project (if you are an LGBTQ Member) and RAINN (Rape, Abuse & Incest National Network).\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo", color=0x2f3136)
+        embed.add_field(name="FBI (Phone and Offices):", value="**https://www.fbi.gov/contact-us/field-offices** or **`1-800-225-5324`**", inline=False)
+        embed.add_field(name="FBI (Online):", value="**https://tips.fbi.gov/** or **`https://www.ic3.gov/Home/ComplaintChoice/default.aspx`**", inline=False)
+        embed.add_field(name="Trevor Project:", value="**`thetrevorproject.org/get-help-now/`**", inline=False)
+        embed.add_field(name='"The Hotline"', value='Call **_`800.799.SAFE (7233)`**\nText __START__ to 88788\nVisit **https://www.thehotline.org/**')
+        embed.add_field(name="RAINN:", value="**https://hotline.rainn.org/online** or **`800-656-4673`**", inline=False)
+        embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
+        embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
+        embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 300 seconds to confirm before it defaults to **no**.", inline=False)
+      elif lang == 'Spanish':
+        embed=discord.Embed(title="Abuso (Sexual o Domestico)", description="El abuso es algo que muchos han experimentado, pero se quedan en silencio debido a trauma u otras circumstancias. Si estas listo para hablar o reportar tu experiencia a alguien, aqui va ver recursos para RAINN, FBI, \"The Hotline\", y el Trevor Project.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project.", color=0x2f3136)
+        embed.add_field(name="FBI (Telefono y Oficinas):", value="**https://www.fbi.gov/contact-us/field-offices** o **`1-800-225-5324`**", inline=False)
+        embed.add_field(name="FBI (Reportar en Linea):", value="**https://tips.fbi.gov/** o **`https://www.ic3.gov/Home/ComplaintChoice/default.aspx`**", inline=False)
+        embed.add_field(name='"The Hotline"', value='Llame **_`800.799.SAFE (7233)`**\nTexte __START__ to 88788\nVisite **https://www.thehotline.org/**')
+        embed.add_field(name="Trevor Project:", value="**`thetrevorproject.org/get-help-now/`**\nTexte **`START`** al numero **`678-678`**", inline=False)
+        embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
+        embed.add_field(name="Ultima Pregunta:", value="Si la situacion es grave o necesita hablar con alguien, daria **`SU`** permiso para ser contactado por el desarollador de Comet. Presione **Si** o **No** en los proximos 300 segundos para confirmar antes que se vaya a la respuesta predeterminada de **no**.", inline=False)
+      await ctx.send(embed=embed, components=[[
+        Button(style = ButtonStyle.red, label = "No"),
+        Button(style = ButtonStyle.green, label = "Si | Yes")
+        ]]
+      )
+
+      try:
+        saButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
+
+        if saButtonCheck.component.label == 'Si | Yes':
+          devSummon = client.get_user(588931051103977494)
+          if lang == 'Spanish':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+            
+            message = f"""\
+Subject: CometCRISIS Recibida de {ctx.author.name} A Las {timeSent.strftime(dateFormat)}
+
+Tiempo Mandado: {timeSent.strftime(dateFormat)} PST
+Persona: {ctx.author} alias {ctx.author.id}
+Nivel: 1-2
+Tipo: {selectionDone.values[0]}"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+
+            embed=discord.Embed(title="Señal de Auxilio Mandada", description=f"La señal de auxilio ha sido mandada al desarrolador. Espere entre 10-20 minutos dependiendo de que hora del dia sea en PST en los Estados Unidos. Pronto va a recibir un mensaje de {devSummon}.", color=0x2f3136)
+            embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro.", value='Sinceramente,\nComet y el Equipo de desarrollo', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="Señal de Auxilio", description=f"Una señal de auxilio ha sido mandada arededor de las {timeSent.strftime(dateFormat)} PST. Aqui estan los detalles:", color=0x2f3136)
+            sosEmbed.add_field(name="Tipo de señal", value='Abuso (Sexual o Domestico)', inline=True)
+            sosEmbed.add_field(name="Persona Afectada:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Hora:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Nivel De Urgencia:", value=f'Nivel 1-2. Tengan cuidado debida a que la situacion puede escalarse', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          elif lang == 'English':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+            
+            message = f"""\
+Subject: URGENCIA: CometCRISIS Signal from {ctx.author.name} at {timeSent.strftime(dateFormat)}
+
+Time sent: {timeSent.strftime(dateFormat)} PST
+User: {ctx.author} alias {ctx.author.id}
+Level: 1 (RIESGO DE PERDIDA DE VIDA)
+Type: {selectionDone.values[0]}"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+
+            embed=discord.Embed(title="SOS Signal Sent", description=f"The Developer has been pinged. Wait in between 10-20 minutes depending on what time it is in US PST. You should get a message from {devSummon}.", color=0x2f3136)
+            embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in.", value='Sincerely,\nComet and the Dev Team', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="SOS Signal", description=f"A SOS signal was sent at around {timeSent.strftime(dateFormat)} PST. Here are the details:", color=0x2f3136)
+            sosEmbed.add_field(name="Type:", value='Abuse', inline=True)
+            sosEmbed.add_field(name="Person Who Sent The Signal:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Time:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Urgency Level:", value=f'Level 1-2. Proceed with caution.', inline=True)
             await devSummon.send(embed=sosEmbed)
           
       except asyncio.TimeoutError:
@@ -753,7 +979,7 @@ async def rank(ctx, member: discord.Member=None, show=5):
       valueToAppend = [user.name, userBal, levelBal]
       rankList.append(valueToAppend)
     except:
-      x = 1
+      pass
   
   rankList.sort(reverse=True, key=lambda rank: rank[2])
   rankList.sort(reverse=True, key=lambda rank: rank[1])
@@ -792,7 +1018,6 @@ async def rank(ctx, member: discord.Member=None, show=5):
 async def solve(ctx, v1: int=0, v2: int=0, v3: int=0, v4: int=0, v5: int=0, v6: int=0, v7: int=0):
   await openBankAccount(ctx.author)
   user = ctx.author
-  phoneCount = 0
   with open('bank.json','r') as f:
     users = json.load(f)
   calcCounter = 0
@@ -843,7 +1068,15 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Calculator','price':500,'description':'Use it to solve stuff. Unlocks #calc, #solve'},
   {'name':'Phone','price':500,'description':'The Castillo Phone 2XS Pro MAX. Use #phone to be able to scam people and do other things.'},
   {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed.'},
-  {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'}]
+  {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'},
+  {'name':'Search Engine','price':1575,'description':'Surf the web for results.'}]
+  
+from googleapi import google
+@client.command()
+async def googling(ctx, *, search):
+  num_page = 1
+  search_results = google.search(search, num_page)
+  await ctx.send(search_results)
 
 @help.command()
 async def emo(ctx):
@@ -1350,16 +1583,8 @@ async def phone(ctx):
               return m.author == ctx.author
 
             msg = await client.wait_for('message', timeout=20, check=check)
-            try:
-              prepare1 = msg.content.replace('<@!', '')
-              prepare2 = prepare1.replace('>', '')
-              finalPrepare = int(prepare2)
-            except:
-              prepare3 = prepare2.replace('<@', '')
-              finalPrepare = int(prepare3)
 
-            userToScam = client.get_user(finalPrepare)
-            print(userToScam)
+            userToScam = getAUser(msg.content)
 
             await ctx.invoke(client.get_command('rob'), member=userToScam, scam=True, phoneRobber=ctx.author)
           except asyncio.TimeoutError:
@@ -1383,15 +1608,8 @@ async def phone(ctx):
               return m.author == ctx.author
 
             msg = await client.wait_for('message', timeout=20, check=check)
-
-            try:
-              prepare1 = msg.content.replace('<@!', '')
-              prepare2 = prepare1.replace('>', '')
-              finalPrepare = int(prepare2)
-            except:
-              prepare3 = prepare2.replace('<@', '')
-              finalPrepare = int(prepare3)
-            userToDM = client.get_user(finalPrepare)
+            
+            userToDM = getAUser(msg.content)
 
             await msg.delete()
 
@@ -1447,7 +1665,8 @@ async def fuck(ctx, *, member:discord.Member):
       responses = [f'{ctx.author.mention} stop it. Stop this now and apologize to {member.mention} for tring to fuck them.',
         'You\'re down bad.',
         ':sick: WTF is wrong with you.',
-        f"You fucked {member.mention} in a car for hours. Næstaè."]
+        f"You fucked {member.mention} in a car for hours. Næstaè.",
+        f'You fucked.']
       await ctx.reply(f'{random.choice(responses)}', mention_author=False)
 
       fckCardCount += 1
@@ -1475,8 +1694,8 @@ async def balance(ctx, *, member:discord.Member=None):
   deathBalance = users[str(user.id)]["Deaths"]
   
   
-  embed=discord.Embed(title=f"{user}'s ({user.nick}) Balance", description=f"Deaths: **``{deathBalance}``**            Multiplier: **``{multBalance}``**\n=========================", color=0xffe252)
-  embed.set_author(name="Bank of Comet")
+  embed=discord.Embed(description=f"Deaths: **``{deathBalance}``**            Multiplier: **``{multBalance}``**\n=========================", color=0xffe252)
+  embed.set_author(name=f"{user}'s ({user.nick}) Balance")
   embed.set_thumbnail(url="https://lh3.googleusercontent.com/7Kj8VrtBcnZkkmwn72PeB1NjG7CoR1K66ID67t4J6BgL1kH16u909npQ3mP795LT8Ebv=s85")
   embed.add_field(name="Wallet", value=f"{walletBalance} ⌬", inline=True)
   embed.add_field(name="Bank", value=f"{bankBalance} ⌬", inline=True)
@@ -1550,7 +1769,7 @@ async def inventory(ctx, *, member:discord.Member=None):
     amount = item["Amount"]
 
     if amount < 1:
-      print('no')
+      pass
     else:
       embed.add_field(name = name, value = amount)
   
@@ -1977,14 +2196,14 @@ async def devnote(ctx):
   randomDevNotes = ['Dev Note #1: Comet started off as a joke by <@588931051103977494>',
     'Dev Note #2: Comet\'s codename is Wolf Rayet. :star:',
     'Dev Note #3: The bot is written in Python. :snake:',
-    'Dev Note #4: Comet\'s is open source',
+    'Dev Note #4: Comet\'s is open source.',
     'Dev Note #5: Comet Music Player supports text search.',
     'Dev Note #6: Hangman on an embed was hell.',
     'Dev Note #7: Comet was originally made for one server, but the creator decided to make it open source and readily available.',
     'Dev Note #8: The first warning system for the bot sucked because no matter where you went the warnings given in one place trasferred to another and the full potential of the warning system could only have been seen in one server. 2.0.0 Aldebaran fixed that.',
-    'Dev Note #9: #tts originally played a tts message in text channels. It was changed to a voice channel TTS because people exploited it.',
+    'Dev Note #9: #tts originally played a tts message in text channels. It was changed to a voice channel TTS because people exploited it. I did love the chaos it caused though.',
     'Dev Note #10: #tts has multi-language support. This means that the bot can read text in Mandarin, English, Spanish, Armenian, Russian, etc.',
-    'Dev Note #11: The bot has a wikipedia search that is inaccurate because of the API scrambling up the search term.',
+    'Dev Note #11: The bot has a wikipedia search that is inaccurate because of the API scrambling up the search term. Due to this, I\'m working on a google search command.',
     'Dev Note #12: T̵h̶e̸ ̵b̵l̷a̶c̵k̵l̵i̷s̴t̵ ̸i̵s̵ ̷w̸a̶t̵c̶h̶i̵n̷g̵ ̷y̴o̴u̶ ̷:̷)̵']
   await ctx.send(f'{random.choice(randomDevNotes)}')
 
@@ -2091,13 +2310,12 @@ async def addWord(ctx, *, wordToAdd):
   word = wordToAdd.lower()
   httpsResult = word.startswith('https')
   if httpsResult == True:
-    print('punctuation removal skipped due to it being a link')
+    pass
   else:
     word = word.translate(str.maketrans('', '', string.punctuation))
   
   with open("slurs.json", "r") as slurs:
     slurPrepare = json.load(slurs)
-  print(ctx.guild.id)
 
   if str(ctx.guild.id) in slurPrepare:
     pass
@@ -2147,7 +2365,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
 
   try:
     if messageToRetrieve < 0:
-      await ctx.send('***Value too low. TF***')
+      pass
     if messageToRetrieve == 1:
       embed = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}', color=0x2f3136)
       embed.set_author(name=f"Snipe Page 1: {channel.name}")
@@ -2183,7 +2401,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
       try:
         buttonCheck = await client.wait_for("button_click", check=check)
 
-        await buttonCheck.respond(content='Changing Super Snipe Page')
+        await buttonCheck.send(content='Changing Super Snipe Page')
         if buttonCheck.component.label == '1':
           embed2 = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}', color=0x2f3136)
           embed2.set_author(name=f"Snipe Page 1: {channel.name}")
@@ -2230,8 +2448,34 @@ async def snipe(ctx):
     embed.set_footer(text=f"Sniper: {ctx.author.name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/snipeIcon.png")
 
+    counter = 0
     try:
-      embed.set_image(url=f"attachment://{regularSnipeImage[channel.id][regularSnipeAuthor[channel.id].id].filename}")
+      embedImg = re.findall("(?P<url>https?://[^\s]+)", regularSnipeMessage[channel.id])
+
+  
+      for i in embedImg:
+        if 'tenor.com' in i:
+          url = i
+          page = requests.get(url)
+          soup = BeautifulSoup(page.content, "html.parser")
+          pageContent = soup.find(id="root")
+
+          tenorUrls = pageContent.find_all("div", class_="Gif")
+          tenorEmbed = re.findall("(?P<url>https?://[^\s]+)", str(tenorUrls))
+          embed.set_image(url=f"{tenorEmbed[0]}")
+          counter += 1
+          break
+        elif 'cdn.discordapp.com' in i:
+          embed.set_image(url=f"{i}")
+          counter += 1
+          break
+        elif 'giphy.com' in i:
+          embed.set_image(url=f"{i}")
+          counter += 1
+          break
+      
+      if counter == 0:
+        embed.set_image(url=f"attachment://{regularSnipeImage[channel.id][regularSnipeAuthor[channel.id].id].filename}")
     except:
       pass
 
@@ -2502,7 +2746,7 @@ async def hangman(ctx):
   
   try:
     multiOrSolo = await client.wait_for('button_click', check=lambda d: d.author == ctx.author and d.channel == ctx.channel, timeout=15)
-    await multiOrSolo.respond(embed=discord.Embed(description=f'Hangman now set to: {multiOrSolo.component.label}.', color=0x2f3136))
+    await multiOrSolo.send(embed=discord.Embed(description=f'Hangman now set to: {multiOrSolo.component.label}.', color=0x2f3136))
     await setUp.edit(embed=discord.Embed(description=f'Hangman now set to: {multiOrSolo.component.label}.', color=0x2f3136))
     mode = str(multiOrSolo.component.label)
   except:
@@ -2656,11 +2900,10 @@ async def remove(ctx, entry: int=1):
   del queues[ctx.guild.id][entryToRemove]
   del queueTitles[ctx.guild.id][entryToRemove]
 
-  await ctx.reply(f'𝙍𝙚𝙢𝙤𝙫𝙚𝙙 ***__{entryRemoved}__*** 𝙛𝙧𝙤𝙢 𝙩𝙝𝙚 𝙦𝙪𝙚𝙪𝙚 :)')
+  await ctx.reply(f'**__`{entryRemoved}`__** is now removed.\n**`{len(queueTitles[ctx.guild.id])}`** Entries remain.')
 
 @client.command(aliases=['p','P','Play'])
 async def play(ctx, *, url : str):
-  print(url)
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
@@ -2673,73 +2916,98 @@ async def play(ctx, *, url : str):
       voice = voiceChannel
     
     async with ctx.typing():
-      if httpsResult == False:
-        newUrl=url.replace(' ', '+')
-        html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
-        videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-        thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
-        song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
-        print(song)
+      if 'open.spotify.com' in url:
+        try:
+          os.system(f'spotdl {url}')
+
+          for file in os.listdir('./'):
+            if file.endswith('.mp3') or file.endswith('.webm') or file.endswith('.m4a'):
+              os.rename(file, 'song.mp3')
+          embed=discord.Embed(title=f"Playing a Spotify URL", url=f"{url}", color=0xf23136)
+          embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+          # embed.set_thumbnail(url=thumbnail)
+          embed.add_field(name="Likes:", value=f"N/A", inline=True)
+          embed.add_field(name="Listeners:", value=f"N/A", inline=True)
+          embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+          embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+          embed.add_field(name="Length:", value=f"N/A", inline=True)
+          embed.set_footer(text="Comet Alert")
+
+          server = ctx.message.guild
+          player = discord.FFmpegPCMAudio('song.mp3', **FFMPEG_OPTS)
+
+          voice.play(player)
+          voice.is_playing()
+        except:
+          pass
       else:
-        song = url
-        songID = parse_qs(urlparse(song).query)['v'][0]
-        thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
-    
-      API_KEY=os.getenv("ytKey")
-      def VideoDetails():
-        global views
-        global title
-        global likes
-
-        if "youtube" in videoUrl:
-          videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+        if httpsResult == False:
+          newUrl = url.replace(' ', '+')
+          html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+          videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+          thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
+          song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+          print(song)
         else:
-	        videoId = videoUrl
+          song = url
+          songID = parse_qs(urlparse(song).query)['v'][0]
+          thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
+      
+        API_KEY=os.getenv("ytKey")
+        def VideoDetails():
+          global views
+          global title
+          global likes
 
-        youtube = build('youtube','v3', developerKey=API_KEY)
+          if "youtube" in videoUrl:
+            videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+          else:
+            videoId = videoUrl
 
-        videoRequest=youtube.videos().list(
-	        part='snippet,statistics',
-	        id=videoId
-        )
+          youtube = build('youtube','v3', developerKey=API_KEY)
 
-        videoResponse = videoRequest.execute()
+          videoRequest=youtube.videos().list(
+            part='snippet,statistics',
+            id=videoId
+          )
 
-        title = videoResponse['items'][0]['snippet']['title']
-        likes = videoResponse['items'][0]['statistics']['likeCount']
-        views = videoResponse['items'][0]['statistics']['viewCount']
-        return (likes, title, views)
-    
-      print(f'{title}+{views}+{likes}')
-      videoUrl = song
-      VideoDetails()
+          videoResponse = videoRequest.execute()
 
-      try:
-        video, source, hours, mins, seconds = search(song)
-      except:
-        await ctx.reply('Invalid Link')
-        return
+          title = videoResponse['items'][0]['snippet']['title']
+          likes = videoResponse['items'][0]['statistics']['likeCount']
+          views = videoResponse['items'][0]['statistics']['viewCount']
+          return (likes, title, views)
+      
+        print(f'{title}+{views}+{likes}')
+        videoUrl = song
+        VideoDetails()
 
-      embed=discord.Embed(title=f"𝙋𝙇𝘼𝙔𝙄𝙉𝙂: {title}", url=f"{song}", description="◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍", color=0xf23136)
-      embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
-      embed.set_thumbnail(url=thumbnail)
-      embed.add_field(name="Likes:", value=f"{likes}", inline=True)
-      embed.add_field(name="Views:", value=f"{views}", inline=True)
-      embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-      embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-      embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
-      embed.set_footer(text="Comet Alert")
-    try:
-      server = ctx.message.guild
-      player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
+        try:
+          video, source, hours, mins, seconds = search(song)
+        except:
+          await ctx.reply('Invalid Link')
+          return
 
-      voice.play(player, after=lambda e: checkQueue(server.id, server))
-      voice.is_playing()
+        embed=discord.Embed(title=f"Playing: {title}", url=f"{song}", color=0xf23136)
+        embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+        embed.set_thumbnail(url=thumbnail)
+        embed.add_field(name="Likes:", value=f"{likes}", inline=True)
+        embed.add_field(name="Views:", value=f"{views}", inline=True)
+        embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+        embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+        embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+        embed.set_footer(text="Comet Alert")
+        try:
+          server = ctx.message.guild
+          player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-      players[server.id] = source
-      await ctx.reply(embed=embed)
-    except:
-      await ctx.invoke(client.get_command('queue'), url=song)
+          voice.play(player, after=lambda e: checkQueue(server.id, server))
+          voice.is_playing()
+
+          players[server.id] = source
+          await ctx.reply(embed=embed)
+        except:
+          await ctx.invoke(client.get_command('queue'), url=song)
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
@@ -2756,9 +3024,8 @@ async def queueList(ctx):
     counter += 1
   queueList += "```**"
 
-  embed=discord.Embed(title="⛧ Ｃｕｒｒｅｎｔ Ｑｕｅｕｅ ⛧:", description=f"{queueList}", color=0x8a84e1)
-  embed.set_author(name="⛆ ⚝ Ｃｏｍｅｔ Ｍｕｓｉｃ Ｐｌａｙｅｒ ⚝ ⛆")
-  embed.set_footer(text="☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+  embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
+  embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
   await ctx.send(embed=embed)
 
 @client.command(aliases=['q','Queue'])
@@ -2814,7 +3081,7 @@ async def queue(ctx, *, url: str):
         await ctx.reply('Invalid Link')
         return
   
-      embed=discord.Embed(title=f"🆀🆄🅴🆄🅴🅳: {title}", url=f"{song}", description="◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍ -- ◍", color=0xf23136)
+      embed=discord.Embed(title=f"🆀🆄🅴🆄🅴🅳 {title}", url=f"{song}", color=0xf23136)
       embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
       embed.set_thumbnail(url=thumbnail)
       embed.add_field(name="Likes:", value=f"{likes}", inline=True)
@@ -2822,7 +3089,6 @@ async def queue(ctx, *, url: str):
       embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
       embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
       embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
-      embed.set_footer(text="Comet Alert")
 
     await ctx.reply(embed=embed)  
     
@@ -2884,7 +3150,23 @@ async def skip(ctx):
 @client.command(aliases=['topic','topis','stopic','Topic','stoc'])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def questions(ctx):
-  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?','Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?', 'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^', 'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?','Who really gets you going?', 'Isn\’t it usually noon by now?', 'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>', 'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____', 'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?', 'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?', 'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?', 'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?', 'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters? /j', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?', 'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here', 'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?', 'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going', 'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?', 'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!', 'The G-Man provides a Xen sample. What do you do?', 'Mention the person with the least friends.', 'I\’m not like other girls!']
+  randomquestions = ['When will you see them again?','What do you do to get rid of stress?','What is something you are obsessed with?','What three words best describe you?','What would be your perfect weekend?','What’s your favorite number? Why?','What are you going to do this weekend?','What’s the most useful thing you own?','What’s your favorite way to waste time?','What do you think of tattoos? Do you have any?',' Do you have any pets? What are their names?','What did you do last weekend?','What is something popular now that annoys you?','What did you do on your last vacation?','What’s the best / worst thing about your work/school?','If you had intro music, what song would it be? Why?','If you opened a business, what kind of business would it be?','Have you ever given a presentation in front of a large group of people? How did it go?','What is the strangest dream you have ever had?','What is a controversial opinion you have?','Who in your life brings you the most joy?',' Who had the biggest impact on the person you have become?',' What is the most annoying habit someone can have?','Where is the most beautiful place you have been?',' Where do you spend most of your free time/day?','Who was your best friend in elementary school?','How often do you stay up past 3 a.m.?','What is the worst fucking animal?','Which recent news story is the most interesting?','Where is the worst place you have been stuck for a long time?',' If you had to change your name, what would your new name be?','What is something that really annoys you but doesn’t bother most people?','What word or saying from the past do you think should come back?',' If you could learn the answer to one question about your future, what would the question be?','Has anyone ever saved your life?','What trends did you follow when you were younger?','What do you fear is hiding in the dark?','What year did you peak?? What do you think will be the best period of your entire life?','What is the silliest fear you have?','What are some things you want to accomplish before you die?','What smell brings back great memories?','What are you best at?','What makes you nervous?','What weird/useless talent do you have?','What was the best birthday wish or gift you’ve ever received?','What cartoons did you watch as a child?','What’s the funniest TV series you have seen?',' If you could bring back one TV show that was canceled, which one would you bring back?','What’s your favorite genre of movie?','Which do you prefer? The Office? Or Friends :face_vomiting:??','What’s the worst movie you have seen ','Do you like horror movies? Why or why not?','When was the last time you went to a movie theater?',' What was the last song you listened to?','Do you like classical music?','Are there any songs that always bring a tear to your eye?','Which do you prefer, popular music or relatively unknown music?','What are the three best apps on your phone?','How many apps do you have on your phone?','An app mysteriously appears on your phone that does something amazing. What does it do?', 'How often do you check your phone?','What do you wish your phone could do?','Why does anybody still buy Apple products? Why don’t more people realize Apple has what’s called “planned obsolescence”?', 'What is the most annoying thing about your phone?','How do you feel if you accidentally leave your phone at home?','Who are some of your favorite athletes?','Which sports do you like to play','What is the hardest sport to excel at?','What is the fanciest restaurant you have eaten at?','What is the worst restaurant you have ever eaten at?',' If you opened a restaurant, what kind of food would you serve?',' What is the most disgusting thing you have heard happened at a restaurant?','Where would you like to travel next?','What is the longest plane trip you have taken?','Have you traveled to any different countries? Which ones?','What is the worst hotel you have stayed at? How about the best hotel?','Will technology save the human race or destroy it?','What sci-fi movie or book would you like the future to be like?','What is your favorite shirt?','What is a fashion trend you are really glad went away?','What is/was your favorite pair of shoes?','What personal goals do you have?',' What do you like to do during summer?',' What’s the best thing to do on a cold winter day?','What is your favorite thing to eat or drink in winter?','What is your favorite holiday?','If you had to get rid of a holiday, which would you get rid of? Why?','What is your favorite type of food?','What foods do you absolutely hate?','What food looks disgusting but tastes delicious?',' If your life was a meal, what kind of meal would it be?','What would you want your last meal to be if you were on death row?', 'What is the spiciest thing you have ever eaten?',' You find a remote that can rewind, fast forward, stop, and start time. What do you do with it?','What word do you always mispronounce?','If you had a giraffe that you needed to hide, where would you hide it?','What was the scariest movie you’ve seen?','What is your stance on floorboards?','When you scream into the void, does it answer with jazz?','When the time comes, will you jump?','What is your favorite video game?','Other than anime, what is your favorite medium?','Do you ever wonder, and then you stop?','Look into my eyes. What do you see?','When the clock ends, the countdown begins.','How many people have you inadvertently killed? 0? 1? 5?',':copyright: 2021 Emmanuel.','According to all known laws of aviation,there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground. The bee, of course, flies anyway, because bees don\'t care what humans think is impossible.','Try redoing the command. It did not run correctly. Were I Emmanuel, I would tell you to do it again. But for a bot, that doesn’t make much sense, I think.','Hello, learned and astonishingly attractive pupils. My name is John Green and I want to welcome you to Crash Course World History.','That would be funny, I think.','Tyklo jedno w glowie mam...',' Do YOU see Swiper?','Ayo anybody else down bad?','Devnote #19: Nobody has figured out just how many of the topic questions are literally just memes; at least, not yet.','What is your favorite shade of piss? Favorite taste?','If someone pushed you off a building, would you enjoy it?','Where is a good place to hide a deceased friend of yours? Who would you hang out with?','What celebrity has the most fashionable feet pics?','Time, Doctor Freeman? Is it really that time again?','What is the answer to the riddle of the rocks?','When I say “run”, what do you think of doing?','Giraffes are like airline food. What’s the deal with them? Do you agree?','What’s the deal with airline food?','Which is more anticipated? Jojo Season 6: Stone Ocean? Or Half-Life 3?','Deja vu! I’ve just been to this place before, higher up the beat but I know it’s my time to go-o!','Get your credit card, if you wanna see me','Who is your favorite Tom Brady?','Have you watched “The Burdening of Will Montgomery”?','Who made the sky? Was it me?','You may consume three beans, but no more. They will know if you consume more.','They surpass me, for I cannot tessellate.','Did you change your diaper today?','Do you fucking want me to go back to how I used to be? How you take fucking advantage of how nice I am now?','Why are you so lazy?','When will you decide to get off your ass for once?','How often do you use reddit?','Who is your crush?',
+    'Do you have a brother named Alec?','Do you have a sister named Juliana?','Who has the largest cock?','Do women exist? Do birds?','Why are so many of these questions so worthless?',
+    'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^',
+    'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?', 'Who really gets you going?', 'Isn\’t it usually noon by now?',
+    'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>',
+    'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____',
+    'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?',
+    'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?',
+    'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?',
+    'If you could choose only one type of boots to wear for the rest of your life, why would it be Uggs?', 'What combination of Nike shoes and socks do you most frequently wear between the months of December and April?',
+    'How old is your sister?', 'By any chance, do you know of any elementary schools within 500 meters? /j', 'Where is your family now?', 'In your time of need, where was everybody?', 'How will you be judged?', 'Where is your solace?',
+    'Excuse my ignorance, but what exactly is moss?', 'Object, dost thou observe time in the past or present?', 'When comes after this? What discord server will be next?', 'yo\’re*', 'Marlon was here',
+    'Who is your least favorite person?', 'What part of a kid’s movie completely scarred you?', 'Toilet paper, over or under?',
+    'Toilet paper, over or under?','Where is the weirdest place you\’ve ever shat in?', 'I drink to forget.', 'Hey baby, come back to my place and I\’ll show you ______', '______ really gets me going',
+    'May the ______ be with you.', 'MAGA! Just kidding, I\’m not a cultist.','Should we normalize watching adult content with our parents?',
+    'You guys really need to find your own things to talk about, but I\’ll help you get started. What the fuck is cheese?','No topic could be generated. Please try again!',
+    'The G-Man provides a Xen sample. What do you do?', 'Mention the person with the least friends.', 'I\’m not like other girls!']
   await ctx.channel.send(f'{random.choice(randomquestions)}')
 
 @client.command(aliases=['gareb', 'garen',])
@@ -2949,7 +3231,7 @@ async def tts(ctx, *, text=None):
     try:
       buttonCheck = await client.wait_for("button_click", timeout=5, check=check)
 
-      await buttonCheck.respond(content = f'{buttonCheck.component.label} Selected')
+      await buttonCheck.send(content = f'{buttonCheck.component.label} Selected')
       if buttonCheck.component.label == 'Spanish (es)':
         translator = Translator()
         result = translator.translate(text, dest='es')
@@ -3171,8 +3453,8 @@ async def setup(ctx, *, setupOption: str=None):
 
     try:
       purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-      channelSelected = purpose.component[0].value
-      await purpose.respond(content=f'Notification channel is now set to __{purpose.component[0].label}__ with a channel ID of __{purpose.component[0].value}__.')
+      channelSelected = purpose.values[0]
+      await purpose.send(content=f'Notification channel is now set to __{purpose.label}__ with a channel ID of __{purpose.values[0]}__.')
       await channelPrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
@@ -3256,8 +3538,8 @@ async def setup(ctx, *, setupOption: str=None):
     try:
       purpose = await client.wait_for("select_option" or "message", check=lambda e: e.user == ctx.author)
       try:
-        higherAdminRole = purpose.component[0].value
-        await purpose.respond(content='Owner/Higher Admin role is now set to {}.'.format(purpose.component[0].value))
+        higherAdminRole = purpose.values[0]
+        await purpose.send('Owner/Higher Admin role is now set to {}.'.format(purpose.values[0]))
         await higherAdminPrompt.delete()
       except:
         adminRole = purpose.content
@@ -3308,8 +3590,8 @@ async def setup(ctx, *, setupOption: str=None):
     try:
       purpose = await client.wait_for("select_option" or "message", check=lambda e: e.user == ctx.author)
       try:
-        adminRole = purpose.component[0].value
-        await purpose.respond(content='Admin role is now set to {}.'.format(purpose.component[0].value))
+        adminRole = purpose.values[0]
+        await purpose.send(content='Admin role is now set to {}.'.format(purpose.values[0]))
         await adminPrompt.delete()
       except:
         adminRole = purpose.content
@@ -3359,8 +3641,8 @@ async def setup(ctx, *, setupOption: str=None):
 
     try:
       purpose =  await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-      role1 = purpose.component[0].value
-      await purpose.respond(content='Role 1 is now set to {}.'.format(purpose.component[0].value))
+      role1 = purpose.values[0]
+      await purpose.send(content='Role 1 is now set to {}.'.format(purpose.values[0]))
       await firstRolePrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
@@ -3407,8 +3689,8 @@ async def setup(ctx, *, setupOption: str=None):
     
     try:
       purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-      role2 = purpose.component[0].value
-      await purpose.respond(content='Role 2 is now set to {}.'.format(purpose.component[0].value))
+      role2 = purpose.values[0]
+      await purpose.send(content='Role 2 is now set to {}.'.format(purpose.values[0]))
       await secondRolePrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
@@ -3424,23 +3706,23 @@ async def setup(ctx, *, setupOption: str=None):
       for i in range(3):
         purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
         if i == 0:
-          adminWarn = int(purpose.component[0].value)
-          await purpose.respond(content='Admin threshold is now set to {}.'.format(purpose.component[0].value))
+          adminWarn = int(purpose.values[0])
+          await purpose.send(content='Admin threshold is now set to {}.'.format(purpose.values[0]))
           await thresholdPrompt.edit('⋙ Finally choose the warning thresholds for all three roles from their respective dropdown menus. Do it in the following order: Admin Role first, then the First Role, then finally the Second Role. ⋘', components=[
             [Select(placeholder="Role 1 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])],
             [Select(placeholder="Role 2 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])]
             ]
           )
         elif i == 1:
-          role1Warn = int(purpose.component[0].value)
-          await purpose.respond(content='Role 1 threshold is now set to {}.'.format(purpose.component[0].value))
+          role1Warn = int(purpose.values[0])
+          await purpose.send(content='Role 1 threshold is now set to {}.'.format(purpose.values[0]))
           await thresholdPrompt.edit('⋙ Finally choose the warning thresholds for all three roles from their respective dropdown menus. Do it in the following order: Admin Role first, then the First Role, then finally the Second Role. ⋘', components=[
             [Select(placeholder="Role 2 Threshold", options=[SelectOption(label=f"{i}", value=f"{i}") for i in range(1, 13)])]
             ]
           )
         elif i == 2:
-          role2Warn = int(purpose.component[0].value)
-          await purpose.respond(content='Role 2 threshold is now set to {}.'.format(purpose.component[0].value))
+          role2Warn = int(purpose.values[0])
+          await purpose.send(content='Role 2 threshold is now set to {}.'.format(purpose.values[0]))
           await thresholdPrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
@@ -3457,8 +3739,8 @@ async def setup(ctx, *, setupOption: str=None):
     
     try:
       purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-      thresholdAction = purpose.component[0].value
-      await purpose.respond(content='Comet is now set to {} when a user reaches the threshold.'.format(purpose.component[0].value))
+      thresholdAction = purpose.values[0]
+      await purpose.send(content='Comet is now set to {} when a user reaches the threshold.'.format(purpose.values[0]))
       await actionPrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
