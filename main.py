@@ -79,7 +79,6 @@ import re
 from googleapiclient.discovery import build
 import audioread
 from urllib.parse import parse_qs, urlparse
-import requests
 from requests import get
 import wikipedia
 from youtube_dl import YoutubeDL
@@ -2908,6 +2907,7 @@ async def play(ctx, *, url : str):
   if (ctx.author.voice):
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
     FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+    proceed = True
 
     if voiceChannel == None:
       channel = ctx.message.author.voice.channel
@@ -2916,38 +2916,24 @@ async def play(ctx, *, url : str):
       voice = voiceChannel
     
     async with ctx.typing():
-      if 'open.spotify.com' in url:
-        try:
-          os.system(f'spotdl {url}')
-
-          for file in os.listdir('./'):
-            if file.endswith('.mp3') or file.endswith('.webm') or file.endswith('.m4a'):
-              os.rename(file, 'song.mp3')
-          embed=discord.Embed(title=f"Playing a Spotify URL", url=f"{url}", color=0xf23136)
-          embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
-          # embed.set_thumbnail(url=thumbnail)
-          embed.add_field(name="Likes:", value=f"N/A", inline=True)
-          embed.add_field(name="Listeners:", value=f"N/A", inline=True)
-          embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-          embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-          embed.add_field(name="Length:", value=f"N/A", inline=True)
-          embed.set_footer(text="Comet Alert")
-
-          server = ctx.message.guild
-          player = discord.FFmpegPCMAudio('song.mp3', **FFMPEG_OPTS)
-
-          voice.play(player)
-          voice.is_playing()
-        except:
-          pass
-      else:
+      if proceed == True:
         if httpsResult == False:
           newUrl = url.replace(' ', '+')
           html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
           videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
           thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
           song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
-          print(song)
+        elif 'open.spotify.com' in url:
+          getSpotifyPage = requests.get(url)
+          scanPage = BeautifulSoup(getSpotifyPage.content, "html.parser")
+          scanPage = str(scanPage.title)
+
+          songTitle = scanPage.replace('<title>', '').replace(' | Spotify</title>', '')
+          newUrl = songTitle.replace(' ', '+')
+          html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+          videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+          thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
+          song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
         else:
           song = url
           songID = parse_qs(urlparse(song).query)['v'][0]
