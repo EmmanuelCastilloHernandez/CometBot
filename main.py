@@ -5,8 +5,10 @@
 ██║░░██╗██║░░██║██║╚██╔╝██║██╔══╝░░░░░██║░░░
 ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
 ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
+--------------------------------------------
 This program was made by Emmanuel Castillo
 Student at NHHS in NH, CA, USA
+--------------------------------------------
 
 Developers:
 Emmanuel Castillo
@@ -27,9 +29,7 @@ try:
     os.system('pip3 uninstall -y googletrans')
     os.system('pip3 install googletrans==3.1.0a0')
     os.system('pip install google-api-python-client')
-    os.system('pip install git+https://github.com/abenassi/Google-Search-API')
 except:
-  os.system('pip install git+https://github.com/abenassi/Google-Search-API')
   os.system('pip install google-api-python-client')
   os.system('pip3 install googletrans==3.1.0a0')
 
@@ -128,8 +128,11 @@ def startupMsg():
   ██║░░██╗██║░░██║██║╚██╔╝██║██╔══╝░░░░░██║░░░
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
-  - - - - - - - - - - - - - - - - - - - - - -
+  --------------------------------------------
   Version **3** Bellatrix Beta 5 ready to use!
+  --------------------------------------------
+
+  Now With CometCRISIS B2 and CometRadio
   '''
 
   pass
@@ -156,11 +159,7 @@ def search(query):
   
   duration = info['duration']
 
-  hours = duration // 3600
-  duration %= 3600
-  mins = duration // 60
-  duration %= 60
-  seconds = duration
+  hours, mins, seconds = howLong(duration)
   return (info, info['formats'][0]['url'], hours, mins, seconds)
 
 #prefix for the bot
@@ -1069,13 +1068,6 @@ shopItems = [{'name':'Feet Pic','price':100,'description':'Someone\'s feet pics.
   {'name':'Padlock','price':2000,'description':'Protect yourself from being robbed.'},
   {'name':'Fuck Card','price':2000,'description':'#fuck to use it. Tho why would you buy it you horny bastard.'},
   {'name':'Search Engine','price':1575,'description':'Surf the web for results.'}]
-  
-from googleapi import google
-@client.command()
-async def googling(ctx, *, search):
-  num_page = 1
-  search_results = google.search(search, num_page)
-  await ctx.send(search_results)
 
 @help.command()
 async def emo(ctx):
@@ -2213,56 +2205,6 @@ async def weatherReport(ctx):
   embed.add_field(name="Aliases:", value="weatherReport, weather", inline=True)
   await ctx.send(embed=embed)
 
-@client.command(aliases=['weather','heavy weather'])
-@commands.cooldown(1, 5, commands.BucketType.guild)
-async def weatherReport(ctx):
-  APIKEY = os.getenv('apiKey')
-  api_key = APIKEY
-
-  base_url = "http://api.openweathermap.org/data/2.5/weather?"
-
-  def check(msg):
-    return msg.author == ctx.author
-
-  try:
-    await ctx.send("`Input your city now:`")
-    grabCity = await client.wait_for('message', check=check, timeout=15)
-    city = grabCity.content
-
-  except asyncio.TimeoutError:
-    await ctx.send(f'**Y\'know** I don\'t have time for this, {ctx.author.mention}. Sorry.')
-    return weatherReport
-
-  complete_url = base_url + "appid=" + api_key + "&q=" + city
-
-  response = requests.get(complete_url)
-
-  cityList = response.json()
-
-  if cityList["cod"] != "404":
-    y = cityList["main"]
-
-    current_temperature = y["temp"]
-
-    current_pressure = y["pressure"]
-
-    current_humidiy = y["humidity"]
-
-    z = cityList["weather"]
-    weather_description = z[0]["description"]
-
-    tempToConvert = current_temperature
-    celcisus_temp = tempToConvert - 273.15
-    fahrenheit_temp = celcisus_temp * ( 9 / 5 ) + 32
-  
-    embed=discord.Embed(description=f"Temperature (in fahrenheit): __**{'{:.2f}'.format(fahrenheit_temp)}\u00b0**__\nAtmospheric pressure (in hPa unit): **__{str(current_pressure)}__**\nHumidity: **__{str(current_humidiy)}\u0025__**\nDescription: **__{str(weather_description)}__**", color=0x34363b)
-    embed.set_thumbnail(url="https://png.pngtree.com/png-clipart/20190924/original/pngtree-planet-earth-icon-design-png-image_4804418.jpg")
-    embed.set_author(name=f"Weather Report for {city.upper()} by {ctx.author.name}", icon_url=ctx.author.avatar_url)
-    await ctx.send(embed=embed)
-  
-  else:
-    await ctx.send("`Your city of choice was not found.`")
-
 @client.command(help='Use it with chat or server when they are dead.')
 @commands.cooldown(1, 10, commands.BucketType.user)
 async def dead(ctx, *, Type=None):
@@ -2878,19 +2820,32 @@ async def edit(ctx):
     embed.set_author(name=f"No Snipeable Messages, {ctx.author}")
     await ctx.send(embed=embed)
 
-def checkQueue(id, server):
+def checkQueue(id, server, channel, person):
   ID = id
   theGuild = server
+  textChannel = channel
+  user = person
+
   FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
   if queues[id] != []:
     voiceChannel = discord.utils.get(client.voice_clients, guild=server)
+    errorChannel = 'UNKNOWN'
     player = queues[id][0]
+    songPlaying = queueTitles[id][0]
     del queues[id][0]
     del queueTitles[id][0]
     video, source, hours, mins, seconds = search(player)
 
-    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild))
+    embed=discord.Embed(title="Comet Music Player", color=0xf23136)
+    embed.set_author(name=f"Now Playing: {songPlaying}")
+    embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+    embed.add_field(name="Requested by:", value=f"{person.mention}", inline=True)
+    embed.add_field(name="Channel:", value=f"{person.voice.channel if person.voice.channel != None else errorChannel}", inline=True)
+    embed.set_footer(text="Comet Alert")
+
+    client.loop.create_task(channel.send(embed=embed))
+    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild, textChannel, user))
 
 @client.command(aliases=['r'])
 async def remove(ctx, entry: int=1):
@@ -2901,7 +2856,7 @@ async def remove(ctx, entry: int=1):
 
   await ctx.reply(f'**__`{entryRemoved}`__** is now removed.\n**`{len(queueTitles[ctx.guild.id])}`** Entries remain.')
 
-@client.command(aliases=['p','P','Play'])
+@client.command(aliases=['Play'])
 async def play(ctx, *, url : str):
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
@@ -2929,6 +2884,7 @@ async def play(ctx, *, url : str):
           scanPage = str(scanPage.title)
 
           songTitle = scanPage.replace('<title>', '').replace(' | Spotify</title>', '')
+          songTitle += ' audio'
           newUrl = songTitle.replace(' ', '+')
           html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
           videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
@@ -2987,7 +2943,7 @@ async def play(ctx, *, url : str):
           server = ctx.message.guild
           player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-          voice.play(player, after=lambda e: checkQueue(server.id, server))
+          voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
           voice.is_playing()
 
           players[server.id] = source
@@ -3014,7 +2970,7 @@ async def queueList(ctx):
   embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
   await ctx.send(embed=embed)
 
-@client.command(aliases=['q','Queue'])
+@client.command(aliases=['Queue'])
 async def queue(ctx, *, url: str):
   print(url)
   httpsResult = url.startswith('https')
@@ -3091,9 +3047,10 @@ async def queue(ctx, *, url: str):
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
-@client.command(aliases=['die'])
+@client.command(aliases=['die', 'goodbye', 'kys'])
 async def leave(ctx):
   if (ctx.voice_client):
+    await ctx.message.add_reaction('✌')
     voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
     await ctx.guild.voice_client.disconnect()
     embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.message.author.voice.channel}.", color=0xe29797)
