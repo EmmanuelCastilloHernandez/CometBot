@@ -10,14 +10,17 @@ This program was made by Emmanuel Castillo
 Student at NHHS in NH, CA, USA
 --------------------------------------------
 
-Developers:
+HEAD DEVELOPER/Creator:
 Emmanuel Castillo
 GitHub: EmmanuelCastilloHernandez
 Discord: eta_c4rinae#7810
 Email: emmanuelino2@gmail.com
 
+Ocassional Dev:
 Garen Gevoryan
 Discord: Warlex#7860
+-------------------------------------------
+Version 3.0 RC 2
 '''
 
 import os
@@ -63,7 +66,6 @@ from io import BytesIO
 import random
 from random import randint
 import randfacts
-import spotdl
 import string
 import smtplib, ssl
 import sympy as sp
@@ -2403,15 +2405,26 @@ async def snipe(ctx):
 
           tenorUrls = pageContent.find_all("div", class_="Gif")
           tenorEmbed = re.findall("(?P<url>https?://[^\s]+)", str(tenorUrls))
-          embed.set_image(url=f"{tenorEmbed[0]}")
+          embedTenor = tenorEmbed[0]
+          embed.set_image(url=f"{embedTenor[:len(embedTenor)-1]}")
           counter += 1
           break
-        elif 'cdn.discordapp.com' in i:
-          embed.set_image(url=f"{i}")
+        elif 'cdn.discordapp.com' in i or 'media.discordapp.net' in i or "i.imgur.com" in i:
+          if 'i.imgur.com' in i:
+            embed.set_image(url=f"{i[:len(i)-1]}")
+          else:
+            embed.set_image(url=f"{i}")
           counter += 1
           break
         elif 'giphy.com' in i:
-          embed.set_image(url=f"{i}")
+          page = requests.get(i)
+          soup = BeautifulSoup(page.content, "html.parser")
+          pageContent = soup.find(id="content")
+          giphyUrls = pageContent.find_all("div", class_="KRS9L9BsuEdhF-ACKiX8x")
+          giphyUrls = re.findall("(?P<url>https?://[^\s]+)", str(giphyUrls))
+
+          print(giphyUrls)
+          embed.set_image(url="https://giphy.com/embed/yD5KEKVG1o9qcoXNYg/twitter/iframe")
           counter += 1
           break
       
