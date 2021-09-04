@@ -1113,11 +1113,11 @@ async def pride(ctx):
   embed=discord.Embed(title="Pride Image Generator", description="Celebrate your pride with #pride, where Comet creates a pride-themed profile picture for you.", color=0x2f3136)
   embed.add_field(name="Aliases:", value="queer, gay, pride, lgbt", inline=True)
   embed.add_field(name="Options for <flag>:", value="bi, pan, gay, lesbian, ace (Asexual), nb (Non-binary), trans", inline=True)
-  embed.add_field(name="Use:", value="**`#pride <user>`** to use a user's PFP, **`#pride`** to use your PFP or a image attachment on the command. TO use a different pride flag, do **`#pride <user> <flag>`**. NOTE: to be able to use <flag>, <user> needs to be stated.", inline=False)
+  embed.add_field(name="Use:", value="**`#pride <user>`** to use a user's PFP, **`#pride`** to use your PFP or a image attachment on the command. TO use a different pride flag, do **`#pride <user> <flag>`**. NOTE: to be able to use <flag>, <user> needs to be stated by pinging a user or putting the text `none`.", inline=False)
   await ctx.send(embed=embed)
 
 @client.command(aliases=['queer','gay','pride'])
-async def lgbt(ctx, member: discord.Member=None, flag: str=None):
+async def lgbt(ctx, member=None, flag: str=None):
   try:
     asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
 
@@ -1125,6 +1125,8 @@ async def lgbt(ctx, member: discord.Member=None, flag: str=None):
   except:
     if member == None:
       member = ctx.author
+    elif member != None:
+      member = getAUser(member)
     
     asset = member.avatar_url_as(size=512)
     data = BytesIO(await asset.read())
@@ -1165,7 +1167,7 @@ async def ascii(ctx):
   await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
-async def ascii(ctx, *, member: discord.Member=None):
+async def ascii(ctx, *, member=None):
   try:
     asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
     nick = ctx.message.attachments[0].filename[:12:]
@@ -1174,15 +1176,23 @@ async def ascii(ctx, *, member: discord.Member=None):
   except:
     if member == None:
       member = ctx.author
-    
-    if member.name == None:
-      nick = member.name
     else:
-      nick = member.nick
+      try:
+        member = getAUser(member)
+      except:
+        member = 'Unknown'
     
-    asset = member.avatar_url_as(size=512)
-    data = BytesIO(await asset.read())
-    pfp = Image.open(data)
+    try:
+      if member.name == None:
+        nick = member.name
+      else:
+        nick = member.nick
+      
+      asset = member.avatar_url_as(size=512)
+      data = BytesIO(await asset.read())
+      pfp = Image.open(data)
+    except:
+      return await ctx.send('No Valid File or User Detected')
   
   pfp.save('pfp.png')
 
@@ -1236,29 +1246,33 @@ async def wanted(ctx):
   await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
-async def wanted(ctx, member:discord.Member=None):
+async def wanted(ctx, member=None):
   try:
     asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
+    nick = ctx.message.attachments[0].filename[:12:]
 
     pfp = Image.open(ctx.message.attachments[0].filename)
-
-    if len(ctx.message.attachments[0].filename) > 12:
-      nick = ctx.message.attachments[0].filename
-      nick = nick[:12:]
-    else:
-      nick = ctx.message.attachments[0].filename
   except:
     if member == None:
       member = ctx.author
-    
-    if member.name == None:
-      nick = member.name
     else:
-      nick = member.nick
-  
-    asset = member.avatar_url_as(size=256)
-    data = BytesIO(await asset.read())
-    pfp = Image.open(data)
+      try:
+        member = getAUser(member)
+      except:
+        member = 'Unknown'
+    
+    try:
+      if member.name == None:
+        nick = member.name
+      else:
+        nick = member.nick
+      
+      asset = member.avatar_url_as(size=512)
+      data = BytesIO(await asset.read())
+      pfp = Image.open(data)
+    except:
+      nick = member[:12:]
+      pfp = Image.open('/home/runner/CometBot/static/photoToRender/favicon.png')
 
   wanted = Image.open("wanted.png")
   draw = ImageDraw.Draw(wanted)
