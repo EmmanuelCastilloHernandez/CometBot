@@ -1259,14 +1259,17 @@ async def wanted(ctx, member=None):
       try:
         member = getAUser(member)
       except:
-        member = 'Unknown'
+        pass
     
     try:
-      if member.name == None:
-        nick = member.name
+      if member.nick == None:
+        nick = member.name[:12:]
       else:
-        nick = member.nick
-      
+        nick = member.nick[:12:]
+    except:
+      nick = member.name[:12:]
+
+    try:  
       asset = member.avatar_url_as(size=512)
       data = BytesIO(await asset.read())
       pfp = Image.open(data)
