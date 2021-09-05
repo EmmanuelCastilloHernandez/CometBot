@@ -2,13 +2,17 @@ import requests
 from requests import get
 from bs4 import BeautifulSoup
 import re
-page = requests.get('https://giphy.com/gifs/mlb-sports-baseball-asg-yD5KEKVG1o9qcoXNYg')
+page = requests.get('https://www.homelessshelterdirectory.org/city/ca-van_nuys')
 soup = BeautifulSoup(page.content, "html.parser")
+giphyUrls = re.findall("(?P<url>https?://[^\s]+)", str(soup))
+videoIDs = [i for i in giphyUrls if ('/shelter/' in i and 'listing.slug' not in i)]
+videoIDs = videoIDs[:10]
+newList = []
 
-pageContent = soup.find(id="content")
-giphyUrls = pageContent.find_all("div", class_="gif-detail-page", id='react-target')
-print(giphyUrls)
+for i in videoIDs:
+  if '"><img' in i:
+    i = i.replace('"><img', "")
+    newList.append(i)
 
-giphyUrls = re.findall("(?P<url>https?://[^\s]+)", str(pageContent))
 
-print(giphyUrls)
+print(newList)
