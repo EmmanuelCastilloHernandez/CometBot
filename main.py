@@ -54,8 +54,6 @@ from discord_components import DiscordComponents, Button, ButtonStyle, Select, S
 from dontDie import dontDieOnMe
 from googletrans import Translator
 from gtts import gTTS
-import lxml
-from lxml import etree
 import math
 import numpy as np
 from numpy import *
@@ -65,7 +63,6 @@ import pytz
 from io import BytesIO
 import random
 from random import randint
-import randfacts
 import string
 import smtplib, ssl
 import sympy as sp
@@ -1170,7 +1167,10 @@ async def ascii(ctx):
 async def ascii(ctx, *, member=None):
   try:
     asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
-    nick = ctx.message.attachments[0].filename[:12:]
+    if member == None:
+      nick = ctx.message.attachments[0].filename[:12:]
+    else:
+      nick = member[:12:]
 
     pfp = Image.open(ctx.message.attachments[0].filename)
   except:
@@ -1246,10 +1246,13 @@ async def wanted(ctx):
   await ctx.send(embed=embed)
 
 @client.command(pass_context=True)
-async def wanted(ctx, member=None):
+async def wanted(ctx, *, member=None):
   try:
     asset = await ctx.message.attachments[0].save(ctx.message.attachments[0].filename)
-    nick = ctx.message.attachments[0].filename[:12:]
+    if member == None:
+      nick = ctx.message.attachments[0].filename[:12:]
+    else:
+      nick = member[:14:]
 
     pfp = Image.open(ctx.message.attachments[0].filename)
   except:
@@ -1263,18 +1266,18 @@ async def wanted(ctx, member=None):
     
     try:
       if member.nick == None:
-        nick = member.name[:12:]
+        nick = member.name[:14:]
       else:
-        nick = member.nick[:12:]
+        nick = member.nick[:14:]
     except:
-      nick = member.name[:12:]
+      nick = member
 
     try:  
       asset = member.avatar_url_as(size=512)
       data = BytesIO(await asset.read())
       pfp = Image.open(data)
     except:
-      nick = member[:12:]
+      nick = member[:14:]
       pfp = Image.open('/home/runner/CometBot/static/photoToRender/favicon.png')
 
   wanted = Image.open("wanted.png")
@@ -2552,14 +2555,6 @@ async def dababyCommand(ctx):
     'https://tenor.com/view/dababy-gif-20861878',
     'https://tenor.com/view/bpm-dababy-stfu-gif-20869699']
   await ctx.channel.send(f'{random.choice(daBabyGIFs)}')
-
-# Gives a random fact - super simple
-# By Garen
-@client.command(aliases=['rf', 'randomfact'])
-@commands.cooldown(1, 5, commands.BucketType.user)
-async def Arandomfack(ctx):
-  fct = randfacts.getFact()
-  await ctx.send(fct)
 
 @client.command(pass_context=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
