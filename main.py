@@ -580,20 +580,20 @@ async def crisis(ctx):
   await msg.delete()
 
   if lang == 'English':
-    embed=discord.Embed(title="CometCRISIS CENTER", description="Thank you for using the Comet Health and Mental Crisis Center. As a Latino LGBTQ+ member, mental and physical health is important to me, especially someone else's health if they are experiencing a crisis that could lead to life-threatening situations, which is why I designed this command to get people the help they need.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
-    embed.add_field(name="Sincerely,", value="**`Emmanuel Castillo (eta_c4rinae#7810)`**\nPS.: **`Note that if the situation is serious, I may have to intervene, but before I do that I must get your consent to do so.`**", inline=True)
+    embed=discord.Embed(title="CometCRISIS CENTER", description="Thank you for using the CometCRISIS Center. People's mental and physical mental health is our top priority, which is why we designed this command.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
+    embed.add_field(name="NOTICE:", value="**`If the situation is serious, we may have to intervene, but before we do that we must get your consent to do so.`**", inline=True)
     embed.add_field(name="You are NEVER ALONE", value="I can help.", inline=True)
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicide"), SelectOption(label="Abuse (Sexual or Domestic)", value="Abuse (Sexual or Domestic)"), SelectOption(label="Need Shelter", value="Need Shelter"), SelectOption(label="Need Food", value="Need Food"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door")
+          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicide"), SelectOption(label="Abuse (Sexual or Domestic)", value="Abuse (Sexual or Domestic)"), SelectOption(label="Need Shelter", value="Need Shelter"), SelectOption(label="Help Find Food", value="Help Find Food"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door")
           ]
         )
       ]
     )
   else:
-    embed=discord.Embed(title="Centro CometCRISIS", description="Gracias por utilizar el Centro de CRISIS DE VIDA CometCRISIS. Yo como un Latino y miembro de la LGBTQ+, la salud mental y fisica es importante para mi, especialmente la salud de alguien si ellos estan teniendo una crisis puede resultar o esta resultando en situaciones que amenazan la vida de tal persona. Por eso diseñe este comando.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPor favor tome tiempo en mirar las optiones que estan ofrecidas en el menu. Muchas de estas opciones tienen recursos para reportar crimenes sexuales y violentos.", color=0x2f3136)
-    embed.add_field(name="Sinceramente,", value="**`Emmanuel Castillo (eta_c4rinae#7810)`**\nPS: **`Note que si su situacion es seria, yo talves necesite intervenir, pero antes de que pueda hacer eso necesito su consentimiento para hacerlo.`**", inline=True)
+    embed=discord.Embed(title="Centro CometCRISIS", description="Gracias por utilizar el Centro de CRISIS DE VIDA CometCRISIS. La salud mental y fisica es importante para nosotros, especialmente la salud de alguien si ellos estan teniendo una crisis puede resultar o esta resultando en situaciones que amenazan la vida de tal persona. Por eso diseñamos este comando.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPor favor tome su tiempo en mirar las opciones que estan ofrecidas en el menu. Muchas de estas opciones tienen recursos para reportar crimenes sexuales y violentos y algunas pueden ayudar a encontrar refugios si es que lo necesitan.", color=0x2f3136)
+    embed.add_field(name="AVISO:", value="Note que si su situacion es seria, talves necesitemos intervenir, pero antes de que podamos hacer eso necesitamos su permiso para hacerlo.`**", inline=True)
     embed.add_field(name="Nunca estas solo/a.", value="Hay ayuda disponible.", inline=True)
 
     await ctx.send(embed=embed,
@@ -613,14 +613,14 @@ async def crisis(ctx):
 
     if selectionDone.values[0] == 'LGBTQ+':
       if lang == 'English':
-        embed=discord.Embed(title="Getting Help for LGBTQ+ Individuals", description="Being an open LGBTQ+ individual is hard, especially in hostile environments that oppress us. For many of us, it's not even an option to come out because we are afraid of being harmed. However, one should seek out help when they are facing the possibility of harm due to one's sexual orientation and/or gender indentity. Thankfully, charities like the Trevor Project exist, whose goal is to help out our community. For this reason, Comet will provide resources to connect with the Trevor Project as it's one of the few good choices for LGBTQ+ indivuals facing crises. Below are the contacts for the Trevor Project\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo", color=0x2f3136)
+        embed=discord.Embed(title="Getting Help for LGBTQ+ Individuals", description="Being an open LGBTQ+ individual is hard, especially in hostile environments that oppress us. For many of us, it's not even an option to come out because we are afraid of being harmed. However, one should seek out help when they are facing the possibility of harm due to one's sexual orientation and/or gender indentity. Thankfully, charities like the Trevor Project exist, whose goal is to help out our community. For this reason, Comet will provide resources to connect with the Trevor Project as it's one of the few good choices for LGBTQ+ indivuals facing crises. Below are the contacts for the Trevor Project\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
         embed.add_field(name="Trevor Project:", value="Visit **thetrevorproject.org/get-help-now/**\nText **`START`** to the phone number **`678-678`**\nCall **`1-866-488-7386`** or **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`**.", inline=False)
         embed.add_field(name='If outside the US:', value='Click **http://suicide.org/international-suicide-hotlines.html** to find your country\'s hotline since the Trevor Project is US-only unfortunately.')
         embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
         embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 30 seconds to confirm before it defaults to **no**.", inline=False)
       elif lang == 'Spanish':
-        embed=discord.Embed(title="Buscando Ayuda Para Integrantes de la LGBTQ+", description="Siendo un miembro de la LGBTQ+ es dificil, especialmente in ambientes hostiles cuales los oprimen. Para muchos, no hay posibilidad de poder expresarnos debido al miedo que los lastimen. Por suerte, hay organizaciones como el Trevor Project, cuya meta es ayudar nuestra comunidad. Por esta razon, Comet tiene recursos para contactarse con el Trevor Project si esta en los Estados Unidos. Abajo de este parafo estan tales contactos.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project.", color=0x2f3136)
+        embed=discord.Embed(title="Buscando Ayuda Para Integrantes de la LGBTQ+", description="Siendo un miembro de la LGBTQ+ es dificil, especialmente in ambientes hostiles cuales los oprimen. Para muchos, no hay posibilidad de poder expresarnos debido al miedo que los lastimen. Por suerte, hay organizaciones como el Trevor Project, cuya meta es ayudar nuestra comunidad. Por esta razon, Comet tiene recursos para contactarse con el Trevor Project si esta en los Estados Unidos. Abajo de este parafo estan tales contactos.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nAVISO: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project.", color=0x2f3136)
         embed.add_field(name="Trevor Project:", value="Visite **thetrevorproject.org/get-help-now/**\nTexte **`START`** a **`678-678`**\nLlame **`1-866-488-7386`** o **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
         embed.add_field(name='Si esta afuera de los Estados Unidos:', value=' Haga click (aqui)[http://suicide.org/international-suicide-hotlines.html] para buscar la linea de suicidio de su pais.')
@@ -720,7 +720,7 @@ Type: {selectionDone.values[0]}"""
         pass
     if selectionDone.values[0] == 'Suicide' or selectionDone.values[0] == 'Suicidio':
       if lang == 'English':
-        embed=discord.Embed(title="Getting Help To Prevent Suicide", description="Suicide is a awful thing to think about. These thoughts are usually products of mental disorders (PTSD, Depression, etc.) and/or a hostile social enviroment (bullying, harrassment). Members of racial, ethnic, gender, and sexual minorities suffer the most from society's harrasment, which drives some of their members to take their own lives. Even when the chances look slim, there is someone that cares about you and there is always a reason to continue living (not counting a job), even if society wants to hate you and rive you to suicide. For this reason, we the Comet Dev team want to help out people with suicidal thoughts and prevent them from harming themselves, no matter where they are and what is their motive. That is why we created the Comet**__Lifeline__** to help out.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo\n\nPS: Comet**CRISIS** works in the PST U.S.A. Timezone", color=0x2f3136)
+        embed=discord.Embed(title="Getting Help To Prevent Suicide", description="Suicide is a awful thing to think about. These thoughts are usually products of mental disorders (PTSD, Depression, etc.) and/or a hostile social enviroment (bullying, harrassment). Members of racial, ethnic, gender, and sexual minorities suffer the most from society's harrasment, which drives some of their members to take their own lives. Even when the chances look slim, there is someone that cares about you and there is always a reason to continue living (not counting a job), even if society wants to hate you and rive you to suicide. For this reason, we the Comet Dev team want to help out people with suicidal thoughts and prevent them from harming themselves, no matter where they are and what is their motive. That is why we created Comet**__CRISIS__** to help out.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nNOTE: Comet**CRISIS** works in the PST U.S.A. Timezone", color=0x2f3136)
         embed.add_field(name="US National Suicide Hotline:", value="**`800-273-8255`**", inline=False)
         embed.add_field(name="Trevor Project For LGBTQ+ Members:", value="Visit **thetrevorproject.org/get-help-now/**\nText **`START`** to **`678-678`**\nCall **`1-866-488-7386`** or **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Suicide Hotlines in Each State and Their Counties:", value="http://suicide.org/suicide-hotlines.html", inline=False)
@@ -729,7 +729,7 @@ Type: {selectionDone.values[0]}"""
         embed.add_field(name="If you are seeking help for a person:", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please. If the person is on the verge of taking their own life, FIND THEM BEFORE THEY HARM THEMSELVES, but make sure to also give them some space so they feel safe. Look for therapy options and help them in their recovery.", inline=False)
         embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 300 seconds to confirm before it defaults to **no**. Please, if you are about to take your own life, ** we beg you to choose the yes button** because we want to help you out even if the circumstances are serious and you don't see hope in continuing to live. YOU are a human being that deserves love and compassion and the help you need. No one can change that.", inline=False)
       elif lang == 'Spanish':
-        embed=discord.Embed(title="Buscando Ayuda Para Prevenir Suicidio", description="Suicidio: un producto de factores como los desordenes mentales y ambientes hostiles. Si eres un miembro de una minoria, la hostilidad de una sociedad puede empujarte al borde de quitarte tu vida. Aunque sientas que no hay una razon porque vivir o una persona cual le importes, siempre hay y habra una razon y persona que te quiuera. Por eso, el equipo de desarrollo de Comet creo esta comando  de recursos y el Comet**CRISIS**, una forma de comunicarse con gente en Discord para ayudar. Espero que encuentre la ayuda que necesite.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Comet**CRISIS** trabaja bajo el horario PST de los Estados Unidos", color=0x2f3136)
+        embed=discord.Embed(title="Buscando Ayuda Para Prevenir Suicidio", description="Suicidio: un producto de factores como los desordenes mentales y ambientes hostiles. Si eres un miembro de una minoria, la hostilidad de una sociedad puede empujarte al borde de quitarte tu vida. Aunque sientas que no hay una razon porque vivir o una persona cual le importes, siempre hay y habra una razon y persona que te quiuera. Por eso, el equipo de desarrollo de Comet creo esta comando  de recursos y el Comet**CRISIS**, una forma de comunicarse con gente en Discord para ayudar. Espero que encuentre la ayuda que necesite.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nAVISO: Comet**CRISIS** trabaja bajo el horario PST de los Estados Unidos y es posible que necesite hablar Ingles en caso que llame el Trevor Project.", color=0x2f3136)
         embed.add_field(name="US National Suicide Hotline:", value="**`800-273-8255`**", inline=False)
         embed.add_field(name="Trevor Project Para Miembros de la LGBTQ+:", value="Visite **thetrevorproject.org/get-help-now/**\nTexte **`START`** a **`678-678`**\nLlame **`1-866-488-7386`** o **`1-866-4-U-TREVOR`**", inline=False)
         embed.add_field(name="Lineas de Vida Para Cada Estado de los Estados Unidos de America y sus Condados:", value="http://suicide.org/suicide-hotlines.html", inline=False)
@@ -831,7 +831,7 @@ Type: {selectionDone.values[0]}"""
         pass
     if selectionDone.values[0] == 'Abuse (Sexual or Domestic)' or selectionDone.values[0] == 'Abuso (Sexual o Domestico)':
       if lang == 'English':
-        embed=discord.Embed(title="Abuse (Sexual or Domestic)", description="Speaking about abuse is a difficult thing to do due to the trauma that is a product of such events. Speaking up may not feel like it's the right thing to do, but by doing so you can help begin the process of getting justice and of healing. Provided below are links to the FBI, \"The Hotline\", the Trevor Project (if you are an LGBTQ Member) and RAINN (Rape, Abuse & Incest National Network).\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo", color=0x2f3136)
+        embed=discord.Embed(title="Abuse (Sexual or Domestic)", description="Speaking about abuse is a difficult thing to do due to the trauma that is a product of such events. Speaking up may not feel like it's the right thing to do, but by doing so you can help begin the process of getting justice and of healing. Provided below are links to the FBI, \"The Hotline\", the Trevor Project (if you are an LGBTQ Member) and RAINN (Rape, Abuse & Incest National Network).\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
         embed.add_field(name="FBI (Phone and Offices):", value="**https://www.fbi.gov/contact-us/field-offices** or **`1-800-225-5324`**", inline=False)
         embed.add_field(name="FBI (Online):", value="**https://tips.fbi.gov/** or **`https://www.ic3.gov/Home/ComplaintChoice/default.aspx`**", inline=False)
         embed.add_field(name="Trevor Project:", value="**`thetrevorproject.org/get-help-now/`**", inline=False)
@@ -841,7 +841,7 @@ Type: {selectionDone.values[0]}"""
         embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
         embed.add_field(name="Final Question:", value="If the situation is grave or need to talk to someone, do **`YOU`** consent to be contacted by Comet's developer? Press either button below in the next 300 seconds to confirm before it defaults to **no**.", inline=False)
       elif lang == 'Spanish':
-        embed=discord.Embed(title="Abuso (Sexual o Domestico)", description="El abuso es algo que muchos han experimentado, pero se quedan en silencio debido a trauma u otras circumstancias. Si estas listo para hablar o reportar tu experiencia a alguien, aqui va ver recursos para RAINN, FBI, \"The Hotline\", y el Trevor Project.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo\n\nPS.: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project.", color=0x2f3136)
+        embed=discord.Embed(title="Abuso (Sexual o Domestico)", description="El abuso es algo que muchos han experimentado, pero se quedan en silencio debido a trauma u otras circumstancias. Si estas listo para hablar o reportar tu experiencia a alguien, aqui va ver recursos para RAINN, FBI, \"The Hotline\", y el Trevor Project.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nAVISO: Es posible que tenga que hablar Ingles para poder comunicarse con el Trevor Project o para poder comunicarse bien con otros servicios.", color=0x2f3136)
         embed.add_field(name="FBI (Telefono y Oficinas):", value="**https://www.fbi.gov/contact-us/field-offices** o **`1-800-225-5324`**", inline=False)
         embed.add_field(name="FBI (Reportar en Linea):", value="**https://tips.fbi.gov/** o **`https://www.ic3.gov/Home/ComplaintChoice/default.aspx`**", inline=False)
         embed.add_field(name='"The Hotline"', value='Llame **_`800.799.SAFE (7233)`**\nTexte __START__ to 88788\nVisite **https://www.thehotline.org/**')
@@ -943,14 +943,14 @@ Type: {selectionDone.values[0]}"""
         pass
     if selectionDone.values[0] == 'Need Shelter' or selectionDone.values[0] == 'Buscar Refugio':
       if lang == 'English':
-        embed=discord.Embed(title="Searching for Shelters", description="Looking for shelter should be a top-priority after you are no longer in danger, especially if it's about to be night. Shelters provide food, bathrooms, and even long-term residence in some instances.\n\nComet can help find shelters thanks to the Homeless Shelter Directory, an online directory of homeless shelters across all of the United States. If you wish to start your search, just press the \"Start Search\" below and if that does not help, an option to send an SOS Signal will be available after the search is finished.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSincerely,\nEmmanuel Castillo", color=0x2f3136)
+        embed=discord.Embed(title="Searching for Shelters", description="Looking for shelter should be a top-priority after you are no longer in danger, especially if it's about to be night. Shelters provide food, bathrooms, and even long-term residence in some instances.\n\nComet can help find shelters thanks to the Homeless Shelter Directory, an online directory of homeless shelters across all of the United States. If you wish to start your search, just press the \"Start Search\" below.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
         embed.add_field(name="Credit: Homeless Shelter Directory:", value="**https://www.homelessshelterdirectory.org/**", inline=False)
         embed.add_field(name="If you need to resources to report crimes:", value="Rerun #crisis and then click the **Abuse (Sexual or Domestic)** option.", inline=False)
         embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
         embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
         embed.add_field(name="Final Question:", value="Do you wish to start your search for a homeless shelter? If so, press the **Start Search** button within the next 300 seconds.", inline=False)
       elif lang == 'Spanish':
-        embed=discord.Embed(title="Buscando Un Refuguio", description="Buscar refugio debe ser una prioridad cuando ya no esté en peligro, especialmente si va a anochecer. Los refugios brindan comida, baños e incluso residencia a largo plazo en algunos casos.\n\nComet puede ayudar a encontrar refugios gracias al Homeless Shelter Directory, un directorio en línea de refugios para personas sin hogar en todo Estados Unidos. Si desea comenzar su búsqueda, simplemente presione \"Iniciar búsqueda\" a continuación y si eso no ayuda, una opción para enviar una señal de emergencia estará disponible una vez que finalice la búsqueda.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nSinceramente,\nEmmanuel Castillo", color=0x2f3136)
+        embed=discord.Embed(title="Buscando Un Refuguio", description="Buscar refugio debe ser una prioridad cuando ya no esté en peligro, especialmente si va a anochecer. Los refugios brindan comida, baños e incluso residencia a largo plazo en algunos casos.\n\nComet puede ayudar a encontrar refugios gracias al Homeless Shelter Directory, un directorio en línea de refugios para personas sin hogar en todo Estados Unidos. Si desea comenzar su búsqueda, simplemente presione \"Iniciar búsqueda\" a continuación.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
         embed.add_field(name="Credito: Homeless Shelter Directory:", value="**https://www.homelessshelterdirectory.org/**", inline=False)
         embed.add_field(name="Si necesita reportar un crimen:", value="Vuelva a ejecutar #crisis y luego haga clic en la opción **Abuso (Sexual o Doméstico)**.", inline=False)
         embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
@@ -1131,7 +1131,197 @@ Type: {selectionDone.values[0]}"""
             pass
       except:
         pass
+    if selectionDone.values[0] == 'Help Find Food' or selectionDone.values[0] == 'Buscar Centros de Comida':
+      if lang == 'English':
+        embed=discord.Embed(title="Searching for Food Banks", description="Food is a basic human right and no one should be worried about if they have enough money to be able to afford it. Unfortunately, 42 million people in the US face food insecurity due to racial injustice and many families living from paycheck to paycheck ([Feeding America](https://www.feedingamerica.org/hunger-in-america)).\n\nComet can try to help find food banks in your communities thanks to the Homeless Shelter Directory, an online directory of homeless shelters and food banks across all of the United States. If you wish to start your search, just press the \"Start Search\" below.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
+        embed.add_field(name="Credit: Homeless Shelter Directory:", value="**https://www.homelessshelterdirectory.org/**", inline=False)
+        embed.add_field(name="If you need to resources to report crimes:", value="Rerun #crisis and then click the **Abuse (Sexual or Domestic)** option.", inline=False)
+        embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
+        embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
+        embed.add_field(name="Final Question:", value="Do you wish to start your search for a homeless shelter? If so, press the **Start Search** button within the next 300 seconds.", inline=False)
+      elif lang == 'Spanish':
+        embed=discord.Embed(title="Buscando Centros De Comida", description="La comida es no solo una necesidad, sino tambien algo que todos deberian tener el derecho de tener sin tener que preocuparse de que si tienen suficiente para poder comprarla. Desafortunadamente, casi 42 millones de personas Estadounidenses son afectados por inseguridad alimenticia debido a la injusticia racial y/o porque muchas personas/familias viven de cheque a cheque ([Feeding America](https://www.feedingamerica.org/hunger-in-america)).\n\nComet puede ayudar a encontrar centros de comida cercanos a su comunidad. Si desea comenzar su búsqueda, simplemente presione \"Iniciar búsqueda\" a continuación.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
+        embed.add_field(name="Credito: Homeless Shelter Directory:", value="**https://www.homelessshelterdirectory.org/**", inline=False)
+        embed.add_field(name="Si necesita reportar un crimen:", value="Vuelva a ejecutar #crisis y luego haga clic en la opción **Abuso (Sexual o Doméstico)**.", inline=False)
+        embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
+        embed.add_field(name="Ultima Pregunta:", value="¿Desea comenzar su búsqueda de un refugio para personas sin hogar? Si es así, presione el botón **Iniciar Búsqueda** en los próximos 300 segundos para empezar el proceso.", inline=False)
+      await ctx.send(embed=embed, components=[[
+        Button(style = ButtonStyle.red, label = "No"),
+        Button(style = ButtonStyle.green, label = "Start Search"),
+        Button(style = ButtonStyle.blue, label = "Iniciar Búsqueda")
+        ]]
+      )
 
+      try:
+        stateNames = ["Alaska", "Alabama", "Arkansas", "Arizona", "California", "Colorado", "Connecticut", "District of Columbia", "Delaware", "Florida", "Georgia", "Hawaii", "Iowa", "Idaho", "Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine", "Michigan", "Minnesota", "Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", "New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Vermont", "Washington", "Wisconsin", "West Virginia", "Wyoming"]
+        fbButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
+
+        if fbButtonCheck.component.label == "Start Search":
+          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the following two select menus. Note that DC residents will have to specify if they live in Washington or in the Washington Navy Yard.", color=0x2f3136)
+
+          await ctx.send(embed=embedPrompt, components=[
+          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
+            ]
+          )
+
+          try:
+            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+            state = selectState.values[0]
+
+            while ' ' in state:
+              state = state.replace(' ', '_')
+
+            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selected", description="Now type out the name of the city you wish to look for food banks.", color=0x2f3136)
+            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/foodbanks/state/{state}")
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
+            cities = [i for i in cities if '/city/' in i]
+            stateAbv = cities[0][45:49]
+            cities = [str(i) for i in cities if stateAbv in i]
+            stateCities = []
+
+            for i in cities:
+              i = str(i)
+              i = i.split('">')
+              stateCities.append(i[0])
+            
+            await selectState.send(embed=embedPrompt2)
+            await ctx.send(embed=embedPrompt2)
+            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
+            cityToChoose = grabUserInput.content
+            while ' ' in cityToChoose:
+              cityToChoose = cityToChoose.replace(' ', '_')
+            
+            cityToChoose = cityToChoose.lower()
+            for i in stateCities:
+              if cityToChoose in i:
+                if i[49:] == cityToChoose:
+                  city = i
+            
+            try:       
+              cityHtml = requests.get(city)
+              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
+              foodBankUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
+              foodBankUrls = [i for i in foodBankUrls if ('/foodbank/' in i and 'listing.slug' not in i)]
+              foodBankUrls = foodBankUrls[:16]
+              filteredCityUrls = []
+
+              for i in foodBankUrls:
+                if '"><img' in i:
+                  i = i.replace('"><img', "")
+                  filteredCityUrls.append(i)
+              
+              resultEmbed = discord.Embed(title=f"Homeless Shelters in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
+              
+              counter = 1
+              for i in filteredCityUrls:
+                page = requests.get(i)
+                soupResult = BeautifulSoup(page.content, "html.parser")
+                title = str(soupResult.title)
+
+                while '<title>' in title:
+                  title = title.replace('<title>', '').replace('</title>', '')
+                  title = title.split(' - ')
+                if len(title) > 2:
+                  title[0:1] = [' '.join(title[0:2])]
+                  del title[1]
+
+                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
+                counter += 1
+
+              await ctx.send(embed=resultEmbed)
+
+            except Exception as e:
+              return await ctx.send(f'City Not Found\n{e}')
+          except:
+            pass
+        if fbButtonCheck.component.label == "Iniciar Búsqueda":
+          embedPrompt = discord.Embed(title="Escoge tu Estado", description="Escoga su estado en donde quieres buscar usando los siguientes menus. Note que los residentes de DC van a necesitar especificar si quieren buscar en Washington o en Washington Navy Yard.", color=0x2f3136)
+
+          await ctx.send(embed=embedPrompt, components=[
+          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
+            ]
+          )
+
+          try:
+            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+            state = selectState.values[0]
+
+            while ' ' in state:
+              state = state.replace(' ', '_')
+
+            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selecionado", description="Ahora escriba el nobre de la ciudad (no el condado) en donde quiere buscar centros de comida.", color=0x2f3136)
+            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/foodbanks/state/{state}")
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
+            cities = [i for i in cities if '/foodbanks/city/' in i]
+            stateAbv = cities[0][45:49]
+            cities = [str(i) for i in cities if stateAbv in i]
+            stateCities = []
+
+            for i in cities:
+              i = str(i)
+              i = i.split('">')
+              stateCities.append(i[0])
+            
+            await selectState.send(embed=embedPrompt2)
+            await ctx.send(embed=embedPrompt2)
+            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
+            cityToChoose = grabUserInput.content
+            while ' ' in cityToChoose:
+              cityToChoose = cityToChoose.replace(' ', '_')
+            
+            cityToChoose = cityToChoose.lower()
+            for i in stateCities:
+              if cityToChoose in i:
+                city = i
+                if i[49:] == cityToChoose:
+                  break
+            
+            try:       
+              cityHtml = requests.get(city)
+              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
+              foodBankUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
+              foodBankUrls = [i for i in foodBankUrls if ('/foodbank/' in i and 'listing.slug' not in i)]
+              foodBankUrls = foodBankUrls[:16]
+              filteredCityUrls = []
+
+              for i in foodBankUrls:
+                if '"><img' in i:
+                  i = i.replace('"><img', "")
+                  filteredCityUrls.append(i)
+              
+              resultEmbed = discord.Embed(title=f"Centros de Comida en {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
+              
+              counter = 1
+              for i in filteredCityUrls:
+                page = requests.get(i)
+                soupResult = BeautifulSoup(page.content, "html.parser")
+                title = str(soupResult.title)
+
+                while '<title>' in title:
+                  title = title.replace('<title>', '').replace('</title>', '')
+                  title = title.split(' - ')
+                if len(title) > 2:
+                  title[0:1] = [' '.join(title[0:2])]
+                  del title[1]
+
+                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
+                counter += 1
+
+              await ctx.send(embed=resultEmbed)
+
+            except Exception as e:
+              return await ctx.send(f'City Not Found\n{e}')
+          except:
+            pass
+      except:
+        pass
 @help.command()
 async def reverse(ctx):
   embed=discord.Embed(title="Emo Image Generator", description="Reverses a string. That's it.", color=0x2f3136)
