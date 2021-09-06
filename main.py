@@ -1198,8 +1198,9 @@ Type: {selectionDone.values[0]}"""
             cityToChoose = cityToChoose.lower()
             for i in stateCities:
               if cityToChoose in i:
+                city = i
                 if i[49:] == cityToChoose:
-                  city = i
+                  break
             
             try:       
               cityHtml = requests.get(city)
