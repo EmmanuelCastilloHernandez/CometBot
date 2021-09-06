@@ -1048,6 +1048,87 @@ Type: {selectionDone.values[0]}"""
               return await ctx.send(f'City Not Found\n{e}')
           except:
             pass
+        if hsButtonCheck.component.label == "Iniciar Búsqueda":
+          embedPrompt = discord.Embed(title="Escoge tu Estado", description="Escoge tu estado en donde quieres buscar usando los siguientes menus. Note que los residentes de DC van a necesitar especificar si quieren buscar en Washington o en Washington Navy Yard.", color=0x2f3136)
+
+          await ctx.send(embed=embedPrompt, components=[
+          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
+            ]
+          )
+
+          try:
+            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+            state = selectState.values[0]
+
+            while ' ' in state:
+              state = state.replace(' ', '_')
+
+            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selecionado", description="Ahora escriba el nobre de la ciudad (no el condado) en donde quiera buscar refugios.", color=0x2f3136)
+            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/state/{state}")
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
+            cities = [i for i in cities if '/city/' in i]
+            stateAbv = cities[0][45:49]
+            cities = [str(i) for i in cities if stateAbv in i]
+            stateCities = []
+
+            for i in cities:
+              i = str(i)
+              i = i.split('">')
+              stateCities.append(i[0])
+            
+            await selectState.send(embed=embedPrompt2)
+            await ctx.send(embed=embedPrompt2)
+            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
+            cityToChoose = grabUserInput.content
+            while ' ' in cityToChoose:
+              cityToChoose = cityToChoose.replace(' ', '_')
+            
+            cityToChoose = cityToChoose.lower()
+            for i in stateCities:
+              if cityToChoose in i:
+                if i[49:] == cityToChoose:
+                  city = i
+            
+            try:       
+              cityHtml = requests.get(city)
+              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
+              shelterUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
+              shelterUrls = [i for i in shelterUrls if ('/shelter/' in i and 'listing.slug' not in i)]
+              shelterUrls = shelterUrls[:16]
+              filteredCityUrls = []
+
+              for i in shelterUrls:
+                if '"><img' in i:
+                  i = i.replace('"><img', "")
+                  filteredCityUrls.append(i)
+              
+              resultEmbed = discord.Embed(title=f"Refugios en {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
+              
+              counter = 1
+              for i in filteredCityUrls:
+                page = requests.get(i)
+                soupResult = BeautifulSoup(page.content, "html.parser")
+                title = str(soupResult.title)
+
+                while '<title>' in title:
+                  title = title.replace('<title>', '').replace('</title>', '')
+                  title = title.split(' - ')
+                if len(title) > 2:
+                  title[0:1] = [' '.join(title[0:2])]
+                  del title[1]
+
+                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
+                counter += 1
+
+              await ctx.send(embed=resultEmbed)
+
+            except Exception as e:
+              return await ctx.send(f'City Not Found\n{e}')
+          except:
+            pass
       except:
         pass
 
