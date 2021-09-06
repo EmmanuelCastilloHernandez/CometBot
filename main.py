@@ -1135,14 +1135,12 @@ Type: {selectionDone.values[0]}"""
       if lang == 'English':
         embed=discord.Embed(title="Searching for Food Banks", description="Food is a basic human right and no one should be worried about if they have enough money to be able to afford it. Unfortunately, 42 million people in the US face food insecurity due to racial injustice and many families living from paycheck to paycheck ([Feeding America](https://www.feedingamerica.org/hunger-in-america)).\n\nComet can try to help find food banks in your communities thanks to the Homeless Shelter Directory, an online directory of homeless shelters and food banks across all of the United States. If you wish to start your search, just press the \"Start Search\" below.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
         embed.add_field(name="Credit: Homeless Shelter Directory:", value="**https://www.homelessshelterdirectory.org/**", inline=False)
-        embed.add_field(name="If you need to resources to report crimes:", value="Rerun #crisis and then click the **Abuse (Sexual or Domestic)** option.", inline=False)
         embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
         embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
         embed.add_field(name="Final Question:", value="Do you wish to start your search for a homeless shelter? If so, press the **Start Search** button within the next 300 seconds.", inline=False)
       elif lang == 'Spanish':
         embed=discord.Embed(title="Buscando Centros De Comida", description="La comida es no solo una necesidad, sino tambien algo que todos deberian tener el derecho de tener sin tener que preocuparse de que si tienen suficiente para poder comprarla. Desafortunadamente, casi 42 millones de personas Estadounidenses son afectados por inseguridad alimenticia debido a la injusticia racial y/o porque muchas personas/familias viven de cheque a cheque ([Feeding America](https://www.feedingamerica.org/hunger-in-america)).\n\nComet puede ayudar a encontrar centros de comida cercanos a su comunidad. Si desea comenzar su búsqueda, simplemente presione \"Iniciar búsqueda\" a continuación.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
         embed.add_field(name="Credito: Homeless Shelter Directory:", value="**https://www.homelessshelterdirectory.org/**", inline=False)
-        embed.add_field(name="Si necesita reportar un crimen:", value="Vuelva a ejecutar #crisis y luego haga clic en la opción **Abuso (Sexual o Doméstico)**.", inline=False)
         embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
         embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
         embed.add_field(name="Ultima Pregunta:", value="¿Desea comenzar su búsqueda de un refugio para personas sin hogar? Si es así, presione el botón **Iniciar Búsqueda** en los próximos 300 segundos para empezar el proceso.", inline=False)
@@ -1215,7 +1213,7 @@ Type: {selectionDone.values[0]}"""
                   i = i.replace('"><img', "")
                   filteredCityUrls.append(i)
               
-              resultEmbed = discord.Embed(title=f"Homeless Shelters in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
+              resultEmbed = discord.Embed(title=f"Food Banks in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
               
               counter = 1
               for i in filteredCityUrls:
