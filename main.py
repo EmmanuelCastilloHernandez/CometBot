@@ -252,18 +252,7 @@ async def on_message_edit(before, after):
     del regBeforeMessage[before.channel.id]
     del regAfterMessage[after.channel.id]
 
-# This executes when a message is sent
-@client.event
-async def on_message(message):
-  await client.process_commands(message)
-
-  '''if message.content.startswith(';'):
-    msg = message.content.replace(';','')
-    responseToSend = await chatBot.get_ai_response(msg)
-  
-    await message.reply(responseToSend[0]["message"])'''
-
-  allowMessage = True
+async def profanityCheck(message):
   # Neo Blacklist Code
   checkBannedWords = ""
   with open("slurs.json", "r") as slurs: slurPrepare = json.load(slurs)
@@ -321,7 +310,22 @@ async def on_message(message):
       await message.channel.send('***Message deleted due to a blacklisted word/phrase being detected***', delete_after=10)
       return
 
-  # End of Neo Blacklist code
+
+# This executes when a message is sent
+@client.event
+async def on_message(message):
+  await client.process_commands(message)
+
+  '''if message.content.startswith(';'):
+    msg = message.content.replace(';','')
+    responseToSend = await chatBot.get_ai_response(msg)
+  
+    await message.reply(responseToSend[0]["message"])'''
+
+  allowMessage = True
+
+  try: await profanityCheck(message)
+  except: pass
   
   if message.content.startswith('^'):
     if f'{message.author.id} | {message.guild.id}' in useSpammyCharacters:
@@ -379,9 +383,6 @@ async def on_message(message):
       'ok',
       f'based {message.author.mention}']
     await message.channel.send(f'{random.choice(agreedReplies)}')
-
-  if message.content.startswith('Wow. There is no message to snipe buddy.'):
-    await message.channel.send('ok')
 
 async def levelUpUser(user, server):
   global levelUpCheck
@@ -489,17 +490,20 @@ async def on_message_delete(message):
   except:
     pass
 
-  del regularSnipeMessage[message.channel.id]
-  del snipeMessageAuthor[message.channel.id]
-  del snipeMessage[message.channel.id]
-  del snipeMessageAuthor2[message.channel.id]
-  del snipeMessage2[message.channel.id]
-  del snipeMessageAuthor3[message.channel.id]
-  del snipeMessage3[message.channel.id]
-  del snipeMessageAuthor4[message.channel.id]
-  del snipeMessage4[message.channel.id]
-  del snipeMessageAuthor5[message.channel.id]
-  del snipeMessage5[message.channel.id]
+  try:
+    del regularSnipeMessage[message.channel.id]
+    del snipeMessageAuthor[message.channel.id]
+    del snipeMessage[message.channel.id]
+    del snipeMessageAuthor2[message.channel.id]
+    del snipeMessage2[message.channel.id]
+    del snipeMessageAuthor3[message.channel.id]
+    del snipeMessage3[message.channel.id]
+    del snipeMessageAuthor4[message.channel.id]
+    del snipeMessage4[message.channel.id]
+    del snipeMessageAuthor5[message.channel.id]
+    del snipeMessage5[message.channel.id]
+  except:
+    pass
 
 @client.event
 async def on_ready():
