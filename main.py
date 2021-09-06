@@ -1158,7 +1158,7 @@ Type: {selectionDone.values[0]}"""
         fbButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
 
         if fbButtonCheck.component.label == "Start Search":
-          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the following two select menus. Note that DC residents will have to specify if they live in Washington or in the Washington Navy Yard.", color=0x2f3136)
+          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the select menus. Note that DC residents will have to specify if they live in Washington or in the Washington Navy Yard.", color=0x2f3136)
 
           await ctx.send(embed=embedPrompt, components=[
           [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
