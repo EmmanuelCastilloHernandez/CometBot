@@ -252,6 +252,41 @@ async def on_message_edit(before, after):
     del regBeforeMessage[before.channel.id]
     del regAfterMessage[after.channel.id]
 
+async def levelSystem(message):
+  # Level Code
+  allowPoints = True
+  
+  if f'{message.author.id} | {message.guild.id}' in usersToLevelUp:
+    return
+  
+  await openLevelUser(message.author, message.guild)
+  with open('levels.json','r') as f:
+    users = json.load(f)
+
+  levelThreshold = 15*users[str(message.guild.id)][str(message.author.id)]['Level']
+  if allowPoints == True:
+    await updateLevels(message.author, message.guild, random.randint(1, 4), 'XP')
+
+    usersToLevelUp[f'{message.author.id} | {message.guild.id}'] = message.guild.id
+
+    await asyncio.sleep(120)
+    del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
+
+  global levelUpCheck
+  if users[str(message.guild.id)][str(message.author.id)]['XP'] > levelThreshold:
+    if f'{message.author.id} | {message.guild.id}' in levelUpCheck:
+      pass
+    else:
+      newLevel = users[str(message.guild.id)][str(message.author.id)]['Level'] + 1
+      await levelUpUser(message.author, message.guild)
+      await message.channel.send(f'{message.author.mention} has leveled up to level **`{newLevel}`**. Keep it up!')
+      levelUpCheck[f'{message.author.id} | {message.guild.id}'] = True
+
+      await asyncio.sleep(60)
+      del levelUpCheck[f'{message.author.id} | {message.guild.id}']
+
+  # End of Level Code
+
 async def profanityCheck(message):
   # Neo Blacklist Code
   checkBannedWords = ""
@@ -311,9 +346,24 @@ async def profanityCheck(message):
       return
 
 
+bannedList = []
 # This executes when a message is sent
 @client.event
 async def on_message(message):
+  try:
+    await openSetupAccount(message.guild)
+  except:
+    pass
+  
+  if message.author == client.user:
+    return
+  
+  if message.author.id in bannedList:
+    try: await profanityCheck(message)
+    except: pass
+
+    return
+  
   await client.process_commands(message)
 
   '''if message.content.startswith(';'):
@@ -329,52 +379,15 @@ async def on_message(message):
   
   if message.content.startswith('^'):
     if f'{message.author.id} | {message.guild.id}' in useSpammyCharacters:
-      allowMessage = False
+      return
 
-    if allowMessage == False:
-      pass
-    else:
-      await message.channel.send('^')
-      useSpammyCharacters[f'{message.author.id} | {message.guild.id}'] = message.guild.id
+    await message.channel.send('^')
+    useSpammyCharacters[f'{message.author.id} | {message.guild.id}'] = message.guild.id
 
-      await asyncio.sleep(30)
-      del useSpammyCharacters[f'{message.author.id} | {message.guild.id}']
+    await asyncio.sleep(30)
+    del useSpammyCharacters[f'{message.author.id} | {message.guild.id}']
 
-  # Level Code
-  allowPoints = True
-  if message.author == client.user:
-    return
-  
-  if f'{message.author.id} | {message.guild.id}' in usersToLevelUp:
-    allowPoints = False
-  
-  await openLevelUser(message.author, message.guild)
-  with open('levels.json','r') as f:
-    users = json.load(f)
 
-  levelThreshold = 15*users[str(message.guild.id)][str(message.author.id)]['Level']
-  if allowPoints == True:
-    await updateLevels(message.author, message.guild, random.randint(1, 4), 'XP')
-
-    usersToLevelUp[f'{message.author.id} | {message.guild.id}'] = message.guild.id
-
-    await asyncio.sleep(60)
-    del usersToLevelUp[f'{message.author.id} | {message.guild.id}']
-
-  global levelUpCheck
-  if users[str(message.guild.id)][str(message.author.id)]['XP'] > levelThreshold:
-    if f'{message.author.id} | {message.guild.id}' in levelUpCheck:
-      pass
-    else:
-      newLevel = users[str(message.guild.id)][str(message.author.id)]['Level'] + 1
-      await levelUpUser(message.author, message.guild)
-      await message.channel.send(f'{message.author.mention} has leveled up to level **`{newLevel}`**. Keep it up!')
-      levelUpCheck[f'{message.author.id} | {message.guild.id}'] = True
-
-      await asyncio.sleep(60)
-      del levelUpCheck[f'{message.author.id} | {message.guild.id}']
-
-  # End of Level Code
 
   if message.content.startswith('no one cares'):
     agreedReplies=['agreed\nand I\'m a bot :skull:',
@@ -557,7 +570,7 @@ async def help(ctx):
 async def crisis(ctx):
   embed=discord.Embed(title="CometCRISIS", description="This command can help an individual find the help they need IRL. This can go from anything from suicide prevention to knowing what to do if ICE knocks at your door. If the command is maliciously misused, the person misusing it can be banned from using Comet in its entirety. Only works in DMs to keep any emergency conversations private and secure.", color=0x2f3136)
   embed.add_field(name="Use:", value="**`#crisis>`**", inline=True)
-  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  embed.add_field(name="Aliases:", value="**SOS**", inline=True)
   await ctx.send(embed=embed)
 
 @client.command(aliases=['SOS', 'sos'])
@@ -3652,7 +3665,7 @@ async def tts(ctx, *, text=None):
       channel = ctx.message.author.voice.channel
       voice = await channel.connect()
     else:
-      uselessVariable = 1
+      pass
     
     tts.save("text.mp3")
     with audioread.audio_open('text.mp3') as f:
@@ -3685,6 +3698,8 @@ async def tts(ctx, *, text=None):
       await asyncio.sleep(1)
       counter += 1
     await voice.disconnect()
+    os.remove('text.mp3')
+    os.system('text.mp3')
 
   except TypeError as e:
     await ctx.send(f"TypeError exception:\n`{e}`")
@@ -3723,6 +3738,7 @@ async def openSetupAccount(server):
   else:
     setting[str(server.id)] = {}
     setting[str(server.id)]["Owner/Higher-Admin Role"] = ''
+    setting[str(server.id)]["Level System"] = 'Enabled'
     setting[str(server.id)]["Admin Role"] = ''
     setting[str(server.id)]["Role 1"] = ''
     setting[str(server.id)]["Role 2"] = ''
