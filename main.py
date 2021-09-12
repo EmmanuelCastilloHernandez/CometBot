@@ -603,7 +603,7 @@ async def crisis(ctx):
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicide"), SelectOption(label="Abuse (Sexual or Domestic)", value="Abuse (Sexual or Domestic)"), SelectOption(label="Need Shelter", value="Need Shelter"), SelectOption(label="Help Find Food", value="Help Find Food"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door")
+          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicide"), SelectOption(label="Abuse (Sexual or Domestic)", value="Abuse (Sexual or Domestic)"), SelectOption(label="Need Shelter", value="Need Shelter"), SelectOption(label="Help Find Food", value="Help Find Food"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door"), SelectOption(label="Find Treament Centers", value="Find Treatment Centers")
           ]
         )
       ]
@@ -615,7 +615,7 @@ async def crisis(ctx):
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso (Sexual o Domestico)", value="Abuso (Sexual o Domestico)"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar")
+          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso (Sexual o Domestico)", value="Abuso (Sexual o Domestico)"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar"), SelectOption(label="Adicción a Substancias", value="Adicción a Substancias")
           ]
         )
       ]
@@ -1338,6 +1338,199 @@ Type: {selectionDone.values[0]}"""
             pass
       except:
         pass
+    if selectionDone.values[0] == 'Find Treatment Centers' or selectionDone.values[0] == 'Adicción a Substancias':
+      if lang == 'English':
+        embed=discord.Embed(title="Seeking Treatment for Substance Abuse", description="Substance abuse is a serious issues in many of our cities. Addiction is usually influenced by mental conditions, genetics, and/or environmental conditions like stress.\n\nOvercoming a drug addiction can help to improve your mental and physical help. Comet can help provide resources for hotlines to contact for resources and even help search for treatment centers.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
+        embed.add_field(name="Credit: Free Treatment Centers:", value="**https://www.freetreatmentcenters.com/**", inline=False)
+        embed.add_field(name="U.S. Department of Health & Human Services' SAMHSA Hotline:", value="**1-800-662-HELP (4357)**", inline=False)
+        embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
+        embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
+        embed.add_field(name="Final Question:", value="Do you wish to start your search for a treament center? If so, press the **Start Search** button within the next 300 seconds.", inline=False)
+      elif lang == 'Spanish':
+        embed=discord.Embed(title="Buscando Centros De Comida", description="El abuso de sustancias es un problema grave en muchas de nuestras ciudades. La adicción generalmente está influenciada por condiciones mentales, genéticas y/o condiciones ambientales como el estrés.\n\nSuperar una adicción a las drogas puede ayudarlo a mejorar su ayuda física y mental. Comet puede ayudar a proporcionar recursos para que las líneas directas se pongan en contacto para obtener recursos e incluso ayudar a buscar centros de tratamiento.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
+        embed.add_field(name="Credito: Free Treatment Centers:", value="**https://www.freetreatmentcenters.com/**", inline=False)
+        embed.add_field(name="Linea SAMHSA del Departmento de Salud y Servicios Humanos Estadounidenses:", value="**1-800-662-HELP (4357)**", inline=False)
+        embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
+        embed.add_field(name="Ultima Pregunta:", value="¿Desea comenzar su búsqueda de un refugio para personas sin hogar? Si es así, presione el botón **Iniciar Búsqueda** en los próximos 300 segundos para empezar el proceso.", inline=False)
+      await ctx.send(embed=embed, components=[[
+        Button(style = ButtonStyle.red, label = "No"),
+        Button(style = ButtonStyle.green, label = "Start Search"),
+        Button(style = ButtonStyle.blue, label = "Iniciar Búsqueda")
+        ]]
+      )
+
+      try:
+        stateNames = ["Alaska", "Alabama", "Arkansas", "Arizona", "California", "Colorado", "Connecticut", "District of Columbia", "Delaware", "Florida", "Georgia", "Hawaii", "Iowa", "Idaho", "Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine", "Michigan", "Minnesota", "Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", "New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Vermont", "Washington", "Wisconsin", "West Virginia", "Wyoming"]
+        fbButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
+
+        if fbButtonCheck.component.label == "Start Search":
+          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the select menus. Note that DC residents will have to specify if they live in Washington or in the Washington Navy Yard.", color=0x2f3136)
+
+          await ctx.send(embed=embedPrompt, components=[
+          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
+            ]
+          )
+
+          try:
+            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+            state = selectState.values[0]
+
+            while ' ' in state:
+              state = state.replace(' ', '_')
+
+            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selected", description="Now type out the name of the city you wish to look for food banks.", color=0x2f3136)
+            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/foodbanks/state/{state}")
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
+            cities = [i for i in cities if '/city/' in i]
+            stateAbv = cities[0][45:49]
+            cities = [str(i) for i in cities if stateAbv in i]
+            stateCities = []
+
+            for i in cities:
+              i = str(i)
+              i = i.split('">')
+              stateCities.append(i[0])
+            
+            await selectState.send(embed=embedPrompt2)
+            await ctx.send(embed=embedPrompt2)
+            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
+            cityToChoose = grabUserInput.content
+            while ' ' in cityToChoose:
+              cityToChoose = cityToChoose.replace(' ', '_')
+            
+            cityToChoose = cityToChoose.lower()
+            for i in stateCities:
+              if cityToChoose in i:
+                city = i
+                if i[49:] == cityToChoose:
+                  break
+            
+            try:       
+              cityHtml = requests.get(city)
+              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
+              foodBankUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
+              foodBankUrls = [i for i in foodBankUrls if ('/foodbank/' in i and 'listing.slug' not in i)]
+              foodBankUrls = foodBankUrls[:16]
+              filteredCityUrls = []
+
+              for i in foodBankUrls:
+                if '"><img' in i:
+                  i = i.replace('"><img', "")
+                  filteredCityUrls.append(i)
+              
+              resultEmbed = discord.Embed(title=f"Food Banks in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
+              
+              counter = 1
+              for i in filteredCityUrls:
+                page = requests.get(i)
+                soupResult = BeautifulSoup(page.content, "html.parser")
+                title = str(soupResult.title)
+
+                while '<title>' in title:
+                  title = title.replace('<title>', '').replace('</title>', '')
+                  title = title.split(' - ')
+                if len(title) > 2:
+                  title[0:1] = [' '.join(title[0:2])]
+                  del title[1]
+
+                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
+                counter += 1
+
+              await ctx.send(embed=resultEmbed)
+
+            except Exception as e:
+              return await ctx.send(f'City Not Found\n{e}')
+          except:
+            pass
+        if fbButtonCheck.component.label == "Iniciar Búsqueda":
+          embedPrompt = discord.Embed(title="Escoge tu Estado", description="Escoga su estado en donde quieres buscar usando los siguientes menus. Note que los residentes de DC van a necesitar especificar si quieren buscar en Washington o en Washington Navy Yard.", color=0x2f3136)
+
+          await ctx.send(embed=embedPrompt, components=[
+          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
+          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
+            ]
+          )
+
+          try:
+            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
+            state = selectState.values[0]
+
+            while ' ' in state:
+              state = state.replace(' ', '_')
+
+            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selecionado", description="Ahora escriba el nobre de la ciudad (no el condado) en donde quiere buscar centros de comida.", color=0x2f3136)
+            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/foodbanks/state/{state}")
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
+            cities = [i for i in cities if '/foodbanks/city/' in i]
+            stateAbv = cities[0][45:49]
+            cities = [str(i) for i in cities if stateAbv in i]
+            stateCities = []
+
+            for i in cities:
+              i = str(i)
+              i = i.split('">')
+              stateCities.append(i[0])
+            
+            await selectState.send(embed=embedPrompt2)
+            await ctx.send(embed=embedPrompt2)
+            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
+            cityToChoose = grabUserInput.content
+            while ' ' in cityToChoose:
+              cityToChoose = cityToChoose.replace(' ', '_')
+            
+            cityToChoose = cityToChoose.lower()
+            for i in stateCities:
+              if cityToChoose in i:
+                city = i
+                if i[49:] == cityToChoose:
+                  break
+            
+            try:       
+              cityHtml = requests.get(city)
+              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
+              foodBankUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
+              foodBankUrls = [i for i in foodBankUrls if ('/foodbank/' in i and 'listing.slug' not in i)]
+              foodBankUrls = foodBankUrls[:16]
+              filteredCityUrls = []
+
+              for i in foodBankUrls:
+                if '"><img' in i:
+                  i = i.replace('"><img', "")
+                  filteredCityUrls.append(i)
+              
+              resultEmbed = discord.Embed(title=f"Centros de Comida en {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
+              
+              counter = 1
+              for i in filteredCityUrls:
+                page = requests.get(i)
+                soupResult = BeautifulSoup(page.content, "html.parser")
+                title = str(soupResult.title)
+
+                while '<title>' in title:
+                  title = title.replace('<title>', '').replace('</title>', '')
+                  title = title.split(' - ')
+                if len(title) > 2:
+                  title[0:1] = [' '.join(title[0:2])]
+                  del title[1]
+
+                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
+                counter += 1
+
+              await ctx.send(embed=resultEmbed)
+
+            except Exception as e:
+              return await ctx.send(f'City Not Found\n{e}')
+          except:
+            pass
+      except:
+        pass
+
 @help.command()
 async def reverse(ctx):
   embed=discord.Embed(title="Emo Image Generator", description="Reverses a string. That's it.", color=0x2f3136)

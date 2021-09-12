@@ -24,21 +24,26 @@ for i in cities:
 cityToChoose = str(input('enter your city (not county): '))
 while ' ' in cityToChoose:
   cityToChoose = cityToChoose.replace(' ', '_')
-print(stateCities)
 
 for i in stateCities:
   if cityToChoose in i:
     city = i
-    print(city)
     if i[43:] == cityToChoose:
       break
 
-page = requests.get(city)
-soup = BeautifulSoup(page.content, "html.parser")
-counter = soup.find_all("p")
-counter = [i.get_text() for i in counter]
-counter = counter[1].replace('                    ', '').split('\n')
-counter = counter[1:len(counter)-1]
-for count, i in enumerate(counter): counter[count] = i.replace('\r', '')
-counter[0:2] = [', '.join(counter[0:2])]
-print(counter)
+cityPage = urllib.request.urlopen(city)
+centers = re.findall(r"(?P<url>https?://[^\s]+)", cityPage.read().decode())
+centers = [i for i in centers if '/li/' in i]
+centers = [i.split('">Email')[0] for i in centers if '">Email' in i]
+
+for i in centers:
+  page = requests.get(i)
+  soup = BeautifulSoup(page.content, "html.parser")
+  counter = soup.find_all("p")
+  counter = [i.get_text() for i in counter]
+  counter = counter[1].replace('                    ', '').split('\n')
+  counter = counter[1:len(counter)-1]
+  for count, i in enumerate(counter): counter[count] = i.replace('\r', '')
+  counter[0:2] = [', '.join(counter[0:2])]
+  print(soup.title)
+  print(counter)
