@@ -3029,7 +3029,7 @@ async def snipe(ctx):
           counter += 1
           break
         elif '//giphy.com' in i:
-          html = urllib.request.urlopen("https://giphy.com/gifs/mlb-sports-baseball-asg-yD5KEKVG1o9qcoXNYg")
+          html = urllib.request.urlopen(i)
           gifs = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
           gifs = re.findall(r"(?P<url>https?://[^\s]+)", str(gifs))
           gifs = [i for i in gifs if 'https://media0.giphy.com/' in i]
