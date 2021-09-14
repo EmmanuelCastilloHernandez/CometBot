@@ -615,7 +615,7 @@ async def crisis(ctx):
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso (Sexual o Domestico)", value="Abuso (Sexual o Domestico)"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar"), SelectOption(label="Adicción a Substancias", value="Adicción a Substancias")
+          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso (Sexual o Domestico)", value="Abuso (Sexual o Domestico)"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar"), SelectOption(label="Adicción", value="Adicción")
           ]
         )
       ]
@@ -1338,16 +1338,16 @@ Type: {selectionDone.values[0]}"""
             pass
       except:
         pass
-    if selectionDone.values[0] == 'Find Treatment Centers' or selectionDone.values[0] == 'Adicción a Substancias':
+    if selectionDone.values[0] == 'Find Treatment Centers' or selectionDone.values[0] == 'Adicción':
       if lang == 'English':
-        embed=discord.Embed(title="Seeking Treatment for Substance Abuse", description="Substance abuse is a serious issues in many of our cities. Addiction is usually influenced by mental conditions, genetics, and/or environmental conditions like stress.\n\nOvercoming a drug addiction can help to improve your mental and physical help. Comet can help provide resources for hotlines to contact for resources and even help search for treatment centers.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
+        embed=discord.Embed(title="Seeking Treatment for Addiction", description="Addiction is a serious issues in many of our cities. Addiction is usually influenced by mental conditions, genetics, and/or environmental conditions like stress.\n\nAddiction can help to improve your mental and physical help. Comet can help provide resources for hotlines to contact for resources and even help search for treatment centers.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
         embed.add_field(name="Credit: Free Treatment Centers:", value="**https://www.freetreatmentcenters.com/**", inline=False)
         embed.add_field(name="U.S. Department of Health & Human Services' SAMHSA Hotline:", value="**1-800-662-HELP (4357)**", inline=False)
         embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
         embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
         embed.add_field(name="Final Question:", value="Do you wish to start your search for a treament center? If so, press the **Start Search** button within the next 300 seconds.", inline=False)
       elif lang == 'Spanish':
-        embed=discord.Embed(title="Buscando Centros De Comida", description="El abuso de sustancias es un problema grave en muchas de nuestras ciudades. La adicción generalmente está influenciada por condiciones mentales, genéticas y/o condiciones ambientales como el estrés.\n\nSuperar una adicción a las drogas puede ayudarlo a mejorar su ayuda física y mental. Comet puede ayudar a proporcionar recursos para que las líneas directas se pongan en contacto para obtener recursos e incluso ayudar a buscar centros de tratamiento.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
+        embed=discord.Embed(title="Buscando Tratamiento Para Adicción", description="La adicción es un problema grave en muchas de nuestras ciudades. La adicción generalmente está influenciada por condiciones mentales, genéticas y/o condiciones ambientales como el estrés.\n\nSuperando una adicción puede ayudar a mejorar la ayuda física y mental. Comet puede ayudar a proporcionar recursos via numeros o sitios web e incluso ayudar a buscar centros de tratamiento aqui en este chat.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
         embed.add_field(name="Credito: Free Treatment Centers:", value="**https://www.freetreatmentcenters.com/**", inline=False)
         embed.add_field(name="Linea SAMHSA del Departmento de Salud y Servicios Humanos Estadounidenses:", value="**1-800-662-HELP (4357)**", inline=False)
         embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
@@ -1365,7 +1365,7 @@ Type: {selectionDone.values[0]}"""
         fbButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
 
         if fbButtonCheck.component.label == "Start Search":
-          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the select menus. Note that DC residents will have to specify if they live in Washington or in the Washington Navy Yard.", color=0x2f3136)
+          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the select menus. Note that DC residents will have to specify if they live in Washington or in Washington DC, DC.", color=0x2f3136)
 
           await ctx.send(embed=embedPrompt, components=[
           [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
@@ -1381,63 +1381,62 @@ Type: {selectionDone.values[0]}"""
             while ' ' in state:
               state = state.replace(' ', '_')
 
-            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selected", description="Now type out the name of the city you wish to look for food banks.", color=0x2f3136)
-            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/foodbanks/state/{state}")
+            html = urllib.request.urlopen(f"https://www.freetreatmentcenters.com/state/{state}")
             cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
             cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
-            cities = [i for i in cities if '/city/' in i]
-            stateAbv = cities[0][45:49]
+
+            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selected", description="Now type out the name of the city you wish to look for treatment centers.", color=0x2f3136)
+            cities = [i for i in cities if '/ci/' in i]
+            stateAbv = cities[0][39:43]
+            print(stateAbv)
             cities = [str(i) for i in cities if stateAbv in i]
             stateCities = []
 
             for i in cities:
               i = str(i)
               i = i.split('">')
+              i = i[0]
+              i = i.split('"\\\'')
               stateCities.append(i[0])
             
+            print(stateCities)
             await selectState.send(embed=embedPrompt2)
             await ctx.send(embed=embedPrompt2)
             grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
-            cityToChoose = grabUserInput.content
+            cityToChoose = grabUserInput.content.lower()
             while ' ' in cityToChoose:
               cityToChoose = cityToChoose.replace(' ', '_')
             
-            cityToChoose = cityToChoose.lower()
             for i in stateCities:
               if cityToChoose in i:
                 city = i
-                if i[49:] == cityToChoose:
+                if i[43:] == cityToChoose:
                   break
             
+            print(i)
             try:       
-              cityHtml = requests.get(city)
-              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
-              foodBankUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
-              foodBankUrls = [i for i in foodBankUrls if ('/foodbank/' in i and 'listing.slug' not in i)]
-              foodBankUrls = foodBankUrls[:16]
-              filteredCityUrls = []
+              cityPage = urllib.request.urlopen(city)
+              centers = re.findall(r"(?P<url>https?://[^\s]+)", cityPage.read().decode())
+              print(centers)
+              centers = [i for i in centers if '/li/' in i]
+              centers = [i.split('">Email')[0] for i in centers if '">Email' in i]
 
-              for i in foodBankUrls:
-                if '"><img' in i:
-                  i = i.replace('"><img', "")
-                  filteredCityUrls.append(i)
-              
-              resultEmbed = discord.Embed(title=f"Food Banks in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
-              
+              resultEmbed = discord.Embed(title=f"Treatment Center in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
               counter = 1
-              for i in filteredCityUrls:
-                page = requests.get(i)
-                soupResult = BeautifulSoup(page.content, "html.parser")
-                title = str(soupResult.title)
+              for i in centers:
+                centerPage = requests.get(i)
+                centerSoup = BeautifulSoup(centerPage.content, "html.parser")
+                centerPageText = centerSoup.find_all("p")
+                centerPageText = [i.get_text() for i in centerPageText]
+                centerPageText = centerPageText[1].replace('                    ', '').split('\n')
+                centerPageText = centerPageText[1:len(centerPageText)-1]
+                for count, i in enumerate(centerPageText): centerPageText[count] = i.replace('\r', '')
+                centerPageText[0:2] = [', '.join(centerPageText[0:2])]
 
+                title = str(centerSoup.title)
                 while '<title>' in title:
                   title = title.replace('<title>', '').replace('</title>', '')
-                  title = title.split(' - ')
-                if len(title) > 2:
-                  title[0:1] = [' '.join(title[0:2])]
-                  del title[1]
-
-                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
+                resultEmbed.add_field(name=f'{counter}. {title}', value=f'{centerPageText[0]}\n{centerPageText[1]}\n{i}', inline=False)
                 counter += 1
 
               await ctx.send(embed=resultEmbed)
@@ -3025,18 +3024,26 @@ async def snipe(ctx):
             embed.set_image(url=f"{i}")
           counter += 1
           break
-        elif 'giphy.com' in i:
-          page = requests.get(i)
-          soup = BeautifulSoup(page.content, "html.parser")
-          pageContent = soup.find(id="content")
-          giphyUrls = pageContent.find_all("div", class_="KRS9L9BsuEdhF-ACKiX8x")
-          giphyUrls = re.findall("(?P<url>https?://[^\s]+)", str(giphyUrls))
-
-          print(giphyUrls)
-          embed.set_image(url="https://giphy.com/embed/yD5KEKVG1o9qcoXNYg/twitter/iframe")
+        elif 'media0.giphy.com' in i:
+          embed.set_image(url=i)
           counter += 1
           break
-      
+        elif '//giphy.com' in i:
+          html = urllib.request.urlopen("https://giphy.com/gifs/mlb-sports-baseball-asg-yD5KEKVG1o9qcoXNYg")
+          gifs = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+          gifs = re.findall(r"(?P<url>https?://[^\s]+)", str(gifs))
+          gifs = [i for i in gifs if 'https://media0.giphy.com/' in i]
+          gifs2 = []
+
+          for e in gifs:
+            e = str(e)
+            e = e.split('">')
+            e = gifs2.append(e[0])
+          
+          embed.set_image(url=gifs2[0])
+          counter += 1
+          break
+
       if counter == 0:
         embed.set_image(url=f"attachment://{regularSnipeImage[channel.id][regularSnipeAuthor[channel.id].id].filename}")
     except:
