@@ -568,7 +568,7 @@ async def help(ctx):
 
 @client.command()
 async def invite(ctx):
-  embed=discord.Embed(title="Invite Comet", description="Thank you for being interested in **Comet**. To invite **Comet** to your Discord server, click the button below.\n\nMake sure to Read the TOS first by clicking the ToS button below.", color=0x2f3136)
+  embed=discord.Embed(title="Invite Comet", description="Thank you for being interested in **Comet**. To invite **Comet** to your Discord server, click the button below.\n\nMake sure to read the ToS first by clicking the ToS button below.", color=0x2f3136)
   await ctx.send(embed=embed, components=[
     [Button(style = ButtonStyle.URL, label='Invite Comet', url='https://discord.com/api/oauth2/authorize?client_id=842461851815247903&permissions=2184708039&scope=bot'),
     Button(style = ButtonStyle.URL, label='Bot ToS', url='https://github.com/EmmanuelCastilloHernandez/CometBot/blob/master/ToS.md')]
@@ -3548,6 +3548,78 @@ async def play(ctx, *, url : str):
         embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
         embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
         embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+        embed.set_footer(text="Comet Alert")
+        try:
+          server = ctx.message.guild
+          player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
+
+          voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
+          voice.is_playing()
+
+          players[server.id] = source
+          await ctx.reply(embed=embed)
+        except:
+          await ctx.invoke(client.get_command('queue'), url=song)
+  else:
+    await ctx.send("You need to be in a voice channel to run this command")
+
+@client.command()
+@commands.is_owner()
+async def test(ctx):
+  for i in client.guilds:
+    await ctx.send(i)
+
+@client.command()
+async def twitterPlay(ctx, *, url : str):
+  httpsResult = url.startswith('https')
+  if (ctx.author.voice):
+    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+    proceed = True
+
+    if voiceChannel == None:
+      channel = ctx.message.author.voice.channel
+      voice = await channel.connect()
+    else:
+      voice = voiceChannel
+    
+    async with ctx.typing():
+      if proceed == True:
+        if httpsResult == False:
+          newUrl = url.replace(' ', '+')
+          html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+          videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+          thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
+          song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+        elif 'open.spotify.com' in url:
+          getSpotifyPage = requests.get(url)
+          scanPage = BeautifulSoup(getSpotifyPage.content, "html.parser")
+          scanPage = str(scanPage.title)
+
+          songTitle = scanPage.replace('<title>', '').replace(' | Spotify</title>', '')
+          songTitle += ' audio'
+          newUrl = songTitle.replace(' ', '+')
+          html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+          videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+          thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
+          song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+        
+        song = url
+
+        try:
+          video, source, hours, mins, seconds = search(song)
+        except:
+          await ctx.reply('Invalid Link')
+          return
+
+        embed=discord.Embed(title=f"Playing: TwitterVideo", url=f"{song}", color=0xf23136)
+        embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+        embed.set_thumbnail(url=thumbnail)
+        embed.add_field(name="Likes:", value=f"NA", inline=True)
+        embed.add_field(name="Views:", value=f"NA", inline=True)
+        embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+        embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+        embed.add_field(name="Length:", value=f"NA Hours, NA Minutes, NA seconds", inline=True)
         embed.set_footer(text="Comet Alert")
         try:
           server = ctx.message.guild
