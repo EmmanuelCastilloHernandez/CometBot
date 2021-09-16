@@ -566,6 +566,15 @@ async def help(ctx):
   
   await ctx.send(embed=embed)
 
+@client.command()
+async def invite(ctx):
+  embed=discord.Embed(title="Invite Comet", description="Thank you for being interested in **Comet**. To invite **Comet** to your Discord server, click the button below.\n\nMake sure to Read the TOS first by clicking the ToS button below.", color=0x2f3136)
+  await ctx.send(embed=embed, components=[
+    [Button(style = ButtonStyle.URL, label='Invite Comet', url='https://discord.com/api/oauth2/authorize?client_id=842461851815247903&permissions=2184708039&scope=bot'),
+    Button(style = ButtonStyle.URL, label='Bot ToS', url='https://github.com/EmmanuelCastilloHernandez/CometBot/blob/master/ToS.md')]
+  ])
+  
+
 @help.command(aliases=['SOS'])
 async def crisis(ctx):
   embed=discord.Embed(title="CometCRISIS", description="This command can help an individual find the help they need IRL. This can go from anything from suicide prevention to knowing what to do if ICE knocks at your door. If the command is maliciously misused, the person misusing it can be banned from using Comet in its entirety. Only works in DMs to keep any emergency conversations private and secure.", color=0x2f3136)
@@ -3066,18 +3075,6 @@ async def snipe(ctx):
 # async def hello(ctx):
 #  await ctx.send('Hello human!')
 
-#Spinning GIF code
-@client.command(aliases=['spin'])
-@commands.cooldown(1, 10, commands.BucketType.user)
-async def spanImages(ctx):
-  randomSpinningImages=['https://media.discordapp.net/attachments/424269924349771786/820415854180565032/xqcSpinDiscord.gif',  'https://tenor.com/view/homer-simpson-twister-happy-spin-gif-13726615',
-    'https://tenor.com/view/spinning-seal-water-funny-gif-5129604',
-    'https://tenor.com/view/spin-dance-twirling-monkey-gif-9406313',
-    'https://tenor.com/view/cat-spin-record-cute-gif-16753412',
-    'https://tenor.com/view/doge-such-spin-spin-dizzy-doge-spin-gif-4981760',
-    'https://tenor.com/view/fan-spinning-camera-go-pro-dizzy-gif-5297858']
-  await ctx.send(f'{random.choice(randomSpinningImages)}')
-
 # Would You Rather
 @client.command(aliases=['wyr'])
 @commands.cooldown(1, 3, commands.BucketType.user)
@@ -3099,7 +3096,7 @@ async def caught(ctx):
 @client.command(aliases=['8ball', 'truther'], help='A sassy 8Ball. Also known as truther\nUse #8ball or #truther to use it!')
 async def _8ball(ctx, *, question):
   responses = ['Certain. Its only a matter of time now',
-    'It is decidedly so :smiley:',
+    'It is decidedly so 😊',
     '¡Sin duda!',
     'Definitely yes. Don\'t worry about it!',
     'No. JK, you can rely on it with your life!',
@@ -3107,15 +3104,16 @@ async def _8ball(ctx, *, question):
     'From what I see, yes!',
     'Probably',
     'Good chance it\'s yes...',
-    'Yes :smiley:',
+    'Yes 😁',
     'Signs are pointing to yes...',
     'Obviously',
     'The reply I have is hazy af. Try again or ask a different question :|',
-    'Too busy breaking my own code. Try saying that again :no_mouth:',
+    'Too busy breaking my own code. Try saying that again 😶',
     '▒▒R▒E▒▒▒S▒▒▒PON▒▒S▒E▒▒▒▒▒C▒LO▒▒▒▒U▒▒D▒Y▒▒▒',
+    '🤖 FRIJOLES DE LA OLLA 🤖  Try again',
     'I\'m not telling you that rn :no_mouth:',
     'I\'m too busy to predict rn. Try again l8r :rage:',
-    'Concentrate porque ahorita se estas sonando como un troglodita...:rage:',
+    'Concentrate porque ahorita se estas sonando como un troglodita...🤬',
     'Don\'t try to count on this.',
     'Probably not. Sorry.',
     'Better chance of being struck by lighting than this being the case.',
@@ -3132,25 +3130,13 @@ async def _8ball(ctx, *, question):
 @client.command(aliases=['delete', 'delet', 'clear','del'], help='Clear command obviously.')
 @commands.has_permissions(manage_messages=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
-async def purge(ctx, maxamount=30):
+async def purge(ctx, maxAmount=30, user: discord.User=None):
   await ctx.message.delete()
-  await ctx.channel.purge(limit=maxamount)
-  await ctx.channel.send(f'Deleted **{maxamount}** messages.', delete_after=5)
-
-@client.command(aliases=['dababy', 'dacar'])
-@commands.cooldown(1, 5, commands.BucketType.user)
-async def dababyCommand(ctx):
-  daBabyGIFs=['https://tenor.com/view/dababy-rapper-hip-hop-rap-digibyte-gif-17582117',
-    'https://tenor.com/view/lets-go-im-ready-its-time-lets-get-it-bop-live-gif-15820219',
-    'https://tenor.com/view/da-baby-baby-db-dance-smile-gif-15748120',
-    'https://tenor.com/view/da-baby-lets-go-lets-goo-lets-gooo-lets-goooo-gif-16298213',
-    'https://tenor.com/view/da-baby-suge-jonathan-lyndale-kirk-gif-15028096',
-    'https://tenor.com/view/da-baby-bop-dance-charlotte-groove-gif-16081053',
-    'https://tenor.com/view/dababy-convertable-gif-20206040',
-    'https://tenor.com/view/dababy-gif-20863730',
-    'https://tenor.com/view/dababy-gif-20861878',
-    'https://tenor.com/view/bpm-dababy-stfu-gif-20869699']
-  await ctx.channel.send(f'{random.choice(daBabyGIFs)}')
+  if user != None:
+    await ctx.channel.purge(limit=maxAmount, check= lambda e: e.author == user)
+  else:
+    await ctx.channel.purge(limit=maxAmount)
+  await ctx.channel.send(f'Deleted **{maxAmount}** messages.', delete_after=5)
 
 @client.command(pass_context=True)
 @commands.cooldown(1, 5, commands.BucketType.user)
@@ -3454,12 +3440,15 @@ def checkQueue(id, server, channel, person):
     errorChannel = 'UNKNOWN'
     player = queues[id][0]
     songPlaying = queueTitles[id][0]
+    videoId = re.findall(r"watch\?v=(\S{11})", str(player))
+    thumbnail = f"https://img.youtube.com/vi/{videoId[0]}/maxresdefault.jpg"
     del queues[id][0]
     del queueTitles[id][0]
     video, source, hours, mins, seconds = search(player)
 
-    embed=discord.Embed(title="Comet Music Player", color=0xf23136)
-    embed.set_author(name=f"Now Playing: {songPlaying}")
+    embed=discord.Embed(title="Comet Music Player", url=player, color=0xf23136)
+    embed.set_author(name=f"Now Playing: {songPlaying}", url=player)
+    embed.set_thumbnail(url=thumbnail)
     embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
     embed.add_field(name="Requested by:", value=f"{person.mention}", inline=True)
     embed.add_field(name="Channel:", value=f"{person.voice.channel if person.voice.channel != None else errorChannel}", inline=True)
@@ -3672,9 +3661,9 @@ async def queue(ctx, *, url: str):
 async def leave(ctx):
   if (ctx.voice_client):
     await ctx.message.add_reaction('✌')
-    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    voiceChannel = ctx.voice_client.channel
     await ctx.guild.voice_client.disconnect()
-    embed=discord.Embed(title=f"Requested by {ctx.author.name}",description=f"Comet left {ctx.message.author.voice.channel}.", color=0xe29797)
+    embed=discord.Embed(title=f"Left {voiceChannel}",description=f"Requested by {ctx.author.name}.", color=0xe29797)
     embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/leaveIcon.png')
     await ctx.reply(embed=embed)
   else:

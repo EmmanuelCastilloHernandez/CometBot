@@ -116,6 +116,5 @@ Here is a list of some bot commands as of 2.0.0 __**`Aldebaran`**__:
 * #SuperSnipe
 * #8ball
 * #topic
-* #dababy
 
 ...along with many others!
