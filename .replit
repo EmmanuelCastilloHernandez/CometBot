@@ -1,0 +1,9 @@
+language="python3"
+run = """
+pip install py-cord
+pip install py-cord[voice]
+python main.py
+"""
+
+[packager]
+ignoredPackages=["discord.py", "discord"]

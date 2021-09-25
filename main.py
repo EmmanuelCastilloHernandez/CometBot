@@ -573,7 +573,18 @@ async def invite(ctx):
     [Button(style = ButtonStyle.URL, label='Invite Comet', url='https://discord.com/api/oauth2/authorize?client_id=842461851815247903&permissions=2184708039&scope=bot'),
     Button(style = ButtonStyle.URL, label='Bot ToS', url='https://github.com/EmmanuelCastilloHernandez/CometBot/blob/master/ToS.md')]
   ])
-  
+
+async def on_connect():
+    global_commands = await client.http.get_global_commands(client.application_id)
+    for command in global_commands:
+        await client.http.delete_global_command(client.application_id, command['id'])
+
+    async for guild in client.fetch_guilds():
+        guild_commands = await client.http.get_guild_commands(client.application_id, guild.id)
+        for command in guild_commands:
+            await client.http.delete_guild_command(bot.application_id, guild.id, command['id'])
+
+client.on_connect = on_connect
 
 @help.command(aliases=['SOS'])
 async def crisis(ctx):
@@ -604,6 +615,8 @@ async def crisis(ctx):
     lang = 'English'
 
   await msg.delete()
+  optionsSpanish = [['LGBTQ+', '🏳️‍🌈'], ['Suicidio', '⚠️'], ['Abuso (Sexual or Domestico)', '🕊️'], ['Buscar Refugio', '🏚️'], ['Buscar Centros de Comida', '🥘'], ['ICE Cerca De Mi Hogar', '🚓']]
+  optionsEnglish = [['LGBTQ+', '🏳️‍🌈'], ['Suicide', '⚠️'], ['Abuse (Sexual or Domestic)', '🕊️'], ['Need Shelter', '🏚️'], ['Help Find Food', '🥘'], ['ICE Is at My Front Door', '🚓']]
 
   if lang == 'English':
     embed=discord.Embed(title="CometCRISIS CENTER", description="Thank you for using the CometCRISIS Center. People's mental and physical mental health is our top priority, which is why we designed this command.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
@@ -612,8 +625,7 @@ async def crisis(ctx):
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Choose your service", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicide", value="Suicide"), SelectOption(label="Abuse (Sexual or Domestic)", value="Abuse (Sexual or Domestic)"), SelectOption(label="Need Shelter", value="Need Shelter"), SelectOption(label="Help Find Food", value="Help Find Food"), SelectOption(label="ICE Is at My Front Door", value="ICE Is at My Front Door"), SelectOption(label="Find Treament Centers", value="Find Treatment Centers")
-          ]
+          Select(placeholder="Choose your service", options=[SelectOption(label=f"{i[0]}", value=f"{i[0]}", emoji=f"{i[1]}") for i in optionsEnglish]
         )
       ]
     )
@@ -624,8 +636,7 @@ async def crisis(ctx):
 
     await ctx.send(embed=embed,
       components = [
-          Select(placeholder="Escoge tu servicio", options=[SelectOption(label="LGBTQ+", value="LGBTQ+"), SelectOption(label="Suicidio", value="Suicidio"), SelectOption(label="Abuso (Sexual o Domestico)", value="Abuso (Sexual o Domestico)"), SelectOption(label="Buscar Refugio", value="Buscar Refugio"), SelectOption(label="Buscar Centros de Comida", value="Buscar Centros de Comida"), SelectOption(label="ICE Cerca De Mi Hogar", value="ICE Cerca De Mi Hogar"), SelectOption(label="Adicción", value="Adicción")
-          ]
+          Select(placeholder="Escoga su servicio", options=[SelectOption(label=f"{i[0]}", value=f"{i[0]}", emoji=f"{i[1]}") for i in optionsSpanish]
         )
       ]
     )
