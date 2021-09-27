@@ -128,10 +128,10 @@ def startupMsg():
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
   --------------------------------------------
-  Version **3** Bellatrix Beta 5 ready to use!
+  Version **3** Bellatrix RC-3 ready to use!
   --------------------------------------------
 
-  Now With CometCRISIS B2 and CometVoice 2.0
+  Now With __CometCRISIS RC-1 and CometVoice 2.0__
   '''
 
   pass
@@ -387,16 +387,6 @@ async def on_message(message):
     await asyncio.sleep(30)
     del useSpammyCharacters[f'{message.author.id} | {message.guild.id}']
 
-
-
-  if message.content.startswith('no one cares'):
-    agreedReplies=['agreed\nand I\'m a bot :skull:',
-      'agreed',
-      '^',
-      'ok',
-      f'based {message.author.mention}']
-    await message.channel.send(f'{random.choice(agreedReplies)}')
-
 async def levelUpUser(user, server):
   global levelUpCheck
   with open('levels.json','r') as f: users = json.load(f)
@@ -544,14 +534,17 @@ async def on_ready():
   print(startupMsg.__doc__)
 
   for i in sendMsgTo:
-    channel = client.get_channel(i)
+    try:
+      channel = client.get_channel(i)
 
-    await channel.send(startupMsg.__doc__, components = [
-      [
-        Button(style = random.choice(randomButtonColors), label = f"Servers with Comet: {servers}", disabled = True),
-        Button(style = random.choice(randomButtonColors), label = "Creator: Emmanuel Castillo", disabled = True)
-      ]
-    ])
+      await channel.send(startupMsg.__doc__, components = [
+        [
+          Button(style = random.choice(randomButtonColors), label = f"Servers with Comet: {servers}", disabled = True),
+          Button(style = random.choice(randomButtonColors), label = "Creator: Emmanuel Castillo", disabled = True)
+        ]
+      ])
+    except:
+      pass
 
 @client.group(invoke_without_command=True)
 async def help(ctx):
@@ -574,18 +567,6 @@ async def invite(ctx):
     Button(style = ButtonStyle.URL, label='Bot ToS', url='https://github.com/EmmanuelCastilloHernandez/CometBot/blob/master/ToS.md')]
   ])
 
-async def on_connect():
-    global_commands = await client.http.get_global_commands(client.application_id)
-    for command in global_commands:
-        await client.http.delete_global_command(client.application_id, command['id'])
-
-    async for guild in client.fetch_guilds():
-        guild_commands = await client.http.get_guild_commands(client.application_id, guild.id)
-        for command in guild_commands:
-            await client.http.delete_guild_command(bot.application_id, guild.id, command['id'])
-
-client.on_connect = on_connect
-
 @help.command(aliases=['SOS'])
 async def crisis(ctx):
   embed=discord.Embed(title="CometCRISIS", description="This command can help an individual find the help they need IRL. This can go from anything from suicide prevention to knowing what to do if ICE knocks at your door. If the command is maliciously misused, the person misusing it can be banned from using Comet in its entirety. Only works in DMs to keep any emergency conversations private and secure.", color=0x2f3136)
@@ -604,7 +585,7 @@ async def crisis(ctx):
   )
 
   try:
-    buttonCheck = await client.wait_for("button_click", timeout=20, check=lambda a: a.user == ctx.author)
+    buttonCheck = await client.wait_for("button_click", timeout=20, check=lambda a: a.user == ctx.author and a.channel == ctx.channel)
 
     if buttonCheck.component.label == 'Spanish | Español':
       lang = 'Spanish'
@@ -615,8 +596,8 @@ async def crisis(ctx):
     lang = 'English'
 
   await msg.delete()
-  optionsSpanish = [['LGBTQ+', '🏳️‍🌈'], ['Suicidio', '⚠️'], ['Abuso (Sexual or Domestico)', '🕊️'], ['Buscar Refugio', '🏚️'], ['Buscar Centros de Comida', '🥘'], ['ICE Cerca De Mi Hogar', '🚓']]
-  optionsEnglish = [['LGBTQ+', '🏳️‍🌈'], ['Suicide', '⚠️'], ['Abuse (Sexual or Domestic)', '🕊️'], ['Need Shelter', '🏚️'], ['Help Find Food', '🥘'], ['ICE Is at My Front Door', '🚓']]
+  optionsSpanish = [['LGBTQ+', '🏳️‍🌈'], ['Suicidio', '⚠️'], ['Abuso (Sexual or Domestico)', '🕊️'], ['Buscar Refugio', '🏡'], ['Buscar Centros de Comida', '🥘'], ['ICE Cerca De Mi Hogar', '🚓']]
+  optionsEnglish = [['LGBTQ+', '🏳️‍🌈'], ['Suicide', '⚠️'], ['Abuse (Sexual or Domestic)', '🕊️'], ['Need Shelter', '🏡'], ['Help Find Food', '🥘'], ['ICE Is at My Front Door', '🚓']]
 
   if lang == 'English':
     embed=discord.Embed(title="CometCRISIS CENTER", description="Thank you for using the CometCRISIS Center. People's mental and physical mental health is our top priority, which is why we designed this command.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\nPlease take a look at the dropdown menu to choose the service that you need today.", color=0x2f3136)
@@ -643,10 +624,7 @@ async def crisis(ctx):
   
   while True:
     selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-    if lang == 'English':
-      await selectionDone.send(content='{} chosen'.format(selectionDone.values[0]))
-    else:
-      await selectionDone.send(content='{} escogido.'.format(selectionDone.values[0]))
+    await selectionDone.defer(edit_origin=True)
 
     if selectionDone.values[0] == 'LGBTQ+':
       if lang == 'English':
@@ -1358,201 +1336,123 @@ Type: {selectionDone.values[0]}"""
             pass
       except:
         pass
-    if selectionDone.values[0] == 'Find Treatment Centers' or selectionDone.values[0] == 'Adicción':
+    if selectionDone.values[0] == 'ICE Cerca De Mi Hogar' or selectionDone.values[0] == 'ICE Is at My Front Door':
       if lang == 'English':
-        embed=discord.Embed(title="Seeking Treatment for Addiction", description="Addiction is a serious issues in many of our cities. Addiction is usually influenced by mental conditions, genetics, and/or environmental conditions like stress.\n\nAddiction can help to improve your mental and physical help. Comet can help provide resources for hotlines to contact for resources and even help search for treatment centers.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
-        embed.add_field(name="Credit: Free Treatment Centers:", value="**https://www.freetreatmentcenters.com/**", inline=False)
-        embed.add_field(name="U.S. Department of Health & Human Services' SAMHSA Hotline:", value="**1-800-662-HELP (4357)**", inline=False)
-        embed.add_field(name="Additional Tips:", value="Call **`911, 999, or 112`** and RUN TO YOUR NEAREST POLICE STATION OR FIRE STATION if you are in **`DANGER`** or having a mental crisis.", inline=False)
-        embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are having a crisis. Give them the resources and seek the person. Don't leave them alone please.", inline=False)
-        embed.add_field(name="Final Question:", value="Do you wish to start your search for a treament center? If so, press the **Start Search** button within the next 300 seconds.", inline=False)
-      elif lang == 'Spanish':
-        embed=discord.Embed(title="Buscando Tratamiento Para Adicción", description="La adicción es un problema grave en muchas de nuestras ciudades. La adicción generalmente está influenciada por condiciones mentales, genéticas y/o condiciones ambientales como el estrés.\n\nSuperando una adicción puede ayudar a mejorar la ayuda física y mental. Comet puede ayudar a proporcionar recursos via numeros o sitios web e incluso ayudar a buscar centros de tratamiento aqui en este chat.\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
-        embed.add_field(name="Credito: Free Treatment Centers:", value="**https://www.freetreatmentcenters.com/**", inline=False)
-        embed.add_field(name="Linea SAMHSA del Departmento de Salud y Servicios Humanos Estadounidenses:", value="**1-800-662-HELP (4357)**", inline=False)
-        embed.add_field(name="Consejos adicionales:", value="Llama al **`911, 999, or 112`** y CORRA A SU ESTACION DE POLICIA O DE BOMBEROS LO MAS RAPIDO QUE PUEDA si estan en **`PELIGRO`**.", inline=False)
-        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este sufriendo uns crisis. Dele los recursos y NO ABANDONEN A LA PERSONA.", inline=False)
-        embed.add_field(name="Ultima Pregunta:", value="¿Desea comenzar su búsqueda de un refugio para personas sin hogar? Si es así, presione el botón **Iniciar Búsqueda** en los próximos 300 segundos para empezar el proceso.", inline=False)
+        embed=discord.Embed(title="Dealing with ICE", description="ICE raids can be unpredictable, but it's good to know how to deal with the threat of raids. Follow the instructions below on how to deal with ICE approaching your location. Sources: [1](https://www.nationalimmigrationproject.org/iceWatch.html) [2](https://www.nilc.org/get-involved/community-education-resources/know-your-rights/imm_enfrcmt_homework_rts_2008-05-2/) [3](https://www.immigrantdefenseproject.org/)\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -", color=0x2f3136)
+        embed.add_field(name="If You Are Caught In Public", value="""**```\
+1. Do not panic.
+2. Don't giveaway your name.
+3. Ask if you are free to go.
+4. If you are not let go, exercise your right to remain
+   silent by pleading the 5th admendment.
+5. If they start searching you, state you do not consent to a 
+   search.
+6. DO NOT LIE. It can make things worse.
+7. DO NOT SHOW FAKE DOCUMENTS. Like lying, it can make your 
+   situation worse.```**
+        """, inline=False)
+        embed.add_field(name="If you are in your place of residence:", value="""\
+**```1. DO NOT PANIC UNDER ANY CIRCUMSTANCES.
+2. Do not lie. It will not help you, rather it will hurt 
+   you in the end.
+3. Do not let the officers in unless if they have a warrant
+   signed by a judge.
+  ⋆ If they say they have a warrant, ask them to pass it
+    down your door.
+  ⋆ Read the warrant to check if it's signed by a judge 
+    because sometimes ICE agents may at times try to pass 
+    off a warrant they signed off as legitimate.
+  ⋆ If the warrant is legitimate, but for someone else,
+    state that the person is not here/does not  
+    reside in the area.
+4. If they enter:
+  ⋆ If the warrant does not demand a search, do not consent
+    to it.
+  ⋆ Exercise your right to remain silent by pleading the 5th 
+    admendment.```**""", inline=False)
+        embed.add_field(name="Additional Tips:", value="""\
+Before any raids occur:
+**```1. Formulate a plan in case one occurs.
+2. Research about immigration lawyers and have those numbers
+   ready to call.```**
+If arrested:
+**```
+1. State you wish to remain silent by pleading the 5th
+  admendment.
+2. Get a lawyer ASAP.
+3. Don't hand over any documents to ICE unless your lawyer
+   and/or a judge says to do so.
+4. DO NOT SIGN ANYTHING WITHOUT TALKING TO YOUR LAWYER FIRST,
+   EVEN IF ICE TRIES TO INTIMIDATE YOU INTO SIGNING. 
+5. DO NOT LIE OR GIVE FALSE DOCUMENTS.```**""", inline=False)
+        embed.add_field(name="If you are seeking help for a person", value="Call and text **`THEM`** especially if they are near a raid. Give them the resources via text .", inline=False)
+        embed.add_field(name="Still Need Help?", value="Do you want to be contacted by the developer? Make your choice within the next 300 seconds.", inline=False)
+      if lang == 'Spanish':
+        embed=discord.Embed(title="Redadas de ICE", description="Las redadas de ICE pueden ser impredecibles, pero es bueno saber cómo lidiar con la amenaza de tales redadas. Siga las instrucciones a continuación sobre cómo lidiar con los agentes de ICE que se esten acercando hacia usted. Fuentes: [1](https://www.nationalimmigrationproject.org/iceWatch.html) [2](https://www.nilc.org/get-involved/community-education-resources/know-your-rights/imm_enfrcmt_homework_rts_2008-05-2/) [3](https://www.immigrantdefenseproject.org/)\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n", color=0x2f3136)
+        embed.add_field(name="Si Usted es Parado en Publico:", value="""**```\
+1. Mantengase calmado.
+2. No diga su nombre.
+3. Pregunte si se puede ir.
+4. Si no se puede ir, ejercite su derecho a mantenerse
+   callado via la 5ta enmienda. Puede decir algo como
+   "Invoco la quinta enmienda" o puede tambien decir
+   "Yo no quiero responder preguntas".
+5. Si comienzan a inspectionarlo, diga que usted no da
+   permiso para hacerlo.
+6. NO MIENTA. PUEDE EMPEORAR SU SITUATION.
+7. No enseñe documentos falsos```**
+        """, inline=False)
+        embed.add_field(name="Si Usted Esta en Su Hogar:", value="""\
+**```1. Mantengase calmado.
+2. No miente. Mentir puedde terminar perjudicandolo.
+3. No deje que los oficiales entren a su hogar al menos
+   que tengan una orden judicial.
+  ⋆ Si dicen que tienen una orden, diga se se la pasen
+    por abajo de la puerta.
+  ⋆ Lea la orden para verificar si fue firmada por un
+    juez porque avecez los agentes de ICE pueden
+    tratar de hacer una orden y ponen sus firmas para
+    hacer que la orden se mire legitima. En caso que
+    no pueda leerla, preguntele a alguien en su hogar
+    que le lea la orden.
+  ⋆ Si la orden es legitima pero no es para usted, diga
+    diga que la persona que buscan no vive/esta en la 
+    area.
+4. Si los agentes entran:
+  ⋆ Si la orden legitima no da autorización para hacer
+    una busqueda, no le de su permiso a los agentes
+    para que lo hagan.
+  ⋆ Ejercite su derecho a mantenerse callado via la 5ta 
+    enmienda.```**""", inline=False)
+        embed.add_field(name="Consejos adicionales:", value="""\
+Antes Que Occuran Redadas:
+**```
+1. Formule un plan para que en caso ocura una. Esto puede
+   componerse de a quien planea dejarle sus hijos en caso
+   que lo arresten y/o quien va a cuidar de su propiedad.
+2. Investige sobre abogados de imigración y mantenga sus
+   numeros listos para llamar.```**
+Si Es Arrestado:
+**```
+1. Diga que quiere mantenerse callado via envocando
+  la 5ta enmienda.
+2. Contracte un abogado imediatamente.
+3. Lo le de ningun documento a imigración sin que su abogado
+   y/o un juez diga que lo haga.
+4. NO FIRME NADA SIN HABLAR CON SU ABOGADO SOBRE ELLO, AUN
+   QUE IMIGRACION TRATE DE INTIMIDARLO. 
+5. NO MIENTA O DE DOCUMENTOS FALSOS.```**""", inline=False)
+        embed.add_field(name="Si esta agarrando ayudar para alguien:", value="**`LLAMENLE O MANDALE MENSAJES`** a la persona que este cerca de una redada o este en una area en donde ocurren frequentemente las redadas de ICE. Dele los recursos.", inline=False)
+        embed.add_field(name="¿Aun necesita ayuda?", value="¿Desea contactar el desarollador para obtener ayuda? Si es así, presione el botón **Si** en los próximos 300 segundos para comenzar el contacto.", inline=False)
       await ctx.send(embed=embed, components=[[
         Button(style = ButtonStyle.red, label = "No"),
-        Button(style = ButtonStyle.green, label = "Start Search"),
-        Button(style = ButtonStyle.blue, label = "Iniciar Búsqueda")
+        Button(style = ButtonStyle.green, label = "Yes | Si")
         ]]
       )
 
-      try:
-        stateNames = ["Alaska", "Alabama", "Arkansas", "Arizona", "California", "Colorado", "Connecticut", "District of Columbia", "Delaware", "Florida", "Georgia", "Hawaii", "Iowa", "Idaho", "Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine", "Michigan", "Minnesota", "Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", "New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Vermont", "Washington", "Wisconsin", "West Virginia", "Wyoming"]
-        fbButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
-
-        if fbButtonCheck.component.label == "Start Search":
-          embedPrompt = discord.Embed(title="Choose your State", description="Choose your state from within the select menus. Note that DC residents will have to specify if they live in Washington or in Washington DC, DC.", color=0x2f3136)
-
-          await ctx.send(embed=embedPrompt, components=[
-          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
-          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
-          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
-            ]
-          )
-
-          try:
-            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-            state = selectState.values[0]
-
-            while ' ' in state:
-              state = state.replace(' ', '_')
-
-            html = urllib.request.urlopen(f"https://www.freetreatmentcenters.com/state/{state}")
-            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
-            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
-
-            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selected", description="Now type out the name of the city you wish to look for treatment centers.", color=0x2f3136)
-            cities = [i for i in cities if '/ci/' in i]
-            stateAbv = cities[0][39:43]
-            print(stateAbv)
-            cities = [str(i) for i in cities if stateAbv in i]
-            stateCities = []
-
-            for i in cities:
-              i = str(i)
-              i = i.split('">')
-              i = i[0]
-              i = i.split('"\\\'')
-              stateCities.append(i[0])
-            
-            print(stateCities)
-            await selectState.send(embed=embedPrompt2)
-            await ctx.send(embed=embedPrompt2)
-            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
-            cityToChoose = grabUserInput.content.lower()
-            while ' ' in cityToChoose:
-              cityToChoose = cityToChoose.replace(' ', '_')
-            
-            for i in stateCities:
-              if cityToChoose in i:
-                city = i
-                if i[43:] == cityToChoose:
-                  break
-            
-            print(i)
-            try:       
-              cityPage = urllib.request.urlopen(city)
-              centers = re.findall(r"(?P<url>https?://[^\s]+)", cityPage.read().decode())
-              print(centers)
-              centers = [i for i in centers if '/li/' in i]
-              centers = [i.split('">Email')[0] for i in centers if '">Email' in i]
-
-              resultEmbed = discord.Embed(title=f"Treatment Center in {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
-              counter = 1
-              for i in centers:
-                centerPage = requests.get(i)
-                centerSoup = BeautifulSoup(centerPage.content, "html.parser")
-                centerPageText = centerSoup.find_all("p")
-                centerPageText = [i.get_text() for i in centerPageText]
-                centerPageText = centerPageText[1].replace('                    ', '').split('\n')
-                centerPageText = centerPageText[1:len(centerPageText)-1]
-                for count, i in enumerate(centerPageText): centerPageText[count] = i.replace('\r', '')
-                centerPageText[0:2] = [', '.join(centerPageText[0:2])]
-
-                title = str(centerSoup.title)
-                while '<title>' in title:
-                  title = title.replace('<title>', '').replace('</title>', '')
-                resultEmbed.add_field(name=f'{counter}. {title}', value=f'{centerPageText[0]}\n{centerPageText[1]}\n{i}', inline=False)
-                counter += 1
-
-              await ctx.send(embed=resultEmbed)
-
-            except Exception as e:
-              return await ctx.send(f'City Not Found\n{e}')
-          except:
-            pass
-        if fbButtonCheck.component.label == "Iniciar Búsqueda":
-          embedPrompt = discord.Embed(title="Escoge tu Estado", description="Escoga su estado en donde quieres buscar usando los siguientes menus. Note que los residentes de DC van a necesitar especificar si quieren buscar en Washington o en Washington Navy Yard.", color=0x2f3136)
-
-          await ctx.send(embed=embedPrompt, components=[
-          [Select(placeholder="States Pt 1", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[:24]])], 
-          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[24:48]])],
-          [Select(placeholder="States Pt 2", options=[SelectOption(label=f"{i[:24]}", value=f"{i.replace(' ', '_').lower()}") for i in stateNames[48:]])]
-            ]
-          )
-
-          try:
-            selectState = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-            state = selectState.values[0]
-
-            while ' ' in state:
-              state = state.replace(' ', '_')
-
-            embedPrompt2 = discord.Embed(title=f"{selectState.values[0].replace('_', ' ').upper()} Selecionado", description="Ahora escriba el nobre de la ciudad (no el condado) en donde quiere buscar centros de comida.", color=0x2f3136)
-            html = urllib.request.urlopen(f"https://www.homelessshelterdirectory.org/foodbanks/state/{state}")
-            cities = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
-            cities = re.findall(r"(?P<url>https?://[^\s]+)", str(cities))
-            cities = [i for i in cities if '/foodbanks/city/' in i]
-            stateAbv = cities[0][45:49]
-            cities = [str(i) for i in cities if stateAbv in i]
-            stateCities = []
-
-            for i in cities:
-              i = str(i)
-              i = i.split('">')
-              stateCities.append(i[0])
-            
-            await selectState.send(embed=embedPrompt2)
-            await ctx.send(embed=embedPrompt2)
-            grabUserInput = await client.wait_for('message', check=lambda d: d.author == ctx.author, timeout=50)
-            cityToChoose = grabUserInput.content
-            while ' ' in cityToChoose:
-              cityToChoose = cityToChoose.replace(' ', '_')
-            
-            cityToChoose = cityToChoose.lower()
-            for i in stateCities:
-              if cityToChoose in i:
-                city = i
-                if i[49:] == cityToChoose:
-                  break
-            
-            try:       
-              cityHtml = requests.get(city)
-              citySoup = BeautifulSoup(cityHtml.content, "html.parser")
-              foodBankUrls = re.findall(r"(?P<url>https?://[^\s]+)", str(citySoup))
-              foodBankUrls = [i for i in foodBankUrls if ('/foodbank/' in i and 'listing.slug' not in i)]
-              foodBankUrls = foodBankUrls[:16]
-              filteredCityUrls = []
-
-              for i in foodBankUrls:
-                if '"><img' in i:
-                  i = i.replace('"><img', "")
-                  filteredCityUrls.append(i)
-              
-              resultEmbed = discord.Embed(title=f"Centros de Comida en {cityToChoose.replace('_', ' ').upper()}, {state.replace('_', ' ').upper()}:", color=0x2f3136)
-              
-              counter = 1
-              for i in filteredCityUrls:
-                page = requests.get(i)
-                soupResult = BeautifulSoup(page.content, "html.parser")
-                title = str(soupResult.title)
-
-                while '<title>' in title:
-                  title = title.replace('<title>', '').replace('</title>', '')
-                  title = title.split(' - ')
-                if len(title) > 2:
-                  title[0:1] = [' '.join(title[0:2])]
-                  del title[1]
-
-                resultEmbed.add_field(name=f'{counter}. {title[0]}', value=f'{title[1]}\n{i}', inline=False)
-                counter += 1
-
-              await ctx.send(embed=resultEmbed)
-
-            except Exception as e:
-              return await ctx.send(f'City Not Found\n{e}')
-          except:
-            pass
-      except:
-        pass
-
 @help.command()
 async def reverse(ctx):
-  embed=discord.Embed(title="Emo Image Generator", description="Reverses a string. That's it.", color=0x2f3136)
+  embed=discord.Embed(title="Reverse Text", description="Reverses a string. That's it.", color=0x2f3136)
   embed.add_field(name="Use:", value="**`#reverse <text>`**", inline=True)
   embed.add_field(name="Aliases:", value="rev", inline=True)
   await ctx.send(embed=embed)
@@ -3560,17 +3460,61 @@ async def play(ctx, *, url : str):
         embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
         embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
         embed.set_footer(text="Comet Alert")
-        try:
-          server = ctx.message.guild
-          player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-          voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
-          voice.is_playing()
+    try:
+      server = ctx.message.guild
+      player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-          players[server.id] = source
-          await ctx.reply(embed=embed)
-        except:
-          await ctx.invoke(client.get_command('queue'), url=song)
+      voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
+      voice.is_playing()
+
+      players[server.id] = source
+      
+      playOptions = [['Queue List', '📓'], ['Add an Entry to Queue', '✏️'], ['Remove an Entry from Queue', '❌'], ['Pause Song', '⏸️'], ['Resume Song', '▶️'], ['Skip Song', '⏭️'], ['Leave Voice Channel', '👋']]
+      await ctx.reply(embed=embed, components=[
+        Select(placeholder=f"Options", options=[SelectOption(label=f"{i[0]}", value=f"{i[0]}", emoji=f'{i[1]}') for i in playOptions])
+      ])
+      try:
+        while True:
+          selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author and e.channel == ctx.channel)
+
+          if selectionDone.values[0] == playOptions[0][0]:
+                await ctx.invoke(client.get_command('queueList'))
+          if selectionDone.values[0] == playOptions[1][0]:
+            try:
+              promptEmbed1 = embed=discord.Embed(title="Add Entry To Queue", description="Type the song link or name to add to the queue within 20 seconds.",color=0x2f3136)
+              await ctx.send(embed=promptEmbed1, delete_after=20)
+
+              entryToAdd = await client.wait_for("message", check=lambda e: e.author == ctx.author, timeout=20)
+              songToAdd = str(entryToAdd.content)
+              await ctx.invoke(client.get_command('play'), url=songToAdd)
+            except:
+              errorEmbed1 = embed=discord.Embed(title="Failed to Add Entry", color=0x2f3136)
+              await ctx.send(embed=errorEmbed1, delete_after=5)
+          if selectionDone.values[0] == playOptions[2][0]:
+            try:
+              promptEmbed2 = embed=discord.Embed(title="Remove Entry From Queue", description="Type the entry number to delete off of queue within 20 seconds.",color=0x2f3136)
+              await ctx.send(embed=promptEmbed2, delete_after=20)
+
+              entryToDelete = await client.wait_for("message", check=lambda e: e.author == ctx.author, timeout=20)
+              entryNumToDelete = int(entryToDelete.content)
+              await ctx.invoke(client.get_command('remove'), entry=entryNumToDelete)
+            except:
+              errorEmbed2 = embed=discord.Embed(title="Failed to Remove Entry", color=0x2f3136)
+              await ctx.send(embed=errorEmbed2, delete_after=5)
+          if selectionDone.values[0] == playOptions[3][0]:
+            await ctx.invoke(client.get_command('pause'))
+          if selectionDone.values[0] == playOptions[4][0]:
+            await ctx.invoke(client.get_command('resume'))
+          if selectionDone.values[0] == playOptions[5][0]:
+            await ctx.invoke(client.get_command('skip'))
+          if selectionDone.values[0] == playOptions[6][0]:
+            await ctx.invoke(client.get_command('leave'))
+            break
+      except:
+        pass
+    except:
+      await ctx.invoke(client.get_command('queue'), url=song)
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
@@ -3580,77 +3524,18 @@ async def test(ctx):
   for i in client.guilds:
     await ctx.send(i)
 
-@client.command()
-async def twitterPlay(ctx, *, url : str):
-  httpsResult = url.startswith('https')
-  if (ctx.author.voice):
-    voiceChannel = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    proceed = True
-
-    if voiceChannel == None:
-      channel = ctx.message.author.voice.channel
-      voice = await channel.connect()
-    else:
-      voice = voiceChannel
-    
-    async with ctx.typing():
-      if proceed == True:
-        if httpsResult == False:
-          newUrl = url.replace(' ', '+')
-          html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
-          videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-          thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
-          song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
-        elif 'open.spotify.com' in url:
-          getSpotifyPage = requests.get(url)
-          scanPage = BeautifulSoup(getSpotifyPage.content, "html.parser")
-          scanPage = str(scanPage.title)
-
-          songTitle = scanPage.replace('<title>', '').replace(' | Spotify</title>', '')
-          songTitle += ' audio'
-          newUrl = songTitle.replace(' ', '+')
-          html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
-          videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-          thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
-          song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
-        
-        song = url
-
-        try:
-          video, source, hours, mins, seconds = search(song)
-        except:
-          await ctx.reply('Invalid Link')
-          return
-
-        embed=discord.Embed(title=f"Playing: TwitterVideo", url=f"{song}", color=0xf23136)
-        embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
-        embed.set_thumbnail(url=thumbnail)
-        embed.add_field(name="Likes:", value=f"NA", inline=True)
-        embed.add_field(name="Views:", value=f"NA", inline=True)
-        embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-        embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-        embed.add_field(name="Length:", value=f"NA Hours, NA Minutes, NA seconds", inline=True)
-        embed.set_footer(text="Comet Alert")
-        try:
-          server = ctx.message.guild
-          player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
-
-          voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
-          voice.is_playing()
-
-          players[server.id] = source
-          await ctx.reply(embed=embed)
-        except:
-          await ctx.invoke(client.get_command('queue'), url=song)
-  else:
-    await ctx.send("You need to be in a voice channel to run this command")
-
 @client.command(aliases=['ql','QueueList'])
 async def queueList(ctx):
   counter = 1
   queueList ="**```"
   guild = ctx.guild
+
+  if guild.id in queues:
+    pass
+  else:
+    queues[guild.id] = []
+    queueTitles[guild.id] = []
+
   theQueue = [queueTitles[guild.id][i:i + 3] for i in range(0, len(queueTitles[guild.id]), 3)]
   print(theQueue)
 
@@ -3758,7 +3643,7 @@ async def pause(ctx):
   if voice.is_playing():
     embed=discord.Embed(title="Music Paused", color=0x2432ff)
     embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/pauseIcon.png')
-    await ctx.reply(embed=embed)
+    await ctx.reply(embed=embed, delete_after=10)
     voice.pause()
   else:
     await ctx.send("No audio is playing in the voice channel at the moment!")
@@ -3769,16 +3654,32 @@ async def resume(ctx):
   if voice.is_paused():
     embed=discord.Embed(title="Music Resumed", color=0xff2600)
     embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
-    await ctx.reply(embed=embed)
+    await ctx.reply(embed=embed, delete_after=10)
     voice.resume()
   else:
     await ctx.send("No song is paused at the moment!")
 
 @client.command(pass_context = True)
 async def skip(ctx):
+  guild = ctx.guild
+
+  if guild.id in queues:
+    pass
+  else:
+    queues[guild.id] = []
+    queueTitles[guild.id] = []
+
   voice = discord.utils.get(client.voice_clients,guild=ctx.guild)
   voice.stop()
-  await ctx.send('Song is now skipped')
+
+  if queues[guild.id] != []:
+    embed=discord.Embed(title="Skipped song", color=0xff2600)
+    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
+    await ctx.send(embed=embed, delete_after=5)
+  else:
+    embed=discord.Embed(title="Song skipped. End of Queue.", color=0xff2600)
+    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
+    await ctx.send(embed=embed, delete_after=5)
 
 # Topic Starter Code
 # Note: Some of these were added by other people
@@ -3842,81 +3743,67 @@ async def tts(ctx, *, text=None):
     text = text[:1200:]
   
   async with ctx.typing():
-    embed=discord.Embed(title="Comet TTS Options", description="Click one of the buttons in this message to choose a language. You have 5 seconds before it defaults to english.",color=0x2f3136)
+    languages = [['English', '🇺🇸'], ['Spanish', '🇲🇽'], ['Armenian', '🇦🇲'], ['Korean', '🇰🇷'], ['Tagalog (Filipino)', '🇵🇭'], ['Russian', '🇷🇺'], ['Chinese (Mandarin/Taiwan)', '🇹🇼'], ['German (de)', '🇩🇪'], ['French (fr)', '🇫🇷']]
+    embed=discord.Embed(title="Comet TTS Options", description="Click one of the buttons in this message to choose a language. You have 8 seconds before it defaults to english.",color=0x2f3136)
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/ttsIcon.png")
-    embed1 = await ctx.send(embed=embed,
-      components = [
-        [
-          Button(style = ButtonStyle.blue, label = "English (en)"),
-          Button(style = ButtonStyle.blue, label = "Spanish (es)"),
-          Button(style = ButtonStyle.red, label = "Armenian (hy)"),
-          Button(style = ButtonStyle.red, label = "Korean (ko)"),
-          Button(style = ButtonStyle.green, label = "Tagalog (Filipino) (tl)")
-        ],
-        [
-          Button(style = ButtonStyle.green, label = "Russian (ru)"),
-          Button(style = ButtonStyle.red, label = "Chinese (Mandarin/Taiwan) (zh-TW)"),
-          Button(style = ButtonStyle.blue, label = "German (de)"),
-          Button(style = ButtonStyle.blue, label = "French (fr)")
-        ]
-      ])
-
-    def check(buttonCheck):
-      return buttonCheck.channel == ctx.channel
+    embed1 = await ctx.send(embed=embed, components = [
+      Select(placeholder="Languages", options=[SelectOption(label=f"{i[0]}", value=f"{i[0]}", emoji=f"{i[1]}") for i in languages])
+      ]
+    )
 
     try:
-      buttonCheck = await client.wait_for("button_click", timeout=5, check=check)
+      selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author and e.channel == ctx.channel, timeout=8)
+      await selectionDone.defer(edit_origin=True)
 
-      await buttonCheck.send(content = f'{buttonCheck.component.label} Selected')
-      if buttonCheck.component.label == 'Spanish (es)':
+      if selectionDone.values[0] == 'Spanish':
         translator = Translator()
         result = translator.translate(text, dest='es')
         print(result.text)
         language = 'es'
         tts = gTTS(text=result.text, lang=language)
         language = 'Spanish'
-      elif buttonCheck.component.label == 'Armenian (hy)':
+      elif selectionDone.values[0] == 'Armenian':
         translator = Translator()
         result = translator.translate(text, dest='hy')
         language = 'hy'
         tts = gTTS(text=result.text, lang=language)
         language = 'Armenian'
-      elif buttonCheck.component.label == 'English (en)':
+      elif selectionDone.values[0] == 'English':
         translator = Translator()
         result = translator.translate(text, dest='en')
         language = 'en'
         tts = gTTS(text=result.text, lang=language)
         language = 'English'
-      elif buttonCheck.component.label == 'Korean (ko)':
+      elif selectionDone.values[0] == 'Korean':
         translator = Translator()
         result = translator.translate(text, dest='ko')
         language = 'ko'
         tts = gTTS(text=result.text, lang=language)
         language = 'Korean'
-      elif buttonCheck.component.label == 'Tagalog (Filipino) (tl)':
+      elif selectionDone.values[0] == 'Tagalog (Filipino)':
         translator = Translator()
         result = translator.translate(text, dest='tl')
         language = 'tl'
         tts = gTTS(text=result.text, lang=language)
         language = 'Tagalog (Filipino)'
-      elif buttonCheck.component.label == 'Russian (ru)':
+      elif selectionDone.values[0] == 'Russian':
         translator = Translator()
         result = translator.translate(text, dest='ru')
         language = 'ru'
         tts = gTTS(text=result.text, lang=language)
         language = 'Russian'
-      elif buttonCheck.component.label == 'Chinese (Mandarin/Taiwan) (zh-TW)':
+      elif selectionDone.values[0] == 'Chinese (Mandarin/Taiwan)':
         translator = Translator()
         result = translator.translate(text, dest='zh-TW')
         language = 'Chinese (Mandarin/Taiwan)'
         tts = gTTS(text=result.text, lang='zh-TW')
-      elif buttonCheck.component.label == 'German (de)':
+      elif selectionDone.values[0] == 'German':
         translator = Translator()
         result = translator.translate(text, dest='de')
         language = 'de'
         tts = gTTS(text=result.text, lang=language)
         language = 'German'
-      elif buttonCheck.component.label == 'French (fr)':
+      elif selectionDone.values[0] == 'French':
         translator = Translator()
         result = translator.translate(text, dest='fr')
         language = 'fr'
@@ -3953,12 +3840,7 @@ async def tts(ctx, *, text=None):
     embed2.add_field(name="Language:", value=f"```{language}```",inline=False)
     embed2.add_field(name="Duration:", value=f"```{hours} Hours: {mins} Minutes: {seconds} Seconds```", inline=False)
     
-  await embed1.edit(embed=embed2, components=[
-    [
-      Button(style = ButtonStyle.blue, label = "☁  ☁  ☀  ☁ Done  ☁  ☁  ☁  ☁  ☁", disabled=True),
-      Button(style = ButtonStyle.blue, label = "☁  ☁  ☁  ☁  ☁  ☁  ☁  ☁", disabled=True)
-    ]
-  ])
+  await embed1.edit(embed=embed2)
     
   try:
     guild = ctx.message.guild
