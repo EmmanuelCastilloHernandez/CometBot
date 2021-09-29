@@ -53,6 +53,7 @@ from discord import FFmpegPCMAudio
 from discord_components import DiscordComponents, Button, ButtonStyle, Select, SelectOption
 from dontDie import dontDieOnMe
 from googletrans import Translator
+import googleapiclient.discovery
 from gtts import gTTS
 import math
 import numpy as np
@@ -561,10 +562,11 @@ async def help(ctx):
 
 @client.command()
 async def invite(ctx):
-  embed=discord.Embed(title="Invite Comet", description="Thank you for being interested in **Comet**. To invite **Comet** to your Discord server, click the button below.\n\nMake sure to read the ToS first by clicking the ToS button below.", color=0x2f3136)
+  embed=discord.Embed(title="Invite Comet", description="Thank you for being interested in **Comet**. To invite **Comet** to your Discord server, click the button below.\n\nMake sure to read the ToS first by clicking the ToS button below.\n\nTo check the source code, click the **Bot Source Code** button", color=0x2f3136)
   await ctx.send(embed=embed, components=[
     [Button(style = ButtonStyle.URL, label='Invite Comet', url='https://discord.com/api/oauth2/authorize?client_id=842461851815247903&permissions=2184708039&scope=bot'),
-    Button(style = ButtonStyle.URL, label='Bot ToS', url='https://github.com/EmmanuelCastilloHernandez/CometBot/blob/master/ToS.md')]
+    Button(style = ButtonStyle.URL, label='Bot ToS', url='https://github.com/EmmanuelCastilloHernandez/CometBot/blob/master/ToS.md'),
+    Button(style = ButtonStyle.URL, label='Bot Source Code', url='https://github.com/EmmanuelCastilloHernandez/CometBot')]
   ])
 
 @help.command(aliases=['SOS'])
@@ -3399,6 +3401,9 @@ async def play(ctx, *, url : str):
           videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
           thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
           song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+        elif "playlist?list=" in url:
+          await queueYoutubePlaylist(url, ctx)
+          return
         elif 'open.spotify.com' in url:
           getSpotifyPage = requests.get(url)
           scanPage = BeautifulSoup(getSpotifyPage.content, "html.parser")
@@ -3477,9 +3482,10 @@ async def play(ctx, *, url : str):
       try:
         while True:
           selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author and e.channel == ctx.channel)
+          await selectionDone.defer(edit_origin=True)
 
           if selectionDone.values[0] == playOptions[0][0]:
-                await ctx.invoke(client.get_command('queueList'))
+            await ctx.invoke(client.get_command('queueList'))
           if selectionDone.values[0] == playOptions[1][0]:
             try:
               promptEmbed1 = embed=discord.Embed(title="Add Entry To Queue", description="Type the song link or name to add to the queue within 20 seconds.",color=0x2f3136)
@@ -3527,7 +3533,7 @@ async def test(ctx):
 @client.command(aliases=['ql','QueueList'])
 async def queueList(ctx):
   counter = 1
-  queueList ="**```"
+  queueList ="**```\n"
   guild = ctx.guild
 
   if guild.id in queues:
@@ -3544,9 +3550,85 @@ async def queueList(ctx):
     counter += 1
   queueList += "```**"
 
+  if queueList == '**```\n```**':
+    queueList = """**```
+⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝
+Nothing is available in the Queue
+Try running #play to play or add things to it
+⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝
+```**"""
   embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
   embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
   await ctx.send(embed=embed)
+
+async def queueYoutubePlaylist(playlist, guild):
+  query = parse_qs(urlparse(playlist).query, keep_blank_values=True)
+  playlistID = query["list"][0]
+
+  youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.getenv('ytKey'))
+
+  request = youtube.playlistItems().list(
+    part = "snippet",
+    playlistId = playlistID,
+    maxResults = 50
+  )
+  response = request.execute()
+
+  playlistItems = []
+  while request is not None:
+    response = request.execute()
+    playlistItems += response["items"]
+    request = youtube.playlistItems().list_next(request, response)
+
+  result = [f'https://www.youtube.com/watch?v={t["snippet"]["resourceId"]["videoId"]}' for t in playlistItems]
+
+  def VideoDetails(videoUrl):
+    if "youtube" in videoUrl:
+      videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+    else:
+	    videoId = videoUrl
+
+    youtube = build('youtube','v3', developerKey=os.getenv('ytKey'))
+
+    videoRequest=youtube.videos().list(
+	    part='snippet,statistics',
+	    id=videoId
+    )
+
+    videoResponse = videoRequest.execute()
+
+    title = videoResponse['items'][0]['snippet']['title']
+    likes = videoResponse['items'][0]['statistics']['likeCount']
+    views = videoResponse['items'][0]['statistics']['viewCount']
+    return (likes, title, views)
+
+  finalResult = []
+  titles = []
+  for i in result:
+    try:
+      videoData = VideoDetails(i)
+      titles.append(videoData[1])
+      finalResult.append(i)
+    except:
+      pass
+
+  counter = 0
+  server = guild.guild
+  for i in finalResult:
+    if server.id in queues:
+      queues[server.id].append(i)
+      queueTitles[server.id].append(titles[counter])
+      counter += 1
+    else:
+      queues[server.id] = []
+      queues[server.id].append(i)
+      queueTitles[server.id] = []
+      queueTitles[server.id].append(titles[counter])
+      counter += 1
+
+  embed=discord.Embed(title=f"Queued {len(finalResult)} Songs", color=0x8a84e1)
+  embed.set_author(name="⚝ Comet Music Player ⚝ ")
+  return await guild.channel.send(embed=embed)
 
 @client.command(aliases=['Queue'])
 async def queue(ctx, *, url: str):

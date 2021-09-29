@@ -1,19 +1,28 @@
-import urllib
-import requests
-from requests import get
-import urllib.request
-import re
-from bs4 import BeautifulSoup
+import googleapiclient.discovery
+from urllib.parse import parse_qs, urlparse
+import os
 
-html = urllib.request.urlopen("https://giphy.com/gifs/mlb-sports-baseball-asg-yD5KEKVG1o9qcoXNYg")
-gifs = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
-gifs = re.findall(r"(?P<url>https?://[^\s]+)", str(gifs))
-gifs = [i for i in gifs if 'https://media0.giphy.com/' in i]
-gifs2 = []
+#extract playlist id from url
+url = 'https://www.youtube.com/playlist?list=PLaV4k-99lpBWDfcR5vZkYlRUFHVXKQu2j'
+query = parse_qs(urlparse(url).query, keep_blank_values=True)
+playlistID = query["list"][0]
 
-for i in gifs:
-  i = str(i)
-  i = i.split('">')
-  i = gifs2.append(i[0])
+youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.getenv('ytKey'))
 
-print(gifs2)
+request = youtube.playlistItems().list(
+  part = "snippet",
+  playlistId = playlistID,
+  maxResults = 50
+)
+response = request.execute()
+
+playlistItems = []
+while request is not None:
+  response = request.execute()
+  playlistItems += response["items"]
+  request = youtube.playlistItems().list_next(request, response)
+
+result = [f'https://www.youtube.com/watch?v={t["snippet"]["resourceId"]["videoId"]}' for t in playlistItems]
+
+print(f"total: {len(playlistItems)}")
+print(result)
