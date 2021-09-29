@@ -1,28 +1,18 @@
-import googleapiclient.discovery
-from urllib.parse import parse_qs, urlparse
-import os
+import urllib
+import urllib.request
+import requests
+from requests import get
+from bs4 import BeautifulSoup
+import re
 
-#extract playlist id from url
-url = 'https://www.youtube.com/playlist?list=PLaV4k-99lpBWDfcR5vZkYlRUFHVXKQu2j'
-query = parse_qs(urlparse(url).query, keep_blank_values=True)
-playlistID = query["list"][0]
+html = urllib.request.urlopen("https://open.spotify.com/playlist/0zbuDTZROsRwyrpVHcD6wh?si=93585d3d753d4820")
+playlist = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+playlist = re.findall(r"(?P<url>https?://[^\s]+)", str(playlist))
+playlist = [i for i in playlist if 'https://open.spotify.com/track/' in i]
 
-youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.getenv('ytKey'))
-
-request = youtube.playlistItems().list(
-  part = "snippet",
-  playlistId = playlistID,
-  maxResults = 50
-)
-response = request.execute()
-
-playlistItems = []
-while request is not None:
-  response = request.execute()
-  playlistItems += response["items"]
-  request = youtube.playlistItems().list_next(request, response)
-
-result = [f'https://www.youtube.com/watch?v={t["snippet"]["resourceId"]["videoId"]}' for t in playlistItems]
-
-print(f"total: {len(playlistItems)}")
-print(result)
+songs = []
+for i in playlist:
+  i = str(i)
+  i = i.split('"')
+  if i[0] not in songs and '/artist/' not in i[0]:
+    songs.append(i[0])

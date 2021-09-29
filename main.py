@@ -3370,6 +3370,26 @@ def checkQueue(id, server, channel, person):
     client.loop.create_task(channel.send(embed=embed))
     voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild, textChannel, user))
 
+def VideoDetails(videoUrl):
+  if "youtube" in videoUrl:
+    videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
+  else:
+	  videoId = videoUrl
+
+  youtube = build('youtube','v3', developerKey=os.getenv('ytKey'))
+
+  videoRequest=youtube.videos().list(
+	  part='snippet,statistics',
+	  id=videoId
+  )
+
+  videoResponse = videoRequest.execute()
+
+  title = videoResponse['items'][0]['snippet']['title']
+  likes = videoResponse['items'][0]['statistics']['likeCount']
+  views = videoResponse['items'][0]['statistics']['viewCount']
+  return (likes, title, views)
+
 @client.command(aliases=['r'])
 async def remove(ctx, entry: int=1):
   entryToRemove = int(entry - 1)
@@ -3401,6 +3421,9 @@ async def play(ctx, *, url : str):
           videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
           thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
           song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+        elif '//open.spotify.com/playlist/' in url:
+          await queueSpotifyPlaylist(url, ctx)
+          return
         elif "playlist?list=" in url:
           await queueYoutubePlaylist(url, ctx)
           return
@@ -3420,58 +3443,37 @@ async def play(ctx, *, url : str):
           song = url
           songID = parse_qs(urlparse(song).query)['v'][0]
           thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
-      
-        API_KEY=os.getenv("ytKey")
-        def VideoDetails():
-          global views
-          global title
-          global likes
-
-          if "youtube" in videoUrl:
-            videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
-          else:
-            videoId = videoUrl
-
-          youtube = build('youtube','v3', developerKey=API_KEY)
-
-          videoRequest=youtube.videos().list(
-            part='snippet,statistics',
-            id=videoId
-          )
-
-          videoResponse = videoRequest.execute()
-
-          title = videoResponse['items'][0]['snippet']['title']
-          likes = videoResponse['items'][0]['statistics']['likeCount']
-          views = videoResponse['items'][0]['statistics']['viewCount']
-          return (likes, title, views)
-      
-        print(f'{title}+{views}+{likes}')
-        videoUrl = song
-        VideoDetails()
-
+        
         try:
-          video, source, hours, mins, seconds = search(song)
-        except:
-          await ctx.reply('Invalid Link')
-          return
+          likes, title, views = VideoDetails(song)
 
-        embed=discord.Embed(title=f"Playing: {title}", url=f"{song}", color=0xf23136)
-        embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
-        embed.set_thumbnail(url=thumbnail)
-        embed.add_field(name="Likes:", value=f"{likes}", inline=True)
-        embed.add_field(name="Views:", value=f"{views}", inline=True)
-        embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
-        embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
-        embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
-        embed.set_footer(text="Comet Alert")
+          try:
+            video, source, hours, mins, seconds = search(song)
+          except:
+            await ctx.reply('Invalid Link')
+            return
+
+          embed=discord.Embed(title=f"Playing: {title}", url=f"{song}", color=0xf23136)
+          embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+          embed.set_thumbnail(url=thumbnail)
+          embed.add_field(name="Likes:", value=f"{likes}", inline=True)
+          embed.add_field(name="Views:", value=f"{views}", inline=True)
+          embed.add_field(name="Requested by:", value=f"{ctx.author.mention}", inline=True)
+          embed.add_field(name="Channel:", value=f"{ctx.message.author.voice.channel}", inline=True)
+          embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+          embed.set_footer(text="Comet Alert")
+        except:
+          pass
 
     try:
       server = ctx.message.guild
       player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-      voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
-      voice.is_playing()
+      try:
+        voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
+        voice.is_playing()
+      except:
+        checkQueue(server.id, server, ctx.channel, ctx.author)
 
       players[server.id] = source
       
@@ -3543,7 +3545,6 @@ async def queueList(ctx):
     queueTitles[guild.id] = []
 
   theQueue = [queueTitles[guild.id][i:i + 3] for i in range(0, len(queueTitles[guild.id]), 3)]
-  print(theQueue)
 
   for item in queueTitles[guild.id]:
     queueList += f"{counter}. {item}\n"
@@ -3560,6 +3561,55 @@ Try running #play to play or add things to it
   embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
   embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
   await ctx.send(embed=embed)
+
+async def queueSpotifyPlaylist(playlist, guild):
+  html = urllib.request.urlopen(f"{playlist}")
+  playlist = re.findall(r"(?P<url>https?://[^\s]+)", html.read().decode())
+  playlist = re.findall(r"(?P<url>https?://[^\s]+)", str(playlist))
+  playlist = [i for i in playlist if 'https://open.spotify.com/track/' in i]
+
+  songs = []
+  for i in playlist:
+    i = str(i)
+    i = i.split('"')
+    if i[0] not in songs and '/artist/' not in i[0]:
+      songs.append(i[0])
+  
+  finalResult = []
+  titles = []
+  for i in songs:
+    getSpotifyPage = requests.get(i)
+    scanPage = BeautifulSoup(getSpotifyPage.content, "html.parser")
+    scanPage = str(scanPage.title)
+
+    songTitle = scanPage.replace('<title>', '').replace(' | Spotify</title>', '')
+    songTitle += ' audio'
+    newUrl = songTitle.replace(' ', '+')
+    html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
+    videoIDs = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+    song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
+    likes, title, views = VideoDetails(song)
+
+    finalResult.append(song)
+    titles.append(title)
+
+  counter = 0
+  server = guild.guild
+  for i in finalResult:
+    if server.id in queues:
+      queues[server.id].append(i)
+      queueTitles[server.id].append(titles[counter])
+      counter += 1
+    else:
+      queues[server.id] = []
+      queues[server.id].append(i)
+      queueTitles[server.id] = []
+      queueTitles[server.id].append(titles[counter])
+      counter += 1
+  
+  embed=discord.Embed(title=f"Queued {len(finalResult)} Songs", color=0x8a84e1)
+  embed.set_author(name="⚝ Comet Music Player ⚝ ")
+  return await guild.channel.send(embed=embed)
 
 async def queueYoutubePlaylist(playlist, guild):
   query = parse_qs(urlparse(playlist).query, keep_blank_values=True)
@@ -3581,26 +3631,6 @@ async def queueYoutubePlaylist(playlist, guild):
     request = youtube.playlistItems().list_next(request, response)
 
   result = [f'https://www.youtube.com/watch?v={t["snippet"]["resourceId"]["videoId"]}' for t in playlistItems]
-
-  def VideoDetails(videoUrl):
-    if "youtube" in videoUrl:
-      videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
-    else:
-	    videoId = videoUrl
-
-    youtube = build('youtube','v3', developerKey=os.getenv('ytKey'))
-
-    videoRequest=youtube.videos().list(
-	    part='snippet,statistics',
-	    id=videoId
-    )
-
-    videoResponse = videoRequest.execute()
-
-    title = videoResponse['items'][0]['snippet']['title']
-    likes = videoResponse['items'][0]['statistics']['likeCount']
-    views = videoResponse['items'][0]['statistics']['viewCount']
-    return (likes, title, views)
 
   finalResult = []
   titles = []
@@ -3632,7 +3662,6 @@ async def queueYoutubePlaylist(playlist, guild):
 
 @client.command(aliases=['Queue'])
 async def queue(ctx, *, url: str):
-  print(url)
   httpsResult = url.startswith('https')
   if (ctx.author.voice):
     async with ctx.typing():
@@ -3648,34 +3677,7 @@ async def queue(ctx, *, url: str):
         songID = parse_qs(urlparse(song).query)['v'][0]
         thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
 
-      API_KEY=os.getenv("ytKey")
-      def VideoDetails():
-        global views
-        global title
-        global likes
-
-        if "youtube" in videoUrl:
-          videoId = videoUrl[len("https://www.youtube.com/watch?v="):]
-        else:
-	        videoId = videoUrl
-
-        youtube = build('youtube','v3', developerKey=API_KEY)
-
-        videoRequest=youtube.videos().list(
-	        part='snippet,statistics',
-	        id=videoId
-        )
-
-        videoResponse = videoRequest.execute()
-
-        title = videoResponse['items'][0]['snippet']['title']
-        likes = videoResponse['items'][0]['statistics']['likeCount']
-        views = videoResponse['items'][0]['statistics']['viewCount']
-        return (likes, title, views)
-    
-      print(f'{title}+{views}+{likes}')
-      videoUrl = song
-      VideoDetails()
+      likes, title, views = VideoDetails(song)
 
       try:
         video, source, hours, mins, seconds = search(song)
