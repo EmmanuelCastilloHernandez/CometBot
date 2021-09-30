@@ -31,6 +31,7 @@ As is, the bot is packed with features, such as:
 > * #topic
 > * AI Chatbot
 * Blacklist
+* Comet Music Player
 * Warning System
 * Economy Game
 
@@ -87,6 +88,11 @@ To engage with Comet**CRISIS**, you run `#crisis`. The command will be available
 
 ### Blacklist
 Slurs are a rampant problem. They may generate problems and cause unecessary problems. This thankfully counters such issue by instantly deleting a offending message without mod intervention. In addition the slur list can be customized to the needs of each server without any issue. In addition, the blacklist circumvents punctuation and translates the Unicode characters in a sentence, making the blacklist harder to bypass. To add new things to the blacklist you use `#addSlur <thing to blacklist>` and to remove an entry you do `#unslur <thing to remove>`. Note that the blacklist is indiscriminate, meaning that no role is immune and also note one server's blacklist doesnt affect another.
+
+### Comet Music Player
+Comet supports the ability to play music from the platforms YouTube and Spotify. To play music, join a voice channel and use `#play <song name or url>` to use. To check the queue, use `#ql` or the dropdown menu produced by `#play`. To add items to the queue, just run `#play` again or use the "Add Item to Queue" option in the dropdown menu. Media controls are also available on the dropdown menu.
+
+Playlists from both Spotify and YouTube are supported.
 
 ### Warning system
 Comet's original system in the 1.0.0 Betas was based on the Replit Database library, which did not allow for the listing of reasons why a person was warned and in itself was only wired to one of the Contributor Servers. **2.0.0** changes that. Comet now not only supports a warning system whose warnings list wont affect another server's list, but one that also values transparency. When you get warned using the `#warn <member> <reason>` you receive a copy of the warning prompt that includes the moderator's name and the reason why. In addition, the `#unwarn <member> <reason>` will also to the same thing. The '#infractions <user>` command can be used to see the warnings. Finally, moderators who get warned in the system can't unwarn themselves.

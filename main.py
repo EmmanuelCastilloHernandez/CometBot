@@ -3355,8 +3355,6 @@ def checkQueue(id, server, channel, person):
     songPlaying = queueTitles[id][0]
     videoId = re.findall(r"watch\?v=(\S{11})", str(player))
     thumbnail = f"https://img.youtube.com/vi/{videoId[0]}/maxresdefault.jpg"
-    del queues[id][0]
-    del queueTitles[id][0]
     video, source, hours, mins, seconds = search(player)
 
     embed=discord.Embed(title="Comet Music Player", url=player, color=0xf23136)
@@ -3367,8 +3365,10 @@ def checkQueue(id, server, channel, person):
     embed.add_field(name="Channel:", value=f"{person.voice.channel if person.voice.channel != None else errorChannel}", inline=True)
     embed.set_footer(text="Comet Alert")
 
-    client.loop.create_task(channel.send(embed=embed))
     voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild, textChannel, user))
+    client.loop.create_task(channel.send(embed=embed))
+    del queues[id][0]
+    del queueTitles[id][0]
 
 def VideoDetails(videoUrl):
   if "youtube" in videoUrl:
@@ -3422,11 +3422,15 @@ async def play(ctx, *, url : str):
           thumbnail = f"https://img.youtube.com/vi/{videoIDs[0]}/maxresdefault.jpg"
           song = str("https://www.youtube.com/watch?v=" + videoIDs[0])
         elif '//open.spotify.com/playlist/' in url:
-          await queueSpotifyPlaylist(url, ctx)
-          return
+          song, playlistEntry = await queueSpotifyPlaylist(url, ctx)
+          isItAPlaylist = True
+          songID = parse_qs(urlparse(song).query)['v'][0]
+          thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
         elif "playlist?list=" in url:
-          await queueYoutubePlaylist(url, ctx)
-          return
+          song, playlistEntry = await queueYoutubePlaylist(url, ctx)
+          isItAPlaylist = True
+          songID = parse_qs(urlparse(song).query)['v'][0]
+          thumbnail = f'https://img.youtube.com/vi/{songID}/maxresdefault.jpg'
         elif 'open.spotify.com' in url:
           getSpotifyPage = requests.get(url)
           scanPage = BeautifulSoup(getSpotifyPage.content, "html.parser")
@@ -3469,12 +3473,13 @@ async def play(ctx, *, url : str):
       server = ctx.message.guild
       player = discord.FFmpegPCMAudio(source, **FFMPEG_OPTS)
 
-      try:
-        voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
-        voice.is_playing()
-      except:
-        checkQueue(server.id, server, ctx.channel, ctx.author)
+      voice.play(player, after=lambda e: checkQueue(server.id, server, ctx.channel, ctx.author))
+      voice.is_playing()
 
+      if isItAPlaylist == True:
+        del queues[server.id][playlistEntry]
+        del queueTitles[server.id][playlistEntry]
+      
       players[server.id] = source
       
       playOptions = [['Queue List', '📓'], ['Add an Entry to Queue', '✏️'], ['Remove an Entry from Queue', '❌'], ['Pause Song', '⏸️'], ['Resume Song', '▶️'], ['Skip Song', '⏭️'], ['Leave Voice Channel', '👋']]
@@ -3522,6 +3527,8 @@ async def play(ctx, *, url : str):
       except:
         pass
     except:
+      if isItAPlaylist == True:
+        return
       await ctx.invoke(client.get_command('queue'), url=song)
   else:
     await ctx.send("You need to be in a voice channel to run this command")
@@ -3595,21 +3602,27 @@ async def queueSpotifyPlaylist(playlist, guild):
 
   counter = 0
   server = guild.guild
+  firstPlaylistEntry = 0
   for i in finalResult:
     if server.id in queues:
       queues[server.id].append(i)
+      if counter == 0:
+        firstPlaylistEntry = len(queues[server.id]) - 1
       queueTitles[server.id].append(titles[counter])
       counter += 1
     else:
       queues[server.id] = []
       queues[server.id].append(i)
+      if counter == 0:
+        firstPlaylistEntry = len(queues[server.id]) - 1
       queueTitles[server.id] = []
       queueTitles[server.id].append(titles[counter])
       counter += 1
   
   embed=discord.Embed(title=f"Queued {len(finalResult)} Songs", color=0x8a84e1)
   embed.set_author(name="⚝ Comet Music Player ⚝ ")
-  return await guild.channel.send(embed=embed)
+  await guild.channel.send(embed=embed)
+  return (finalResult[0], firstPlaylistEntry)
 
 async def queueYoutubePlaylist(playlist, guild):
   query = parse_qs(urlparse(playlist).query, keep_blank_values=True)
@@ -3644,21 +3657,27 @@ async def queueYoutubePlaylist(playlist, guild):
 
   counter = 0
   server = guild.guild
+  firstPlaylistEntry = 0
   for i in finalResult:
     if server.id in queues:
       queues[server.id].append(i)
+      if counter == 0:
+        firstPlaylistEntry = len(queues[server.id]) - 1
       queueTitles[server.id].append(titles[counter])
       counter += 1
     else:
       queues[server.id] = []
       queues[server.id].append(i)
+      if counter == 0:
+        firstPlaylistEntry = len(queues[server.id]) - 1
       queueTitles[server.id] = []
       queueTitles[server.id].append(titles[counter])
       counter += 1
 
   embed=discord.Embed(title=f"Queued {len(finalResult)} Songs", color=0x8a84e1)
   embed.set_author(name="⚝ Comet Music Player ⚝ ")
-  return await guild.channel.send(embed=embed)
+  await guild.channel.send(embed=embed)
+  return (finalResult[0], firstPlaylistEntry)
 
 @client.command(aliases=['Queue'])
 async def queue(ctx, *, url: str):
