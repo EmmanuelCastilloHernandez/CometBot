@@ -129,7 +129,7 @@ def startupMsg():
   ╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗░░░██║░░░
   ░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝░░░╚═╝░░░
   --------------------------------------------
-  Version **3** Bellatrix RC-3 ready to use!
+  Version **3.0** Bellatrix ready to use!
   --------------------------------------------
 
   Now With __CometCRISIS RC-1 and CometVoice 2.0__
@@ -3577,7 +3577,7 @@ Try running #play to play or add things to it
       selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author and e.channel == ctx.channel)
       
       if selectionDone.values[0] == selectionDone.values[0]:
-        theQueue = [queueTitles[guild.id][i:i + 10] for i in range(0, len(queueTitles[guild.id]), 10)]
+        theQueue = [queueTitles[guild.id][i:i + 12] for i in range(0, len(queueTitles[guild.id]), 12)]
         queueList = "**```\n"
         counter = (10 * (int(selectionDone.values[0])-1)) + 1
         for item in theQueue[int(selectionDone.values[0])-1]:
@@ -3589,10 +3589,10 @@ Try running #play to play or add things to it
         await msg.edit(embed = embed, components=[
           Select(placeholder=f"Pages", options=[SelectOption(label=f"{i+1}", value=f"{i+1}") for i in range(len(theQueue))])
         ])
-        
-      await selectionDone.edit_origin(embed = embed)
-  except Exception as e:
-    await ctx.send(e)
+
+      await selectionDone.defer(edit_origin=True)
+  except:
+    pass
 
 async def queueSpotifyPlaylist(playlist, guild):
   html = urllib.request.urlopen(f"{playlist}")
