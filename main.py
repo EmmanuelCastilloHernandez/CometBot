@@ -3415,6 +3415,7 @@ async def play(ctx, *, url : str):
     
     async with ctx.typing():
       if proceed == True:
+        isItAPlaylist = False
         if httpsResult == False:
           newUrl = url.replace(' ', '+')
           html = urllib.request.urlopen("https://www.youtube.com/results?search_query="+newUrl)
@@ -3551,9 +3552,9 @@ async def queueList(ctx):
     queues[guild.id] = []
     queueTitles[guild.id] = []
 
-  theQueue = [queueTitles[guild.id][i:i + 3] for i in range(0, len(queueTitles[guild.id]), 3)]
+  theQueue = [queueTitles[guild.id][i:i + 10] for i in range(0, len(queueTitles[guild.id]), 10)]
 
-  for item in queueTitles[guild.id]:
+  for item in theQueue[0]:
     queueList += f"{counter}. {item}\n"
     counter += 1
   queueList += "```**"
@@ -3567,7 +3568,31 @@ Try running #play to play or add things to it
 ```**"""
   embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
   embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
-  await ctx.send(embed=embed)
+  msg = await ctx.send(embed=embed, components=[
+    Select(placeholder=f"Pages", options=[SelectOption(label=f"{i+1}", value=f"{i+1}") for i in range(len(theQueue))])
+  ])
+
+  try:
+    while True:
+      selectionDone = await client.wait_for("select_option", check=lambda e: e.user == ctx.author and e.channel == ctx.channel)
+      
+      if selectionDone.values[0] == selectionDone.values[0]:
+        theQueue = [queueTitles[guild.id][i:i + 10] for i in range(0, len(queueTitles[guild.id]), 10)]
+        queueList = "**```\n"
+        counter = (10 * (int(selectionDone.values[0])-1)) + 1
+        for item in theQueue[int(selectionDone.values[0])-1]:
+          queueList += f"{counter}. {item}\n"
+          counter += 1
+        queueList += "```**"
+        embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
+        embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
+        await msg.edit(embed = embed, components=[
+          Select(placeholder=f"Pages", options=[SelectOption(label=f"{i+1}", value=f"{i+1}") for i in range(len(theQueue))])
+        ])
+        
+      await selectionDone.edit_origin(embed = embed)
+  except Exception as e:
+    await ctx.send(e)
 
 async def queueSpotifyPlaylist(playlist, guild):
   html = urllib.request.urlopen(f"{playlist}")
@@ -3581,6 +3606,11 @@ async def queueSpotifyPlaylist(playlist, guild):
     i = i.split('"')
     if i[0] not in songs and '/artist/' not in i[0]:
       songs.append(i[0])
+  
+  if len(songs) > 10:
+    embed=discord.Embed(title=f"Processing {len(songs)} Songs.\nNote that it will take a while due to the length of the playlist.", color=0x8a84e1)
+    embed.set_author(name="⚝ Comet Music Player ⚝ ")
+    await guild.channel.send(embed=embed, delete_after=10)
   
   finalResult = []
   titles = []
@@ -3644,6 +3674,10 @@ async def queueYoutubePlaylist(playlist, guild):
     request = youtube.playlistItems().list_next(request, response)
 
   result = [f'https://www.youtube.com/watch?v={t["snippet"]["resourceId"]["videoId"]}' for t in playlistItems]
+  if len(result) > 10:
+    embed=discord.Embed(title=f"Processing {len(result)} Songs.\nNote that it will take a while due to the length of the playlist.", color=0x8a84e1)
+    embed.set_author(name="⚝ Comet Music Player ⚝ ")
+    await guild.channel.send(embed=embed, delete_after=10)
 
   finalResult = []
   titles = []
