@@ -256,7 +256,9 @@ async def on_message_edit(before, after):
 async def levelSystem(message):
   # Level Code
   allowPoints = True
-  
+  with open('setup.json', 'r') as setup: setting = json.load(setup)
+  notificationChannel = int(setting[str(message.guild.id)]["Notification Channel"])
+
   if f'{message.author.id} | {message.guild.id}' in usersToLevelUp:
     return
   
@@ -278,9 +280,10 @@ async def levelSystem(message):
     if f'{message.author.id} | {message.guild.id}' in levelUpCheck:
       pass
     else:
+      notificationChannel = client.get_channel(notificationChannel)
       newLevel = users[str(message.guild.id)][str(message.author.id)]['Level'] + 1
       await levelUpUser(message.author, message.guild)
-      await message.channel.send(f'{message.author.mention} has leveled up to level **`{newLevel}`**. Keep it up!')
+      await notificationChannel.send(f'{message.author.mention} has leveled up to level **`{newLevel}`**. Keep it up!')
       levelUpCheck[f'{message.author.id} | {message.guild.id}'] = True
 
       await asyncio.sleep(60)
@@ -346,7 +349,6 @@ async def profanityCheck(message):
       await message.channel.send('***Message deleted due to a blacklisted word/phrase being detected***', delete_after=10)
       return
 
-
 bannedList = []
 # This executes when a message is sent
 @client.event
@@ -373,7 +375,9 @@ async def on_message(message):
   
     await message.reply(responseToSend[0]["message"])'''
 
-  allowMessage = True
+  with open('setup.json', 'r') as setup: setting = json.load(setup)
+  if setting[str(message.guild.id)]["Level System"] == 'Enabled':
+    await levelSystem(message)
 
   try: await profanityCheck(message)
   except: pass
@@ -4029,7 +4033,7 @@ async def openSetupAccount(server):
   else:
     setting[str(server.id)] = {}
     setting[str(server.id)]["Owner/Higher-Admin Role"] = ''
-    setting[str(server.id)]["Level System"] = 'Enabled'
+    setting[str(server.id)]["Level System"] = 'Disabled'
     setting[str(server.id)]["Admin Role"] = ''
     setting[str(server.id)]["Role 1"] = ''
     setting[str(server.id)]["Role 2"] = ''
@@ -4048,6 +4052,30 @@ async def openSetupAccount(server):
 @commands.has_permissions(administrator=True)
 async def setup(ctx, *, setupOption: str=None):
   await openSetupAccount(ctx.guild)
+  if setupOption == 'level' or setupOption == 'l':
+    embed=discord.Embed(title="Toggling Level System", description='Click one of the buttons in the next 30 seconds to enable or disable the Comet Level System.', color=0x2f3136)
+    embed.add_field(name="Enable:", value="Clicking this button enables the level system and will prompt you to setup the notification channel where level up notifications will pop-up. Note that setting up the notification channel is mandatory.", inline=True)
+    embed.add_field(name="Disable:", value="Disables the level system.", inline=True)
+
+    msg = await ctx.send(embed=embed, components=[[Button(style = ButtonStyle.green, label = "Enable"), Button(style = ButtonStyle.red, label = "Disable")]])
+
+    try:
+      with open('setup.json', 'r') as setup: setting = json.load(setup)
+      buttonCheck = await client.wait_for("button_click", timeout=20, check=lambda a: a.user == ctx.author and a.channel == ctx.channel)
+      await msg.delete()
+
+      if buttonCheck.component.label == 'Enable':
+        setting[str(ctx.guild.id)]["Level System"] = 'Enabled'
+        with open('setup.json','w') as setup: json.dump(setting, setup)
+      if buttonCheck.component.label == 'Disable':
+        setting[str(ctx.guild.id)]["Level System"] = 'Disabled'
+        with open('setup.json','w') as setup: json.dump(setting, setup)
+        return
+      
+      await ctx.invoke(client.get_command('setup'), setupOption='notif')
+      return
+    except:
+      pass
   if setupOption == 'notif' or setupOption == 'notification' or setupOption == 'n':
     if len(ctx.guild.channels) >= 100:
       channels = [i for i in ctx.guild.channels[:25]]
@@ -4111,9 +4139,10 @@ async def setup(ctx, *, setupOption: str=None):
 
     try:
       purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
-      channelSelected = purpose.values[0]
-      await purpose.send(content=f'Notification channel is now set to __{purpose.label}__ with a channel ID of __{purpose.values[0]}__.')
-      await channelPrompt.delete()
+      channelSelected = int(purpose.values[0])
+      await purpose.defer(edit_origin=True)
+      embed=discord.Embed(title=f"Channel Set\nID:{channelSelected}", color=0x2f3136)
+      await channelPrompt.edit(content='All set. Expect level-up messages there along with messages of when Comet reboots.', embed=embed, components=[])
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
       return
@@ -4123,6 +4152,7 @@ async def setup(ctx, *, setupOption: str=None):
     serverSetup[str(ctx.guild.id)]["Notification Channel"] = int(channelSelected)
 
     with open('setup.json', 'w') as s: json.dump(serverSetup, s)
+    return
     
   if setupOption == 'warning':
     higherAdminRole = ''
@@ -4197,7 +4227,7 @@ async def setup(ctx, *, setupOption: str=None):
       purpose = await client.wait_for("select_option" or "message", check=lambda e: e.user == ctx.author)
       try:
         higherAdminRole = purpose.values[0]
-        await purpose.send('Owner/Higher Admin role is now set to {}.'.format(purpose.values[0]))
+        await purpose.defer(edit_origin=True)
         await higherAdminPrompt.delete()
       except:
         adminRole = purpose.content
@@ -4249,7 +4279,7 @@ async def setup(ctx, *, setupOption: str=None):
       purpose = await client.wait_for("select_option" or "message", check=lambda e: e.user == ctx.author)
       try:
         adminRole = purpose.values[0]
-        await purpose.send(content='Admin role is now set to {}.'.format(purpose.values[0]))
+        await purpose.defer(edit_origin=True)
         await adminPrompt.delete()
       except:
         adminRole = purpose.content
@@ -4300,7 +4330,7 @@ async def setup(ctx, *, setupOption: str=None):
     try:
       purpose =  await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
       role1 = purpose.values[0]
-      await purpose.send(content='Role 1 is now set to {}.'.format(purpose.values[0]))
+      await purpose.defer(edit_origin=True)
       await firstRolePrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
@@ -4398,7 +4428,7 @@ async def setup(ctx, *, setupOption: str=None):
     try:
       purpose = await client.wait_for("select_option", check=lambda e: e.user == ctx.author)
       thresholdAction = purpose.values[0]
-      await purpose.send(content='Comet is now set to {} when a user reaches the threshold.'.format(purpose.values[0]))
+      await purpose.defer(edit_origin=True)
       await actionPrompt.delete()
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
@@ -4421,6 +4451,7 @@ async def setup(ctx, *, setupOption: str=None):
     embed=discord.Embed(title="Settings", color=0x2f3136)
     embed.add_field(name="notification:", value="Configure Comet Notifications", inline=True)
     embed.add_field(name="warning:", value="Configure Comet's warning system.", inline=True)
+    embed.add_field(name="level:", value="Configure Comet's level system.", inline=True)
     await ctx.send(embed=embed)
 
 @client.command(aliases=['Warn'])
