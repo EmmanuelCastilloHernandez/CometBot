@@ -2966,7 +2966,7 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
         buttonCheck = await client.wait_for("button_click", check=check)
 
         await buttonCheck.defer(edit_origin=True)
-        
+
         if buttonCheck.component.label == '1':
           embed2 = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}', color=0x2f3136)
           embed2.set_author(name=f"Snipe Page 1: {channel.name}")
@@ -3440,27 +3440,31 @@ def checkQueue(id, server, channel, person):
 
   FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
-  if queues[id] != []:
-    voiceChannel = discord.utils.get(client.voice_clients, guild=server)
-    errorChannel = 'UNKNOWN'
-    player = queues[id][0]
-    songPlaying = queueTitles[id][0]
-    videoId = re.findall(r"watch\?v=(\S{11})", str(player))
-    thumbnail = f"https://img.youtube.com/vi/{videoId[0]}/maxresdefault.jpg"
-    video, source, hours, mins, seconds = search(player)
+  try:
+    if queues[id] != []:
+      voiceChannel = discord.utils.get(client.voice_clients, guild=server)
+      errorChannel = 'UNKNOWN'
+      player = queues[id][0]
+      songPlaying = queueTitles[id][0]
+      videoId = re.findall(r"watch\?v=(\S{11})", str(player))
+      thumbnail = f"https://img.youtube.com/vi/{videoId[0]}/maxresdefault.jpg"
+      video, source, hours, mins, seconds = search(player)
 
-    embed=discord.Embed(title="CometRADIO", url=player, color=0xf23136)
-    embed.set_author(name=f"Now Playing: {songPlaying}", url=player)
-    embed.set_thumbnail(url=thumbnail)
-    embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
-    embed.add_field(name="Requested by:", value=f"{person.mention}", inline=True)
-    embed.add_field(name="Channel:", value=f"{person.voice.channel if person.voice.channel != None else errorChannel}", inline=True)
-    embed.set_footer(text="Comet Alert")
+      embed=discord.Embed(title="CometRADIO", url=player, color=0xf23136)
+      embed.set_author(name=f"Now Playing: {songPlaying}", url=player)
+      embed.set_thumbnail(url=thumbnail)
+      embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
+      embed.add_field(name="Requested by:", value=f"{person.mention}", inline=True)
+      embed.add_field(name="Channel:", value=f"{person.voice.channel if person.voice.channel != None else errorChannel}", inline=True)
+      embed.set_footer(text="Comet Alert")
 
-    voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild, textChannel, user))
+      voiceChannel.play(discord.FFmpegPCMAudio(source, **FFMPEG_OPTS), after=lambda e: checkQueue(ID, theGuild, textChannel, user))
+      client.loop.create_task(channel.send(embed=embed))
+      del queues[id][0]
+      del queueTitles[id][0]
+  except:
+    embed=discord.Embed(title="End of queue.", color=0x2f3136)
     client.loop.create_task(channel.send(embed=embed))
-    del queues[id][0]
-    del queueTitles[id][0]
 
 def VideoDetails(videoUrl):
   if "youtube" in videoUrl:
