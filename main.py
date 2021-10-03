@@ -20,7 +20,7 @@ Ocassional Dev:
 Garen Gevoryan
 Discord: Warlex#7860
 -------------------------------------------
-Version 3.0 RC 2
+Version 3.0 RC Final
 '''
 
 import os
@@ -1455,6 +1455,93 @@ Si Es Arrestado:
         Button(style = ButtonStyle.green, label = "Yes | Si")
         ]]
       )
+
+      try:
+        iceButtonCheck = await client.wait_for("button_click", timeout=300, check=lambda a: a.user == ctx.author)
+
+        if iceButtonCheck.component.label == 'Si | Yes':
+          devSummon = client.get_user(588931051103977494)
+          if lang == 'Spanish':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            message = f"""\
+Subject: CometCRISIS: {ctx.author.name} A Las {timeSent.strftime(dateFormat)}
+
+Tiempo Mandado: {timeSent.strftime(dateFormat)} PST
+Persona: {ctx.author} alias {ctx.author.id}
+Nivel: 1 a 3
+Tipo: Crisis LGBT"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+
+            embed=discord.Embed(title="Señal de Auxilio Mandada", description=f"La señal de auxilio ha sido mandada al desarrolador. Espere entre 10-20 minutos dependiendo de que hora del dia sea en PST en los Estados Unidos. Pronto va a recibir un mensaje de {devSummon}.", color=0x2f3136)
+            embed.add_field(name="Gracias por su paciencia y mientras tanto encuentre un lugar seguro y lo le abra la puerta a los agentes.", value='Sinceramente,\nComet y el Equipo de desarrollo', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="Señal de Auxilio", description=f"Una señal de auxilio ha sido mandada arededor de las {timeSent.strftime(dateFormat)} PST. Aqui estan los detalles:", color=0x2f3136)
+            sosEmbed.add_field(name="Tipo de señal", value='Redada de ICE', inline=True)
+            sosEmbed.add_field(name="Persona Afectada:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Hora:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Nivel De Urgencia:", value=f'Nivel 2-4. Tengan cuidado debida a que la situacion puede escalarse', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          elif lang == 'English':
+            smtpServer = os.getenv('Protocol')
+            port = 587
+            senderEmail = os.getenv('cometEmail')
+            phoneNum = os.getenv('sendPhoneNum')
+            pw = os.getenv('passWordCE')
+            emails = ['emmanuelino2@gmail.com', f'{phoneNum}']
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(smtpServer, port)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(senderEmail, pw)
+
+            dateFormat='%m/%d/%Y %H:%M:%S'
+            timeSent = datetime.now(tz=pytz.utc)
+            timeSent = timeSent.astimezone(timezone('US/Pacific'))
+
+            message = f"""\
+Subject: CometCRISIS Signal fron {ctx.author.name} at {timeSent.strftime(dateFormat)}
+
+Time sent: {timeSent.strftime(dateFormat)} PST
+User: {ctx.author} AKA {ctx.author.id}
+Level: 1 a 3
+Type: {selectionDone.values[0]}"""
+            for i in emails:
+              server.sendmail(senderEmail, i, message)
+            server.close()
+            
+            embed=discord.Embed(title="SOS Signal Sent", description=f"The Developer has been pinged. Wait in between 10-20 minutes depending on what time it is in US PST. You should get a message from {devSummon}.", color=0x2f3136)
+            embed.add_field(name="Thank you for your patience. Meanwhile, find a safe place to be in and whatever you do, do not open the door to the agents.", value='Sincerely,\nComet and the Dev Team', inline=True)
+            await ctx.send(embed=embed)
+
+            sosEmbed = discord.Embed(title="SOS Signal", description=f"A SOS signal was sent at around {timeSent.strftime(dateFormat)} PST. Here are the details:", color=0x2f3136)
+            sosEmbed.add_field(name="Type:", value='ICE Raid', inline=True)
+            sosEmbed.add_field(name="Person Who Sent The Signal:", value=f'<@{ctx.author.id}> ({ctx.author.name}#{ctx.author.discriminator})', inline=True)
+            sosEmbed.add_field(name="Time:", value=f'{timeSent.strftime(dateFormat)}', inline=True)
+            sosEmbed.add_field(name="Urgency Level:", value=f'Level 2-4. Proceed with caution.', inline=True)
+            await devSummon.send(embed=sosEmbed)
+          
+      except asyncio.TimeoutError:
+        pass
 
 @help.command()
 async def reverse(ctx):
@@ -4000,8 +4087,89 @@ async def tts(ctx, *, text=None):
     await ctx.send(f"TypeError exception:\n`{e}`")
 
 @client.command(help="Play with #rps")
-async def rps(ctx):
-  rpsGame = ['rock', 'paper', 'scissors']
+async def rps(ctx, player2: discord.Member=None):
+  rpsGame = [['Rock', '🪨'], ['Paper', '📃'], ['Scissors', '✂️']]
+  choices = {}
+  player1 =ctx.author
+  if player2 == None:
+    player2 = client.user
+    users = [player1.id, player2.id]
+    player2Choice = random.choice(rpsGame)
+    player2Choice = player2Choice[0]
+    choices[int(player2.id)] = player2Choice
+  else:
+    users = [player1.id, player2.id]
+  
+  embed=discord.Embed(title=f"RPS: {ctx.author} VS {player2}", description=f'Hey {ctx.author.mention} and {player2.mention}, choose your choice of rock, paper, or scissors from the dropdown menu to see who will win this match.', color=0x2f3136)
+  msg = await ctx.send(embed=embed, components=[
+    Select(placeholder=f"Options", options=[SelectOption(label=f"{i[0]}", value=f"{i[0]}", emoji=f'{i[1]}') for i in rpsGame])
+  ])
+
+  waitingEmbed = discord.Embed(title=f"Round will soon begin", color=0x2f3136)
+  try:
+    if int(player1.id) not in choices:
+      waitingEmbed.add_field(name='Waiting for:', value=f'{player1}')
+    elif int(player2.id) not in choices:
+      waitingEmbed.add_field(name='Waiting for:', value=f'{player2}')
+    else:
+      waitingEmbed.add_field(name='Waiting for:', value=f'Both {player2} and {player1}')
+    
+    msg2 = await ctx.send(embed=waitingEmbed)
+    while len(choices) != 2:
+      selectionDone = await client.wait_for("select_option", check=lambda e: e.user.id in users and e.channel == ctx.channel)
+      await selectionDone.defer(edit_origin=True)
+
+      choices[int(selectionDone.user.id)] = selectionDone.values[0]
+
+      if int(player1.id) not in choices:
+        waitingEmbed = discord.Embed(title=f"Round will soon begin", color=0x2f3136)
+        waitingEmbed.add_field(name='Waiting for:', value=f'{player1}')
+      elif int(player2.id) not in choices:
+        waitingEmbed = discord.Embed(title=f"Round will soon begin", color=0x2f3136)
+        waitingEmbed.add_field(name='Waiting for:', value=f'{player2}')
+      else:
+        waitingEmbed = discord.Embed(title=f"Round will soon begin", color=0x2f3136)
+        waitingEmbed.add_field(name='Waiting for:', value=f'Both {player2} and {player1}')
+      
+      await msg2.edit(embed=waitingEmbed)
+    else:
+      await msg2.delete()
+      if choices[int(player1.id)] == choices[int(player2.id)]:
+        resultEmbed=discord.Embed(title=f"RPS: TIE", color=0x2f3136)
+        resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+        resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+      elif choices[int(player1.id)] == rpsGame[0][0]:
+        if choices[int(player2.id)] == rpsGame[1][0]:
+          resultEmbed=discord.Embed(title=f"RPS: {player2} WINS", color=0x2f3136)
+          resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+          resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+        if choices[int(player2.id)] == rpsGame[2][0]:
+          resultEmbed=discord.Embed(title=f"RPS: {player1} WINS", color=0x2f3136)
+          resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+          resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+      elif choices[int(player1.id)] == rpsGame[1][0]:
+        if choices[int(player2.id)] == rpsGame[2][0]:
+          resultEmbed=discord.Embed(title=f"RPS: {player2} WINS", color=0x2f3136)
+          resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+          resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+        elif choices[int(player2.id)] == rpsGame[0][0]:
+          resultEmbed=discord.Embed(title=f"RPS: {player1} WINS", color=0x2f3136)
+          resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+          resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+      elif choices[int(player1.id)] == rpsGame[2][0]:
+        if choices[int(player2.id)] == rpsGame[0][0]:
+          resultEmbed=discord.Embed(title=f"RPS: {player2} WINS", color=0x2f3136)
+          resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+          resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+        elif choices[int(player2.id)] == rpsGame[1][0]:
+          resultEmbed=discord.Embed(title=f"RPS: {player1} WINS", color=0x2f3136)
+          resultEmbed.add_field(name=f'{player1} Chose:', value=f'{choices[int(player1.id)]}')
+          resultEmbed.add_field(name=f'{player2} Chose:', value=f'{choices[int(player2.id)]}')
+      
+      return await msg.edit(embed=resultEmbed, components=[])
+  except Exception as e:
+    return await ctx.send(e)
+
 
 async def openWarnUser(member, server):
   with open('warns.json', 'r') as warnings:
@@ -4142,7 +4310,7 @@ async def setup(ctx, *, setupOption: str=None):
       channelSelected = int(purpose.values[0])
       await purpose.defer(edit_origin=True)
       embed=discord.Embed(title=f"Channel Set\nID:{channelSelected}", color=0x2f3136)
-      await channelPrompt.edit(content='All set. Expect level-up messages there along with messages of when Comet reboots.', embed=embed, components=[])
+      await channelPrompt.edit(content='`All set. Expect level-up messages there along with messages of when Comet reboots.`', embed=embed, components=[])
     except asyncio.TimeoutError:
       await ctx.send("Setup timed out. No changes were saved.")
       return
