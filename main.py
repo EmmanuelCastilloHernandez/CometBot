@@ -20,7 +20,7 @@ Ocassional Dev:
 Garen Gevoryan
 Discord: Warlex#7860
 -------------------------------------------
-Version 3.0 RC Final
+Version 3.0
 '''
 
 import os
@@ -132,7 +132,7 @@ def startupMsg():
   Version **3.0** Bellatrix ready to use!
   --------------------------------------------
 
-  Now With __CometCRISIS RC-1 and CometVoice 2.0__
+  Now With __CometCRISIS and CometVoice 2.0__
   '''
 
   pass
@@ -194,7 +194,7 @@ async def on_guild_join(guild):
   
   general = find(lambda x: 'general'.encode('utf-8') in unicodedata.normalize('NFKD', x.name).encode('ascii', 'ignore'),  guild.text_channels)
   if general and general.permissions_for(guild.me).send_messages:
-    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is # and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\n\nThank you for choosing Comet 2.0.0.", color=0x34363b)
+    embed=discord.Embed(title="My name is Comet. Pleasure to be here!", url="https://cometbot.emmanuelch.repl.co/", description="My alias is `#` and to find what commands I have, run #help and you should be ready to go. To see if the bot is online, go to the website embedded in this message or if that doesn't work go to: https://cometbot.emmanuelch.repl.co/\nOne final thing: **`run #setup warning`** to configure the bot's warning system.\n\nThank you for choosing Comet 3.0!", color=0x2f3136)
     embed.set_author(name=f"Hello, {guild.name}")
     embed.set_thumbnail(url="https://cometbot.emmanuelch.repl.co/static/photoToRender/favicon.png")
     embed.add_field(name="Sincerely,", value="Emmanuel Castillo", inline=True)
@@ -557,7 +557,7 @@ async def help(ctx):
   embed.add_field(name="Moderation:", value="warn, unwarn, infractions, clear", inline=True)
   embed.add_field(name="Snipes:", value="ssnipe, snipe, edit", inline=True)
   embed.add_field(name="Image Commands:", value="pride, emo, wanted", inline=True)
-  embed.add_field(name="Games:", value="tictactoe, hangman", inline=True)
+  embed.add_field(name="Games:", value="tictactoe, hangman, rps", inline=True)
   embed.add_field(name="Economy:", value="beg, shop, buy, use, inv, shoot, phone", inline=True)
   embed.add_field(name="Voice Channel / Music:", value="tts, play, leave", inline=True)
   embed.add_field(name="EMERGENCY:", value="crisis", inline=True)
@@ -2811,7 +2811,7 @@ async def devnote(ctx):
     'Dev Note #2: Comet\'s codename is Wolf Rayet. :star:',
     'Dev Note #3: The bot is written in Python. :snake:',
     'Dev Note #4: Comet\'s is open source.',
-    'Dev Note #5: Comet Music Player supports text search.',
+    'Dev Note #5: CometRADIO supports text search.',
     'Dev Note #6: Hangman on an embed was hell.',
     'Dev Note #7: Comet was originally made for one server, but the creator decided to make it open source and readily available.',
     'Dev Note #8: The first warning system for the bot sucked because no matter where you went the warnings given in one place trasferred to another and the full potential of the warning system could only have been seen in one server. 2.0.0 Aldebaran fixed that.',
@@ -2965,7 +2965,8 @@ async def SuperSnipe(ctx, *, messageToRetrieve: int=1):
       try:
         buttonCheck = await client.wait_for("button_click", check=check)
 
-        await buttonCheck.send(content='Changing Super Snipe Page')
+        await buttonCheck.defer(edit_origin=True)
+        
         if buttonCheck.component.label == '1':
           embed2 = discord.Embed(title=f"{snipeMessageAuthor[channel.id]}", description=f'{snipeMessage[channel.id]}', color=0x2f3136)
           embed2.set_author(name=f"Snipe Page 1: {channel.name}")
@@ -3418,7 +3419,7 @@ async def makeZalgo(ctx, *, textToZalgofy: str):
   finalText = ''.join(zalgoList)
   await ctx.send(f'`{finalText}`')
 
-@client.command(aliases=['rdit','Edit','stevenImproveUrSpelling', 'garentoo'], help='Edit command for snitches')
+@client.command(aliases=['rdit','Edit'], help='Edit command for snitches')
 async def edit(ctx):
   try:
     embed=discord.Embed(title=f"Author: {regEditMessageAuthor[ctx.channel.id]}", color=0x2f3136)
@@ -3448,7 +3449,7 @@ def checkQueue(id, server, channel, person):
     thumbnail = f"https://img.youtube.com/vi/{videoId[0]}/maxresdefault.jpg"
     video, source, hours, mins, seconds = search(player)
 
-    embed=discord.Embed(title="Comet Music Player", url=player, color=0xf23136)
+    embed=discord.Embed(title="CometRADIO", url=player, color=0xf23136)
     embed.set_author(name=f"Now Playing: {songPlaying}", url=player)
     embed.set_thumbnail(url=thumbnail)
     embed.add_field(name="Length:", value=f"{hours} Hours, {mins} Minutes, {seconds} seconds", inline=True)
@@ -3481,14 +3482,32 @@ def VideoDetails(videoUrl):
   views = videoResponse['items'][0]['statistics']['viewCount']
   return (likes, title, views)
 
+@help.command(aliases=['r'])
+async def remove(ctx):
+  embed=discord.Embed(title="Remove a Queued Song", description="This command is used to remove a song from the CometRADIO Queue. Supports Spotify and YouTube song links along with playlist links. To remove an entry, first use `#ql` and then find out what is the number of the song you want to remove.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#remove <number of list entry>`**", inline=True)
+  embed.add_field(name="Aliases:", value="**r**", inline=True)
+  await ctx.send(embed=embed)
+
 @client.command(aliases=['r'])
 async def remove(ctx, entry: int=1):
-  entryToRemove = int(entry - 1)
-  entryRemoved = queueTitles[ctx.guild.id][entryToRemove]
-  del queues[ctx.guild.id][entryToRemove]
-  del queueTitles[ctx.guild.id][entryToRemove]
+  try:
+    entryToRemove = int(entry - 1)
+    entryRemoved = queueTitles[ctx.guild.id][entryToRemove]
+    del queues[ctx.guild.id][entryToRemove]
+    del queueTitles[ctx.guild.id][entryToRemove]
 
-  await ctx.reply(f'**__`{entryRemoved}`__** is now removed.\n**`{len(queueTitles[ctx.guild.id])}`** Entries remain.')
+    await ctx.reply(f'**__`{entryRemoved}`__** is now removed.\n**`{len(queueTitles[ctx.guild.id])}`** Entries remain.')
+  except:
+    embed=discord.Embed(title="Queue Entry Doesn't Exist", color=0x2f3136)
+    await ctx.send(embed=embed)
+
+@help.command(aliases=['Play'])
+async def play(ctx):
+  embed=discord.Embed(title="Play a Song", description="This command is used to fire up CometRADIO. Supports Spotify and YouTube song links along with playlist links. Also supports word search.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#play <url or search term>`**", inline=True)
+  embed.add_field(name="Aliases:", value="**Play**", inline=True)
+  await ctx.send(embed=embed)
 
 @client.command(aliases=['Play'])
 async def play(ctx, *, url : str):
@@ -3550,7 +3569,7 @@ async def play(ctx, *, url : str):
             return
 
           embed=discord.Embed(title=f"Playing: {title}", url=f"{song}", color=0xf23136)
-          embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+          embed.set_author(name="CometRADIO", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
           embed.set_thumbnail(url=thumbnail)
           embed.add_field(name="Likes:", value=f"{likes}", inline=True)
           embed.add_field(name="Views:", value=f"{views}", inline=True)
@@ -3623,13 +3642,21 @@ async def play(ctx, *, url : str):
         return
       await ctx.invoke(client.get_command('queue'), url=song)
   else:
-    await ctx.send("You need to be in a voice channel to run this command")
+    embed=discord.Embed(title="You need to be in a voice channel to play something.", color=0x2f3136)
+    await ctx.send(embed=embed)
 
 @client.command()
 @commands.is_owner()
 async def test(ctx):
   for i in client.guilds:
     await ctx.send(i)
+
+@help.command(aliases=['QueueList'])
+async def ql(ctx):
+  embed=discord.Embed(title="CometRADIO Queue", description="Use this command to see the server queue of songs.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#ql`**", inline=True)
+  embed.add_field(name="Aliases:", value="**queueList, QueueList**", inline=True)
+  await ctx.send(embed=embed)
 
 @client.command(aliases=['ql','QueueList'])
 async def queueList(ctx):
@@ -3658,7 +3685,7 @@ Try running #play to play or add things to it
 ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝ - ⚝
 ```**"""
   embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
-  embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
+  embed.set_author(name="⚝ CometRADIO Queue ⚝ ")
   msg = await ctx.send(embed=embed, components=[
     Select(placeholder=f"Pages", options=[SelectOption(label=f"{i+1}", value=f"{i+1}") for i in range(len(theQueue))])
   ])
@@ -3676,7 +3703,7 @@ Try running #play to play or add things to it
           counter += 1
         queueList += "```**"
         embed=discord.Embed(description=f"{queueList}", color=0x8a84e1)
-        embed.set_author(name="⚝ Comet Music Player Queue ⚝ ")
+        embed.set_author(name="⚝ CometRADIO Queue ⚝ ")
         await msg.edit(embed = embed, components=[
           Select(placeholder=f"Pages", options=[SelectOption(label=f"{i+1}", value=f"{i+1}") for i in range(len(theQueue))])
         ])
@@ -3700,7 +3727,7 @@ async def queueSpotifyPlaylist(playlist, guild):
   
   if len(songs) > 10:
     embed=discord.Embed(title=f"Processing {len(songs)} Songs.\nNote that it will take a while due to the length of the playlist.", color=0x8a84e1)
-    embed.set_author(name="⚝ Comet Music Player ⚝ ")
+    embed.set_author(name="⚝ CometRADIO ⚝ ")
     await guild.channel.send(embed=embed, delete_after=10)
   
   finalResult = []
@@ -3741,7 +3768,7 @@ async def queueSpotifyPlaylist(playlist, guild):
       counter += 1
   
   embed=discord.Embed(title=f"Queued {len(finalResult)} Songs", color=0x8a84e1)
-  embed.set_author(name="⚝ Comet Music Player ⚝ ")
+  embed.set_author(name="⚝ CometRADIO ⚝ ")
   await guild.channel.send(embed=embed)
   return (finalResult[0], firstPlaylistEntry)
 
@@ -3767,7 +3794,7 @@ async def queueYoutubePlaylist(playlist, guild):
   result = [f'https://www.youtube.com/watch?v={t["snippet"]["resourceId"]["videoId"]}' for t in playlistItems]
   if len(result) > 10:
     embed=discord.Embed(title=f"Processing {len(result)} Songs.\nNote that it will take a while due to the length of the playlist.", color=0x8a84e1)
-    embed.set_author(name="⚝ Comet Music Player ⚝ ")
+    embed.set_author(name="⚝ CometRADIO ⚝ ")
     await guild.channel.send(embed=embed, delete_after=10)
 
   finalResult = []
@@ -3800,7 +3827,7 @@ async def queueYoutubePlaylist(playlist, guild):
       counter += 1
 
   embed=discord.Embed(title=f"Queued {len(finalResult)} Songs", color=0x8a84e1)
-  embed.set_author(name="⚝ Comet Music Player ⚝ ")
+  embed.set_author(name="⚝ CometRADIO ⚝ ")
   await guild.channel.send(embed=embed)
   return (finalResult[0], firstPlaylistEntry)
 
@@ -3830,7 +3857,7 @@ async def queue(ctx, *, url: str):
         return
   
       embed=discord.Embed(title=f"🆀🆄🅴🆄🅴🅳 {title}", url=f"{song}", color=0xf23136)
-      embed.set_author(name="Comet Music Player", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
+      embed.set_author(name="CometRADIO", icon_url="https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png")
       embed.set_thumbnail(url=thumbnail)
       embed.add_field(name="Likes:", value=f"{likes}", inline=True)
       embed.add_field(name="Views:", value=f"{views}", inline=True)
@@ -3853,6 +3880,13 @@ async def queue(ctx, *, url: str):
   else:
     await ctx.send("You need to be in a voice channel to run this command")
 
+@help.command(aliases=['kys','die','goodbye'])
+async def leave(ctx):
+  embed=discord.Embed(title="Leave", description="Makes Comet leave the Voice Channel.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#leave`**", inline=True)
+  embed.add_field(name="Aliases:", value="**kys, die, goodbye**", inline=True)
+  await ctx.send(embed=embed)
+
 @client.command(aliases=['die', 'goodbye', 'kys'])
 async def leave(ctx):
   if (ctx.voice_client):
@@ -3860,32 +3894,56 @@ async def leave(ctx):
     voiceChannel = ctx.voice_client.channel
     await ctx.guild.voice_client.disconnect()
     embed=discord.Embed(title=f"Left {voiceChannel}",description=f"Requested by {ctx.author.name}.", color=0xe29797)
-    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/leaveIcon.png')
+    embed.set_author(name="CometRADIO", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/leaveIcon.png')
     await ctx.reply(embed=embed)
   else:
-    await ctx.send("Im not in a voice channel.")
+    embed=discord.Embed(title="I am not in a voice channel.", color=0x2f3136)
+    await ctx.send(embed=embed)
+
+@help.command(aliases=['stop'])
+async def pause(ctx):
+  embed=discord.Embed(title="Pause", description="Pauses CometRADIO.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#pause`**", inline=True)
+  embed.add_field(name="Aliases:", value="**stop**", inline=True)
+  await ctx.send(embed=embed)
 
 @client.command(pass_context = True, aliases=['stop'])
 async def pause(ctx):
   voice = discord.utils.get(client.voice_clients,guild=ctx.guild)
   if voice.is_playing():
     embed=discord.Embed(title="Music Paused", color=0x2432ff)
-    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/pauseIcon.png')
+    embed.set_author(name="CometRADIO", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/pauseIcon.png')
     await ctx.reply(embed=embed, delete_after=10)
     voice.pause()
   else:
-    await ctx.send("No audio is playing in the voice channel at the moment!")
+    embed=discord.Embed(title="Nothing is playing.", color=0x2f3136)
+    await ctx.send(embed=embed)
+
+@help.command()
+async def resume(ctx):
+  embed=discord.Embed(title="Resume", description="Resumes CometRADIO.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#resume`**", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  await ctx.send(embed=embed)
 
 @client.command(pass_context = True)
 async def resume(ctx): 
   voice = discord.utils.get(client.voice_clients,guild=ctx.guild)
   if voice.is_paused():
     embed=discord.Embed(title="Music Resumed", color=0xff2600)
-    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
+    embed.set_author(name="CometRADIO", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
     await ctx.reply(embed=embed, delete_after=10)
     voice.resume()
   else:
-    await ctx.send("No song is paused at the moment!")
+    embed=discord.Embed(title="Nothing is paused.", color=0x2f3136)
+    await ctx.send(embed=embed)
+
+@help.command()
+async def skip(ctx):
+  embed=discord.Embed(title="Skip Song", description="Skips the song currently playing in CometRADIO.", color=0x2f3136)
+  embed.add_field(name="Use:", value="**`#skip`**", inline=True)
+  embed.add_field(name="Aliases:", value="**NONE**", inline=True)
+  await ctx.send(embed=embed)
 
 @client.command(pass_context = True)
 async def skip(ctx):
@@ -3902,11 +3960,11 @@ async def skip(ctx):
 
   if queues[guild.id] != []:
     embed=discord.Embed(title="Skipped song", color=0xff2600)
-    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
+    embed.set_author(name="CometRADIO", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
     await ctx.send(embed=embed, delete_after=5)
   else:
     embed=discord.Embed(title="Song skipped. End of Queue.", color=0xff2600)
-    embed.set_author(name="Comet Music Player", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
+    embed.set_author(name="CometRADIO", icon_url='https://cometbot.emmanuelch.repl.co/static/photoToRender/playIcon.png')
     await ctx.send(embed=embed, delete_after=5)
 
 # Topic Starter Code
@@ -3920,7 +3978,7 @@ async def questions(ctx):
     'In your opinion, how much faster should the server completely descend into sarcasm?', 'There’s no message to snipe buddy.', '^',
     'Who has touched you the most? Physically? Metaphysically?','What do you do with it?', 'Who will win the race?', 'Who really gets you going?', 'Isn\’t it usually noon by now?',
     'Where are your parents?', 'Today I will affect the trout population.','Today I will drive the trout population extinct.', 'Today I will leave the trout population unchanged.', 'All we had to do was follow the damn train, <@438154309872386068>',
-    'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Dev note #4: guacamole ___ penis', 'Guys Ik Char\’s crush. It\’s: ____',
+    'Did you know? Garen\’s real name is Jetsiky. Allegedly.', 'What word or phrase, like “causality” or “vernacular” or “in any case” do you try to use in more sentences than you probably should?', 'Dev Note#2: The creator is too lazy to add sex bot.', 'Guys Ik Char\’s crush. It\’s: ____',
     'Dev Note #3: I don’t care what any of them say. The N-Word will never be funny.',  'Isn’t it usually noon by now?', 'My favorites are green and purple strictly non-convex polyhedra. What about you?',
     'My email is emmanuel@aol.com. Dont judge, it\’s from 2003.', 'What are the worst fanbases?', 'Y’know how some days you just feel baggier than a nutsack?',
     'What did you want to be when you grew up when you were 5? How about when you were 6? 7? 8? 9? 10? 11? What made you change your plans so often?', 'What were your parents doing during 9/11?', 'Where do you see yourself in 24 hours?',
